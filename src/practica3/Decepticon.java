@@ -20,11 +20,11 @@ import java.util.logging.Logger;
  */
 public class Decepticon extends SingleAgent {
     public AgentID boss;
-    private int type;
+    private final int type;
     private int status; // mapping -> 0
                         // target found -> 1
     private boolean alive;
-    private String key;
+    private final String key;
     
     public Decepticon(AgentID aid, AgentID boss1,int mytype,String mykey) throws Exception{
         super(aid);
@@ -47,6 +47,7 @@ public class Decepticon extends SingleAgent {
     
     }
 
+    @Override
     public void execute(){
         
         while(alive){
