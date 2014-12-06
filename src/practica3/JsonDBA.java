@@ -58,6 +58,12 @@ public class JsonDBA {
     public String crearJson(LinkedHashMap coleccion) {
         return gson.toJson(coleccion);
     }
+    
+    public String crearJson(String key, String value){
+        LinkedHashMap hm = new LinkedHashMap();
+        hm.put(key, value);
+        return gson.toJson(hm);
+    }
 
     //**************************************************************************************************//
     //**********************   FUNCIONES DE RECEPCION DE JSON (DESERIALIZACION) ************************//

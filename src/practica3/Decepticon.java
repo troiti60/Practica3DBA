@@ -25,6 +25,7 @@ public class Decepticon extends SingleAgent {
                         // target found -> 1
     private boolean alive;
     private final String key;
+    private JsonDBA json;
     
     public Decepticon(AgentID aid, AgentID boss1,int mytype,String mykey) throws Exception{
         super(aid);
@@ -33,14 +34,12 @@ public class Decepticon extends SingleAgent {
         alive=true;
         type=mytype;
         key=mykey;
+        json = new JsonDBA();
     }
     
     public void refreshSensors(){
         ACLMessage out=new ACLMessage(ACLMessage.QUERY_REF);
-        LinkedHashMap hash = new LinkedHashMap();
-        Gson gson = new Gson();
-        hash.put("key",key);
-        out.setContent(gson.toJson(hash));
+        out.setContent(json.crearJson("key", key));
         out.setSender(this.getAid());
         out.setReceiver(new AgentID("Canis"));
         this.send(out);
