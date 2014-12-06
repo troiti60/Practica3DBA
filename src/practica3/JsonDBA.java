@@ -50,7 +50,7 @@ public class JsonDBA {
     }
 
     /**
-     * Funcion que te serializa una coleccion de datos a formato JSON
+     * Funcion que serializa una coleccion de datos a formato JSON
      *
      * @param coleccion
      * @return Devuelve un String con el texto en formato JSON
@@ -58,7 +58,12 @@ public class JsonDBA {
     public String crearJson(LinkedHashMap coleccion) {
         return gson.toJson(coleccion);
     }
-    
+    /**
+     * Serializa un mensaje a formato json.
+     * @param key: clave json
+     * @param value: contenido asociado a la clave
+     * @return devuelve un string clave y valor en formato json
+     */
     public String crearJson(String key, String value){
         LinkedHashMap hm = new LinkedHashMap();
         hm.put(key, value);
