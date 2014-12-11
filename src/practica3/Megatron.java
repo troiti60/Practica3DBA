@@ -10,6 +10,7 @@ package practica3;
 import es.upv.dsic.gti_ia.core.AgentID;
 import es.upv.dsic.gti_ia.core.SingleAgent;
 import es.upv.dsic.gti_ia.organization.DataBaseAccess;
+import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -22,6 +23,7 @@ public class Megatron extends SingleAgent{
     
     private Decepticon dron1, dron2, dron3, dron4;
     private AgentID idDron1, idDron2, idDron3, idDron4;
+    private ArrayList<Coord> positions;
     private Map myMap;
     
     /**
@@ -47,6 +49,7 @@ public class Megatron extends SingleAgent{
 
     public Megatron(AgentID aid) throws Exception {
         super(aid);
+        positions=new ArrayList<Coord>(4);
     }
     
     @Override
@@ -68,6 +71,31 @@ public class Megatron extends SingleAgent{
         }
     }
     
+    /**
+     * This method is thought to be called by Megatron itself after parsing
+     * a new perception of one of his drons so he can update the map.
+     * @param pos current dron position
+     * @param perception last perception received by decepticon
+     * @param dron local identifier of the sender. It must be an integer between 0 and 3
+     * @author Antonio Troitiño del Río
+     */
+    private void updateMap(Coord pos, ArrayList<Integer> perception, int dron){
+        if(perception.isEmpty()||dron>=positions.size()){
+            System.err.println("ERROR: Megatron received an empty perception!");
+        }else{
+            positions.set(dron, pos);
+            int cont = Math.round((float)Math.sqrt(perception.size()));
+            cont=(cont-1)/2;
+            int count=0;
+            for(int i=0-cont;i<=cont;i++){
+                for(int j=0-cont;j<=cont;j++){
+                    myMap.addNode(new Coord(pos.getX()+j,pos.getY()+i),perception.get(count));
+                    count++;
+                }
+            }
+        
+        }
+    }
     public void Suscribe(){  }
     
     public void Cancel(){  }
