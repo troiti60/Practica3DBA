@@ -27,29 +27,6 @@ public class JsonDBA {
     //*******************   FUNCIONES DE CREACION DE JSON (SERIALIZACION) ******************************//
     //**************************************************************************************************//
     /**
-     * Funcion de login en el Servidor. Parametro World es obligatorio.
-     *
-     * @param world Nombre del mapa
-     * @param radar Nombre del agente Radar
-     * @param scanner Nombre del agente Scanner
-     * @param battery Nombre del agente Battery
-     * @param gps Nombre del agente GPS
-     * @return Devuelve el string de logeo
-     */
-    public String login(String world, String radar, String scanner, String battery, String gps) {
-        LinkedHashMap hash = new LinkedHashMap();
-
-        hash.put("command", "login");
-        hash.put("world", world);
-        hash.put("radar", radar);
-        hash.put("scanner", scanner);
-        hash.put("battery", battery);
-        hash.put("gps", gps);
-
-        return gson.toJson(hash);
-    }
-
-    /**
      * Funcion que serializa una coleccion de datos a formato JSON
      *
      * @param coleccion
@@ -94,7 +71,6 @@ public class JsonDBA {
             System.out.print("La clave "+clave+ " no está en el mensaje");
         
         return element;
-        
         
     }
     
