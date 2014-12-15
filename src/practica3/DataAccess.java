@@ -25,6 +25,7 @@ public class DataAccess {
     private final String username;
     private final String passwd;
     private final Boolean ssl;
+    private final String world;
 
     /**
      * Name Decepticons
@@ -65,7 +66,7 @@ public class DataAccess {
         this.username = "Capricornio";
         this.passwd = "Gaugin";
         this.ssl = false;
-
+        this.world  = "beach";
         this.key = null;
     }
 
@@ -197,6 +198,14 @@ public class DataAccess {
      */
     public static String getNameDron4() {
         return DataAccess.nameDron1;
+    }
+    
+    /**
+     * Getter of the world
+     * @author JC
+     */
+    public String getWorld(){
+        return this.world;
     }
     
 }
