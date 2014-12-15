@@ -20,7 +20,7 @@ import java.util.logging.Logger;
  */
 public class Decepticon extends SingleAgent {
     public AgentID boss;
-    private final int type;
+    private final int rol;
     private int status; // mapping -> 0
                         // target found -> 1
     private boolean alive;
@@ -32,7 +32,7 @@ public class Decepticon extends SingleAgent {
         boss=boss1;
         status = 0;
         alive=true;
-        type=mytype;
+        rol=mytype;
         key=mykey;
         json = new JsonDBA();
     }
@@ -89,5 +89,87 @@ public class Decepticon extends SingleAgent {
                 }
             }
         }
+    }
+    
+    public void Checkin(){
+        JsonDBA json = new JsonDBA();
+        ACLMessage outbox;
+        LinkedHashMap<String,String> hm = new LinkedHashMap<>();
+        hm.put("command", "checkin");
+        hm.put("rol",Integer.toString(rol));
+        hm.put("key",key);
+        String msg = json.crearJson(hm);
+        
+        outbox = new ACLMessage();
+        outbox.setSender(getAid());
+        outbox.setPerformative(ACLMessage.REQUEST);
+        outbox.setReceiver(new AgentID("Canis"));
+        outbox.setContent(msg);
+        this.send(outbox);
+        
+    }
+    
+    public void Move(){
+        JsonDBA json = new JsonDBA();
+        ACLMessage outbox;
+        LinkedHashMap<String,String> hm = new LinkedHashMap<>();
+        hm.put("command", "moveX");
+        hm.put("key",key);
+        String msg = json.crearJson(hm);
+        
+        outbox = new ACLMessage();
+        outbox.setSender(getAid());
+        outbox.setPerformative(ACLMessage.REQUEST);
+        outbox.setReceiver(new AgentID("Canis"));
+        outbox.setContent(msg);
+        this.send(outbox);
+    }
+    
+    public void Refuel(){
+ 
+        JsonDBA json = new JsonDBA();
+        ACLMessage outbox;
+        LinkedHashMap<String,String> hm = new LinkedHashMap<>();
+        hm.put("command", "refuel");
+        hm.put("key",key);
+        String msg = json.crearJson(hm);
+        
+        outbox = new ACLMessage();
+        outbox.setSender(getAid());
+        outbox.setPerformative(ACLMessage.REQUEST);
+        outbox.setReceiver(new AgentID("Canis"));
+        outbox.setContent(msg);
+        this.send(outbox);
+        
+    }
+    
+    public void Perception(){
+ 
+        JsonDBA json = new JsonDBA();
+        ACLMessage outbox;
+        String msg = json.crearJson("key",key);
+        
+        outbox = new ACLMessage();
+        outbox.setSender(getAid());
+        outbox.setPerformative(ACLMessage.QUERY_REF);
+        outbox.setReceiver(new AgentID("Canis"));
+        outbox.setContent(msg);
+        this.send(outbox);
+        
+    }
+    
+    public void Cancelation(){
+ 
+        JsonDBA json = new JsonDBA();
+        ACLMessage outbox;
+        String msg = json.crearJson("key",key);
+        
+        outbox = new ACLMessage();
+        outbox.setSender(getAid());
+        outbox.setPerformative(ACLMessage.QUERY_REF);
+        outbox.setReceiver(new AgentID("Canis"));
+        outbox.setContent(msg);
+        this.send(outbox);
+        
     }
 }
