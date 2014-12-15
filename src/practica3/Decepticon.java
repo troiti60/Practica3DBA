@@ -157,19 +157,4 @@ public class Decepticon extends SingleAgent {
         this.send(outbox);
         
     }
-    
-    public void Cancelation(){
- 
-        JsonDBA json = new JsonDBA();
-        ACLMessage outbox;
-        String msg = json.crearJson("key",key);
-        
-        outbox = new ACLMessage();
-        outbox.setSender(getAid());
-        outbox.setPerformative(ACLMessage.QUERY_REF);
-        outbox.setReceiver(new AgentID("Canis"));
-        outbox.setContent(msg);
-        this.send(outbox);
-        
-    }
 }
