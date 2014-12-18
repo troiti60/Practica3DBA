@@ -10,6 +10,8 @@ import es.upv.dsic.gti_ia.core.AgentID;
 import es.upv.dsic.gti_ia.core.SingleAgent;
 import es.upv.dsic.gti_ia.organization.DataBaseAccess;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.PriorityQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -28,7 +30,47 @@ public class Megatron extends SingleAgent {
     private JsonDBA json;
     private DataAccess dataAccess;
     
+/**
+     * Enum with possible movement actions
+     *
+     * @author Daniel Sánchez Alcaide
+     */
+    public enum Accion {
 
+        NW("moveNW"),
+        N("moveN"),
+        NE("moveNE"),
+        E("moveE"),
+        SE("moveSE"),
+        S("moveS"),
+        SW("moveSW"),
+        W("moveW");
+
+        // String that defines the action
+        private final String command;
+
+        /**
+         * Constructor
+         *
+         * @param command String that defines the action to take
+         * @author Daniel Sánchez Alcaide
+         */
+        private Accion(final String command) {
+            this.command = command;
+        }
+
+        /**
+         * Return the string that defines the action
+         *
+         * @return String that defines the action
+         * @author Daniel Sánchez Alcaide
+         */
+        @Override
+        public String toString() {
+            return this.command;
+        }
+    }
+    
     /**
      * Enum of state
      *
@@ -185,5 +227,34 @@ public class Megatron extends SingleAgent {
                 System.out.println("Megatron------\nEstado: Cancel");
                 break;
         }
+    }
+    
+    /**
+     * The best path to reach the goal, once we have found it, using A*
+     *
+     * @return Direction where drone should move
+     * @param actual the position of the selected drone
+     * @throws Exception
+     * @author Daniel Sánchez Alcaide
+     */
+    private Accion busqueda(Nodo actual) throws Exception {
+       Accion camino = Accion.N;
+       Comparator<Nodo> comp = new ComparadorHeuristicaNodo();
+       PriorityQueue<Nodo> abiertos = new PriorityQueue<Nodo>(comp);
+       ArrayList<Nodo> cerrados = new ArrayList<Nodo>();
+       abiertos.add(actual);
+       
+       return camino;
+    }
+    
+    /**
+     * The best path to reach the goal, once we have found it, using A*
+     *
+     * @return The goal nodo
+     * @author Antonio Troitiño del Río
+     */
+    public static Nodo getTarget(){
+        Nodo goal = new Nodo(0,0,0,0);
+        return goal;
     }
 }
