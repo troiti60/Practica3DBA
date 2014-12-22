@@ -10,8 +10,10 @@ import es.upv.dsic.gti_ia.core.AgentID;
 import es.upv.dsic.gti_ia.core.SingleAgent;
 import es.upv.dsic.gti_ia.organization.DataBaseAccess;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.PriorityQueue;
+import java.util.Stack;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -233,17 +235,42 @@ public class Megatron extends SingleAgent {
      * The best path to reach the goal, once we have found it, using A*
      *
      * @return Direction where drone should move
-     * @param actual the position of the selected drone
+     * @param start the position of the selected drone
+     * @param goal the position of the goal
      * @throws Exception
      * @author Daniel Sánchez Alcaide
      */
-    private Accion busqueda(Nodo actual) throws Exception {
-       Accion camino = Accion.N;
+    private Stack<Accion> busqueda(Nodo start, Nodo goal) throws Exception {
+       Stack<Accion> camino = new Stack<Accion>();
        Comparator<Nodo> comp = new ComparadorHeuristicaNodo();
-       PriorityQueue<Nodo> abiertos = new PriorityQueue<Nodo>(comp);
+       PriorityQueue<Nodo> abiertos = new PriorityQueue<Nodo>((Collection<? extends Nodo>) comp);
        ArrayList<Nodo> cerrados = new ArrayList<Nodo>();
-       abiertos.add(actual);
-       
+       Nodo current = start;
+       abiertos.add(current);
+       //El vértice no es la meta y abiertos no está vacío
+       while(!abiertos.isEmpty() && !current.equals(goal)){
+           //Sacamos el nodo de abiertos
+           current = abiertos.poll();
+           //Metemos el nodo en cerrados
+           cerrados.add(current);
+           //Examinamos los nodos vecinos
+           ArrayList<Nodo> vecinos = current.getAdy();
+           for(int i=0;i<vecinos.size();i++){
+               Nodo vecino = vecinos.get(i);
+               //Comprobamos que no esté ni en abiertos ni en cerrados
+               if(!abiertos.contains(vecino) && !cerrados.contains(vecino)){
+                   //Guardamos el camino hacia el nodo actual desde los vecinos
+                   vecino.setCamino(current);
+                   abiertos.add(vecino);
+               }
+               if(abiertos.contains(vecino)){
+                   //Si el vecino está en abiertos comparamos los valores de g 
+                   //para los posibles nodos padre
+                   if(vecino.getCamino().g(start) > current.g(start))
+                       vecino.setCamino(current);
+               }
+           }
+       }
        return camino;
     }
     
