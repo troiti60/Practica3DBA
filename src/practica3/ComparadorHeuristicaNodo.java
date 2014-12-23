@@ -13,13 +13,13 @@ import java.util.Comparator;
  * @author Daniel Sánchez Alcaide
  */
 public class ComparadorHeuristicaNodo implements Comparator<Nodo>{
-    private static Nodo goal = Megatron.getTarget();
+    private static Nodo goal = Map.getTarget();
     
     /**
-     * Compare two nodos for the priority queue comparator
-     * @param x one nodo
-     * @param y the other nodo
-     * @return -1 if x priority is higher that y; 1 if y priority is higher that x;
+     * Compare two nodes for the priority queue comparator
+     * @param x a node
+     * @param y the other node
+     * @return -1 if x priority is higher than y; 1 if y priority is higher than x;
      * 0 if both have same priority
      * @author Daniel Sánchez Alcaide
      */
