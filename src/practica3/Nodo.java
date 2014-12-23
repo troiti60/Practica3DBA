@@ -24,9 +24,7 @@ public class Nodo implements Comparable<Nodo> {
     
     // Valor de radar del nodo: 0=libre 1=muro 2=objetivo
     private final int radar;
-    
-    // Distancia euclídea del nodo al objetivo
-    private final float scanner;
+   
     
     // Array de nodos (no muros) adyacentes
     private final ArrayList<Nodo> adyacentes = new ArrayList<Nodo>();
@@ -51,13 +49,11 @@ public class Nodo implements Comparable<Nodo> {
      * @param x coordenada x del nodo
      * @param y coordenada y del nodo
      * @param radar valor de radar del nodo
-     * @param scanner valor de scanner del nodo
      * @author Antonio Troitiño
      */
-    public Nodo(int x, int y, int radar, float scanner) {
+    public Nodo(int x, int y, int radar) {
         this.coord = new Coord(x, y);
         this.radar = radar;
-        this.scanner = scanner;
         this.explorado = 0;
     }
 
@@ -66,13 +62,11 @@ public class Nodo implements Comparable<Nodo> {
      *
      * @param coord coordenadas que ocupa el nodo
      * @param radar valor de radar del nodo
-     * @param scanner valor de scanner del nodo
      * @author Alexander Straub
      */
-    public Nodo(Coord coord, int radar, float scanner) {
+    public Nodo(Coord coord, int radar) {
         this.coord = coord;
         this.radar = radar;
-        this.scanner = scanner;
         this.explorado = 0;
     }
 
@@ -107,18 +101,18 @@ public class Nodo implements Comparable<Nodo> {
     }
 
     /**
-     * Añade un nodo adyacente al arrayList correspondiente
+     * Adds an adjacent node to the right collection
      *
-     * @param unNodo Nodo que hay que añadir a las listas
+     * @param aNode Node to be added
      * @author Antonio Troitiño
      */
-    public void add(Nodo unNodo) {
-        if (unNodo.getRadar() != 1) {
-            this.adyacentes.add(unNodo);
+    public void add(Nodo aNode) {
+        if (aNode.getRadar() == 0||aNode.getRadar()==3) {
+            this.adyacentes.add(aNode);
             this.explorado++;
-        } else {
+        } else if(aNode.getRadar()==1||aNode.getRadar()==2){
             this.explorado++;
-            this.murosAdyacentes.add(unNodo);
+            this.murosAdyacentes.add(aNode);
         }
     }
 
@@ -202,15 +196,7 @@ public class Nodo implements Comparable<Nodo> {
         return this.coord;
     }
 
-    /**
-     * Devuelves el valor obtenido por el scanner
-     *
-     * @return Distancia al destino (como si no hubiera obstáculos)
-     * @author Alexander Straub
-     */
-    public float getScanner() {
-        return this.scanner;
-    }
+
 
     /**
      * Devolver la coordenada en el norte
