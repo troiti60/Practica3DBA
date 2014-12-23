@@ -21,8 +21,7 @@ import java.util.logging.Logger;
 public class Decepticon extends SingleAgent {
     public AgentID boss;
     private final int rol;
-    private int status; // mapping -> 0
-                        // target found -> 1
+
     private boolean alive;
     private final String key;
     private JsonDBA json;
@@ -30,7 +29,6 @@ public class Decepticon extends SingleAgent {
     public Decepticon(AgentID aid, AgentID boss1,int mytype,String mykey) throws Exception{
         super(aid);
         boss=boss1;
-        status = 0;
         alive=true;
         rol=mytype;
         key=mykey;
