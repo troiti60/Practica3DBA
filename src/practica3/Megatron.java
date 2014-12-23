@@ -12,6 +12,7 @@ import es.upv.dsic.gti_ia.organization.DataBaseAccess;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.PriorityQueue;
 import java.util.Stack;
 import java.util.logging.Level;
@@ -24,20 +25,19 @@ import java.util.logging.Logger;
  */
 public class Megatron extends SingleAgent {
 
-    private Decepticon dron1, dron2, dron3, dron4;
-    private AgentID idDron1, idDron2, idDron3, idDron4;
-    private ArrayList<Coord> positions;
+    private ArrayList<DataDecepticon> drones;
     private Map myMap;
     private ACLMessage inbox, outbox;
     private JsonDBA json;
     private DataAccess dataAccess;
+    private Decepticon dron1,dron2,dron3,dron4;
     
 /**
      * Enum with possible movement actions
      *
      * @author Daniel Sánchez Alcaide
      */
-    public enum Accion {
+    public enum Action {
 
         NW("moveNW"),
         N("moveN"),
@@ -57,7 +57,7 @@ public class Megatron extends SingleAgent {
          * @param command String that defines the action to take
          * @author Daniel Sánchez Alcaide
          */
-        private Accion(final String command) {
+        private Action(final String command) {
             this.command = command;
         }
 
@@ -96,17 +96,17 @@ public class Megatron extends SingleAgent {
 
     public Megatron(AgentID aid) throws Exception {
         super(aid);
-        positions = new ArrayList<Coord>(4);
+        drones = new ArrayList<DataDecepticon>(4);
     }
 
     @Override
     protected void init() {
         this.myMap = new Map();
         this.dataAccess = DataAccess.crearInstancia();
-        this.idDron1 = new AgentID(DataAccess.getNameDron1());
-        this.idDron2 = new AgentID(DataAccess.getNameDron2());
-        this.idDron3 = new AgentID(DataAccess.getNameDron3());
-        this.idDron4 = new AgentID(DataAccess.getNameDron4());
+        this.drones.add( new DataDecepticon(DataAccess.getNameDron1(),2));
+        this.drones.add( new DataDecepticon(DataAccess.getNameDron2(),2));
+        this.drones.add( new DataDecepticon(DataAccess.getNameDron3(),2));
+        this.drones.add( new DataDecepticon(DataAccess.getNameDron4(),2));
 
     }
 
@@ -121,10 +121,10 @@ public class Megatron extends SingleAgent {
      * @author Antonio Troitiño del Río
      */
     private void updateMap(Coord pos, ArrayList<Integer> perception, int dron) {
-        if (perception.isEmpty() || dron >= positions.size()) {
+        if (perception.isEmpty() || dron >= drones.size()) {
             System.err.println("ERROR: Megatron received an empty perception!");
         } else {
-            positions.set(dron, pos);
+            drones.get(dron).setPosition(pos);
             int cont = Math.round((float) Math.sqrt(perception.size()));
             cont = (cont - 1) / 2;
             int count = 0;
@@ -139,7 +139,7 @@ public class Megatron extends SingleAgent {
     }
     /**
      * Send the message to subscribe to the world
-     * @author JC
+     * @author JC con su flow
      * 
      */
     public void Suscribe() {
@@ -198,10 +198,10 @@ public class Megatron extends SingleAgent {
             case Create:
                 System.out.println("Megatron------\nEstado: Create");
                 try {
-                    this.dron1 = new Birdron(this.idDron1, this.getAid(), dataAccess.getKey() );
-                    this.dron2 = new Birdron(this.idDron2, this.getAid(), dataAccess.getKey() );
-                    this.dron3 = new Birdron(this.idDron3, this.getAid(), dataAccess.getKey() );
-                    this.dron4 = new Birdron(this.idDron4, this.getAid(), dataAccess.getKey() );
+                    this.dron1 = new Birdron(this.drones.get(0).getId(), this.getAid(), dataAccess.getKey() );
+                    this.dron2 = new Birdron(this.drones.get(1).getId(), this.getAid(), dataAccess.getKey() );
+                    this.dron3 = new Birdron(this.drones.get(2).getId(), this.getAid(), dataAccess.getKey() );
+                    this.dron4 = new Birdron(this.drones.get(3).getId(), this.getAid(), dataAccess.getKey() );
                 } catch (Exception ex) {
                     Logger.getLogger(Megatron.class.getName()).log(Level.SEVERE, null, ex);
                     System.err.println("Error al instanciar los drones");
@@ -240,8 +240,8 @@ public class Megatron extends SingleAgent {
      * @throws Exception
      * @author Daniel Sánchez Alcaide
      */
-    private Stack<Accion> busqueda(Nodo start, Nodo goal) throws Exception {
-       Stack<Accion> camino = new Stack<Accion>();
+    private Stack<Action> busqueda(Nodo start, Nodo goal) throws Exception {
+       Stack<Action> camino = new Stack<Action>();
        Comparator<Nodo> comp = new ComparadorHeuristicaNodo();
        PriorityQueue<Nodo> abiertos = new PriorityQueue<Nodo>((Collection<? extends Nodo>) comp);
        ArrayList<Nodo> cerrados = new ArrayList<Nodo>();
@@ -275,13 +275,84 @@ public class Megatron extends SingleAgent {
     }
     
     /**
-     * The best path to reach the goal, once we have found it, using A*
-     *
-     * @return The goal nodo
+     * Gives a way to explore a void map (plainworld) with a single drone
+     * @return next action to be done by specified drone
      * @author Antonio Troitiño del Río
      */
-    public static Nodo getTarget(){
-        Nodo goal = new Nodo(0,0,0,0);
-        return goal;
+    private Action mapv0(int drone){
+
+        Action toDo=null;
+        HashMap<Coord,Nodo> map = myMap.getMap();
+        if(drones.get(drone).hasWork()){ 
+            toDo= drones.get(drone).getAction();
+            if(toDo==Action.N&&map.get(drones.get(drone).getCurrent().N()).getRadar()!=2)
+                return toDo;
+            else if (toDo==Action.S&&map.get(drones.get(drone).getCurrent().S()).getRadar()!=2)
+                return toDo;
+            else {drones.get(drone).cancelJob(); toDo=null;}
+        }
+        char pos;
+        if(drones.get(drone).getStart().getY()>5) pos='S';
+        else pos='N';
+        switch(pos){
+            case 'S':
+                if((drones.get(drone).getLastAction()==Action.W&&
+                   !map.containsKey(drones.get(drone).getCurrent().O().O().O())&&
+                   map.get(drones.get(drone).getCurrent().O().O()).getRadar()!=2)
+                    ||(drones.get(drone).getLastAction()==Action.N&&
+                   !map.containsKey(drones.get(drone).getCurrent().SO().SO().O())&&
+                   map.get(drones.get(drone).getCurrent().O().O()).getRadar()!=2)){
+                    toDo=Action.W;
+                    drones.get(drone).doThat(toDo);}
+                else if((drones.get(drone).getLastAction()==Action.E&&
+                   !map.containsKey(drones.get(drone).getCurrent().E().E().E())&&
+                   map.get(drones.get(drone).getCurrent().E().E()).getRadar()!=2)
+                    ||(drones.get(drone).getLastAction()==Action.N&&
+                   !map.containsKey(drones.get(drone).getCurrent().SE().SE().E())&&
+                   map.get(drones.get(drone).getCurrent().E().E()).getRadar()!=2)){
+                    toDo=Action.E;
+                    drones.get(drone).doThat(toDo);}
+                else {
+                    toDo=Action.N;
+                    drones.get(drone).push(toDo);
+                    drones.get(drone).push(toDo);
+                    drones.get(drone).push(toDo);
+                    drones.get(drone).push(toDo);
+                    drones.get(drone).doThat(toDo);
+                }                
+                break;
+            case 'N':
+                 if((drones.get(drone).getLastAction()==Action.W&&
+                   !map.containsKey(drones.get(drone).getCurrent().O().O().O())&&
+                   map.get(drones.get(drone).getCurrent().O().O()).getRadar()!=2)
+                    ||(drones.get(drone).getLastAction()==Action.S&&
+                   !map.containsKey(drones.get(drone).getCurrent().NO().NO().O())&&
+                   map.get(drones.get(drone).getCurrent().O().O()).getRadar()!=2)){
+                    toDo=Action.W;
+                    drones.get(drone).doThat(toDo);}
+                else if((drones.get(drone).getLastAction()==Action.E&&
+                   !map.containsKey(drones.get(drone).getCurrent().E().E().E())&&
+                   map.get(drones.get(drone).getCurrent().E().E()).getRadar()!=2)
+                    ||(drones.get(drone).getLastAction()==Action.S&&
+                   !map.containsKey(drones.get(drone).getCurrent().NE().NE().E())&&
+                   map.get(drones.get(drone).getCurrent().E().E()).getRadar()!=2)){
+                    toDo=Action.E;
+                    drones.get(drone).doThat(toDo);}
+                else {
+                    toDo=Action.S;
+                    drones.get(drone).push(toDo);
+                    drones.get(drone).push(toDo);
+                    drones.get(drone).push(toDo);
+                    drones.get(drone).push(toDo);
+                    drones.get(drone).doThat(toDo);
+                } 
+                break;     
+            default:
+                System.err.println("Error: posición de comienzo del dron no inicializada");
+        
+                break;
+        }
+        return toDo;
     }
+
 }
