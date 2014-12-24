@@ -45,20 +45,20 @@ public class Decepticon extends SingleAgent {
 
     @Override
     public void execute(){
-        System.out.println("Decepticon " + this.getName().toString() + " Ejecuntandose...");
+        System.out.println("Decepticon " + this.getName() + " Ejecuntandose...");
         
         ACLMessage msg;   
         
-        System.out.println("Decepticon " + this.getName().toString() + " Registrandose en el servidor...");
+        System.out.println("Decepticon " + this.getName() + " Registrandose en el servidor...");
         Checkin();
         
         try {
             msg = this.receiveACLMessage();
             
             if(msg.getPerformativeInt() == ACLMessage.INFORM)
-                System.out.println("Decepticon " + this.getName().toString() + " Registrado");
+                System.out.println("Decepticon " + this.getName() + " Registrado");
             else{
-                System.out.println("Decepticon " + this.getName().toString() + " No se ha podido registrar");
+                System.out.println("Decepticon " + this.getName() + " No se ha podido registrar");
                 alive = false;
             }
             
@@ -66,8 +66,6 @@ public class Decepticon extends SingleAgent {
             Logger.getLogger(Decepticon.class.getName()).log(Level.SEVERE, null, ex);
             alive = false;
         }
-        
-        
         
         while(alive){
             msg=new ACLMessage();
@@ -80,6 +78,7 @@ public class Decepticon extends SingleAgent {
             if(msg.getSender().getLocalName().equals("Canis")){
                 if(performative==ACLMessage.INFORM){
                     if(msg.getContent().contains("battery")){
+                        System.out.println("Decepticon " + this.getName() + " Recibido informe del servidor de bateria");
                         ACLMessage out= new ACLMessage();
                         out.setPerformative(ACLMessage.INFORM);
                         out.setSender(this.getAid());
@@ -90,6 +89,7 @@ public class Decepticon extends SingleAgent {
                 } else if (performative==ACLMessage.NOT_UNDERSTOOD||
                             performative==ACLMessage.REFUSE||
                             performative==ACLMessage.FAILURE){
+                    System.out.println("Decepticon " + this.getName() + " Recibido informe del servidor ERROR");
                     ACLMessage out= new ACLMessage(performative);
                     out.setSender(this.getAid());
                     out.setReceiver(boss);
@@ -99,6 +99,7 @@ public class Decepticon extends SingleAgent {
                 }
             } else if (msg.getSender().getLocalName().equals(boss.getLocalName())){
                 if(performative==ACLMessage.REQUEST){
+                    System.out.println("Decepticon " + this.getName().toString() + " Recibido solicitud de Megatron");
                     ACLMessage out = new ACLMessage(msg.getPerformativeInt());
                     out.setSender(this.getAid());
                     out.setReceiver(new AgentID("Canis"));
@@ -109,6 +110,7 @@ public class Decepticon extends SingleAgent {
                 }
             }
         }
+        System.out.println("Decepticon " + this.getName() + " Muerto");
     }
     
     public void Checkin(){
