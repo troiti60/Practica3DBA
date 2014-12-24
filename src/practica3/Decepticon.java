@@ -41,14 +41,36 @@ public class Decepticon extends SingleAgent {
         out.setSender(this.getAid());
         out.setReceiver(new AgentID("Canis"));
         this.send(out);
-    
     }
 
     @Override
     public void execute(){
+        System.out.println("Decepticon " + this.getName().toString() + " Ejecuntandose...");
+        
+        ACLMessage msg;   
+        
+        System.out.println("Decepticon " + this.getName().toString() + " Registrandose en el servidor...");
+        Checkin();
+        
+        try {
+            msg = this.receiveACLMessage();
+            
+            if(msg.getPerformativeInt() == ACLMessage.INFORM)
+                System.out.println("Decepticon " + this.getName().toString() + " Registrado");
+            else{
+                System.out.println("Decepticon " + this.getName().toString() + " No se ha podido registrar");
+                alive = false;
+            }
+            
+        } catch (InterruptedException ex) {
+            Logger.getLogger(Decepticon.class.getName()).log(Level.SEVERE, null, ex);
+            alive = false;
+        }
+        
+        
         
         while(alive){
-            ACLMessage msg=new ACLMessage();
+            msg=new ACLMessage();
             try {
                 msg = this.receiveACLMessage();
             } catch (InterruptedException ex) {
@@ -104,7 +126,6 @@ public class Decepticon extends SingleAgent {
         outbox.setReceiver(new AgentID("Canis"));
         outbox.setContent(msg);
         this.send(outbox);
-        
     }
     
     public void Move(){
