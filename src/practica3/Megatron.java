@@ -171,64 +171,86 @@ public class Megatron extends SingleAgent {
     public void execute() {
         State state = State.Subscribe;
         String msg = null;
+        boolean live = true;
+        System.out.println("Megatron: Iniciado");
         
-        switch (state) {
-            // Suscribe
-            case Subscribe:
-                System.out.println("Megatron------\nEstado: Subscribe");
-                Suscribe();                                     
-                try {
-                        inbox = receiveACLMessage();
-                        msg = inbox.getContent();
-                    } catch (InterruptedException ex) {
-                        System.out.println("Problema al recibir mensaje en Subscribe: "+ ex);
+        while(live){
+            switch (state) {
+                // Suscribe
+                case Subscribe:
+                    System.out.println("Megatron------ Estado: Subscribe");
+                    Suscribe();                                     
+                    try {
+                            inbox = receiveACLMessage();
+                            msg = inbox.getContent();
+                        } catch (InterruptedException ex) {
+                            System.out.println("Problema al recibir mensaje en Subscribe: "+ ex);
+                        }
+                    if (inbox.getPerformativeInt() == ACLMessage.INFORM) {
+                        System.out.println("Megatron: Cambiando a estado Create");
+                        state = State.Create;
+                        JsonDBA json = new JsonDBA();
+                        String result = (String) json.getElement(msg, "result");
+                        dataAccess.setKey(result);                   
+
+                    } else {
+                        System.out.println("ERROR: " + inbox.getPerformative());
                     }
-                if (inbox.getPerformativeInt() == ACLMessage.INFORM) {
-                    state = State.Create;
-                    JsonDBA json = new JsonDBA();
-                    String result = (String) json.getElement(msg, "result");
-                    dataAccess.setKey(result);                   
+                    break;
+
+                // Lanzar x drones y esperar el OK
+                case Create:
+                    System.out.println("Megatron------ Estado: Create");
+                    try {
+                        this.dron1 = new Birdron(this.drones.get(0).getId(), this.getAid(), dataAccess.getKey() );
+                        //this.dron2 = new Birdron(this.drones.get(1).getId(), this.getAid(), dataAccess.getKey() );
+                        //this.dron3 = new Birdron(this.drones.get(2).getId(), this.getAid(), dataAccess.getKey() );
+                        //this.dron4 = new Birdron(this.drones.get(3).getId(), this.getAid(), dataAccess.getKey() );
+
+                    } catch (Exception ex) {
+                        Logger.getLogger(Megatron.class.getName()).log(Level.SEVERE, null, ex);
+                        System.err.println("Error al instanciar los drones");
+                        
+                        System.out.println("Megatron: Cambiando a estado Cancel");
+                        state = State.Cancel;
+                    }
                     
-                } else {
-                    System.out.println("ERROR: " + inbox.getPerformative());
-                }
-                break;
+                    System.out.println("Megatron: Lanzando decepticion...");
+                    this.dron1.start();
+                    
+                    System.out.println("Megatron: Cambiando a estado Feel");
+                    state = State.Feel;
+                    
+                    break;
 
-            // Lanzar x drones y esperar el OK
-            case Create:
-                System.out.println("Megatron------\nEstado: Create");
-                try {
-                    this.dron1 = new Birdron(this.drones.get(0).getId(), this.getAid(), dataAccess.getKey() );
-                    this.dron2 = new Birdron(this.drones.get(1).getId(), this.getAid(), dataAccess.getKey() );
-                    this.dron3 = new Birdron(this.drones.get(2).getId(), this.getAid(), dataAccess.getKey() );
-                    this.dron4 = new Birdron(this.drones.get(3).getId(), this.getAid(), dataAccess.getKey() );
-                } catch (Exception ex) {
-                    Logger.getLogger(Megatron.class.getName()).log(Level.SEVERE, null, ex);
-                    System.err.println("Error al instanciar los drones");
-                }
-                break;
+                // Pedir percepcion a x drones
+                // Esperar x percepciones
+                case Feel:
+                    System.out.println("Megatron------ Estado: Feel");
+                    break;
 
-            // Pedir percepcion a x drones
-            // Esperar x percepciones
-            case Feel:
-                System.out.println("Megatron------\nEstado: Feel");
-                break;
+                // Heuristica
+                case Heuristic:
+                    System.out.println("Megatron------ Estado: Heuristic");
+                    break;
 
-            // Heuristica
-            case Heuristic:
-                System.out.println("Megatron------\nEstado: Heuristic");
-                break;
+                // Dar orden(es) a x drones
+                case Action:
+                    System.out.println("Megatron------ Estado: Action");
+                    break;
 
-            // Dar orden(es) a x drones
-            case Action:
-                System.out.println("Megatron------\nEstado: Action");
-                break;
+                // Cancelar todo para reiniciar
+                case Cancel:
+                    System.out.println("Megatron------ Estado: Cancel");
+                    Cancel();
 
-            // Cancelar todo para reiniciar
-            case Cancel:
-                System.out.println("Megatron------\nEstado: Cancel");
-                break;
+                    System.out.println("Megatron: Cambiando a estado Muerto");
+                    live = false;
+                    break;
+            }
         }
+        
+        System.out.println("Megatron: Muerto");
     }
     
     /**
