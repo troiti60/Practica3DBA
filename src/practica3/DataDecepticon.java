@@ -29,9 +29,9 @@ public class DataDecepticon {
      * @param aname name for the new DataDecepticon
      * @param arole role for the decepticon
      */
-    DataDecepticon(String aname,int arole){
+    DataDecepticon(String aname){
         name=aname;
-        role=arole;
+        role=-1;
         id=new AgentID(aname);
         alive=true;
         fuel=100;
@@ -187,6 +187,5 @@ public class DataDecepticon {
     public void setAlive(boolean alive) {
         this.alive = alive;
     }
-    
     
 }
