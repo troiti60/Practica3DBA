@@ -42,43 +42,54 @@ public class Decepticon extends SingleAgent {
         out.setReceiver(new AgentID("Canis"));
         this.send(out);
     }
-
+    
     @Override
     public void execute(){
+             
         System.out.println("Decepticon " + this.getName() + " Ejecuntandose...");
         
-        ACLMessage msg;   
+        ACLMessage msg = null;   
         
         System.out.println("Decepticon " + this.getName() + " Registrandose en el servidor...");
         Checkin();
         
         try {
-            msg = this.receiveACLMessage();
-            
-            if(msg.getPerformativeInt() == ACLMessage.INFORM)
-                System.out.println("Decepticon " + this.getName() + " Registrado");
-            else{
-                System.out.println("Decepticon " + this.getName() + " No se ha podido registrar");
-                alive = false;
-            }
+            msg = receiveACLMessage();
+            System.out.println("Decepticon " + this.getName() + " Respuesta de registro recibida");
             
         } catch (InterruptedException ex) {
             Logger.getLogger(Decepticon.class.getName()).log(Level.SEVERE, null, ex);
+            System.err.println("Decepticon " + this.getName() + " Error al registrar");
+            alive = false;
+        }
+        
+        if(msg.getPerformativeInt() == ACLMessage.INFORM){
+            System.out.println("Decepticon " + this.getName() + " Registrado");
+
+            System.out.println("Decepticon " + this.getName() + " Escaneando entorno");
+            refreshSensors();
+        }
+        else{
+            System.out.println("Decepticon " + this.getName() + " No se ha podido registrar");
+            System.out.println("\t"+msg.getContent());
             alive = false;
         }
         
         while(alive){
+            System.out.println("\nDecepticon " + this.getName() + " Esperando mensaje...");
             msg=new ACLMessage();
             try {
                 msg = this.receiveACLMessage();
+                System.out.println("\t" + this.getName() + " Contenido " + msg.getContent());
             } catch (InterruptedException ex) {
                 Logger.getLogger(Decepticon.class.getName()).log(Level.SEVERE, null, ex);
             }
             int performative=msg.getPerformativeInt();
             if(msg.getSender().getLocalName().equals("Canis")){
+                System.out.println("Decepticon " + this.getName() + " Recibido informe del servidor");
                 if(performative==ACLMessage.INFORM){
                     if(msg.getContent().contains("battery")){
-                        System.out.println("Decepticon " + this.getName() + " Recibido informe del servidor de bateria");
+                        System.out.println("Decepticon " + this.getName() + " bateria");
                         ACLMessage out= new ACLMessage();
                         out.setPerformative(ACLMessage.INFORM);
                         out.setSender(this.getAid());
@@ -89,7 +100,7 @@ public class Decepticon extends SingleAgent {
                 } else if (performative==ACLMessage.NOT_UNDERSTOOD||
                             performative==ACLMessage.REFUSE||
                             performative==ACLMessage.FAILURE){
-                    System.out.println("Decepticon " + this.getName() + " Recibido informe del servidor ERROR");
+                    System.out.println("Decepticon " + this.getName() + " ERROR");
                     ACLMessage out= new ACLMessage(performative);
                     out.setSender(this.getAid());
                     out.setReceiver(boss);
@@ -106,13 +117,22 @@ public class Decepticon extends SingleAgent {
                     out.setContent(msg.getContent());
                     this.send(out);
                     
+                    System.out.println("Decepticon " + this.getName() + " Escaneando entorno");
                     refreshSensors();
+                }
+                // Mensaje recibido de Megatron para morir con estilo
+                else if(performative==ACLMessage.CANCEL){
+                    System.out.println("Decepticon " + this.getName().toString() + " Megatron me mata");
+                    alive = false;
                 }
             }
         }
         System.out.println("Decepticon " + this.getName() + " Muerto");
     }
     
+    //####################################3
+    // Arreglar el parseo
+    //#################################
     public void Checkin(){
         JsonDBA json = new JsonDBA();
         ACLMessage outbox;
@@ -122,21 +142,8 @@ public class Decepticon extends SingleAgent {
         hm.put("key",key);
         String msg = json.crearJson(hm);
         
-        outbox = new ACLMessage();
-        outbox.setSender(getAid());
-        outbox.setPerformative(ACLMessage.REQUEST);
-        outbox.setReceiver(new AgentID("Canis"));
-        outbox.setContent(msg);
-        this.send(outbox);
-    }
-    
-    public void Move(){
-        JsonDBA json = new JsonDBA();
-        ACLMessage outbox;
-        LinkedHashMap<String,String> hm = new LinkedHashMap<>();
-        hm.put("command", "moveX");
-        hm.put("key",key);
-        String msg = json.crearJson(hm);
+        msg = "{\"command\":\"checkin\",\"rol\":"+1+",\"key\":\""+ this.key +"\"}";
+        System.out.println("Contenido del mensaje enviado: " + msg);
         
         outbox = new ACLMessage();
         outbox.setSender(getAid());
@@ -146,24 +153,9 @@ public class Decepticon extends SingleAgent {
         this.send(outbox);
     }
     
-    public void Refuel(){
- 
-        JsonDBA json = new JsonDBA();
-        ACLMessage outbox;
-        LinkedHashMap<String,String> hm = new LinkedHashMap<>();
-        hm.put("command", "refuel");
-        hm.put("key",key);
-        String msg = json.crearJson(hm);
-        
-        outbox = new ACLMessage();
-        outbox.setSender(getAid());
-        outbox.setPerformative(ACLMessage.REQUEST);
-        outbox.setReceiver(new AgentID("Canis"));
-        outbox.setContent(msg);
-        this.send(outbox);
-        
-    }
-    
+    //#############################3
+    // Igual que refreshSensor ?????
+    //###############################
     public void Perception(){
  
         JsonDBA json = new JsonDBA();
