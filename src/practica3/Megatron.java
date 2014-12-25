@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.PriorityQueue;
 import java.util.Stack;
 import java.util.logging.Level;
@@ -103,10 +104,10 @@ public class Megatron extends SingleAgent {
     protected void init() {
         this.myMap = new Map();
         this.dataAccess = DataAccess.crearInstancia();
-        this.drones.add( new DataDecepticon(DataAccess.getNameDron1(),2));
-        this.drones.add( new DataDecepticon(DataAccess.getNameDron2(),2));
-        this.drones.add( new DataDecepticon(DataAccess.getNameDron3(),2));
-        this.drones.add( new DataDecepticon(DataAccess.getNameDron4(),2));
+        this.drones.add( new DataDecepticon(DataAccess.getNameDron1()));
+        this.drones.add( new DataDecepticon(DataAccess.getNameDron2()));
+        this.drones.add( new DataDecepticon(DataAccess.getNameDron3()));
+        this.drones.add( new DataDecepticon(DataAccess.getNameDron4()));
 
     }
 
@@ -134,8 +135,9 @@ public class Megatron extends SingleAgent {
                     count++;
                 }
             }
-
         }
+        
+        System.out.println("Megatron: Mapa actualizado");
     }
     /**
      * Send the message to subscribe to the world
@@ -150,6 +152,7 @@ public class Megatron extends SingleAgent {
         outbox.setReceiver(new AgentID("Canis"));
         outbox.setSender(getAid());
         outbox.setContent(json.crearJson("world",dataAccess.getWorld()));
+        System.out.println("\tContenido subscribe: " + outbox.getContent());
         this.send(outbox);
         
     }
@@ -166,12 +169,57 @@ public class Megatron extends SingleAgent {
         outbox.setContent(dataAccess.getKey());
         this.send(outbox);
     }
-
+    
+    
+    //################################
+    // Parametrizar, que reciba un tipo de Action y que sea lo que envie
+    // Modificado para que tenga distintos tipos de destinatarios
+    // Método movido desde la clase Decepticon
+    // #################################
+    public void Move(String nameDron, Action action){
+        JsonDBA json = new JsonDBA();
+        ACLMessage outbox;
+        LinkedHashMap<String,String> hm = new LinkedHashMap<>();
+        hm.put("command", "moveX"); //hm.put("command", action);
+        hm.put("key",dataAccess.getKey());
+        String msg = json.crearJson(hm);
+        
+        outbox = new ACLMessage();
+        outbox.setSender(getAid());
+        outbox.setPerformative(ACLMessage.REQUEST);
+        outbox.setReceiver(new AgentID(nameDron));
+        outbox.setContent(msg);
+        this.send(outbox);
+    }
+    
+    //################################
+    // Modificado para que tenga distintos tipos de destinatarios
+    // Método movido desde la clase Decepticon
+    // #################################
+    public void Refuel(String nameDron){
+        JsonDBA json = new JsonDBA();
+        ACLMessage outbox;
+        LinkedHashMap<String,String> hm = new LinkedHashMap<>();
+        hm.put("command", "refuel");
+        hm.put("key",dataAccess.getKey());
+        String msg = json.crearJson(hm);
+        
+        outbox = new ACLMessage();
+        outbox.setSender(getAid());
+        outbox.setPerformative(ACLMessage.REQUEST);
+        outbox.setReceiver(new AgentID(nameDron));
+        outbox.setContent(msg);
+        this.send(outbox);
+        
+    }
+    
     @Override
     public void execute() {
         State state = State.Subscribe;
         String msg = null;
         boolean live = true;
+        Action sigAction = null;
+        int numeroDron = -1;
         System.out.println("Megatron: Iniciado");
         
         while(live){
@@ -180,21 +228,24 @@ public class Megatron extends SingleAgent {
                 case Subscribe:
                     System.out.println("Megatron------ Estado: Subscribe");
                     Suscribe();                                     
+                    
                     try {
-                            inbox = receiveACLMessage();
-                            msg = inbox.getContent();
-                        } catch (InterruptedException ex) {
-                            System.out.println("Problema al recibir mensaje en Subscribe: "+ ex);
-                        }
+                        inbox = receiveACLMessage();
+                        msg = inbox.getContent();
+                    } catch (InterruptedException ex) {
+                        System.err.println("Megatron: Problema al recibir mensaje en Subscribe: "+ ex);
+                    }
+                    
                     if (inbox.getPerformativeInt() == ACLMessage.INFORM) {
-                        System.out.println("Megatron: Cambiando a estado Create");
-                        state = State.Create;
                         JsonDBA json = new JsonDBA();
                         String result = (String) json.getElement(msg, "result");
-                        dataAccess.setKey(result);                   
-
+                        dataAccess.setKey(result);   
+                        System.out.println("Megatron: Clave recibida " + dataAccess.getKey());
+                        System.out.println("Megatron: Cambiando a estado Create");
+                        state = State.Create;
+                        
                     } else {
-                        System.out.println("ERROR: " + inbox.getPerformative());
+                        System.err.println("Megatron ERROR: " + inbox.getPerformative());
                     }
                     break;
 
@@ -203,15 +254,16 @@ public class Megatron extends SingleAgent {
                     System.out.println("Megatron------ Estado: Create");
                     try {
                         this.dron1 = new Birdron(this.drones.get(0).getId(), this.getAid(), dataAccess.getKey() );
+                        this.drones.get(0).setRole(2); // por ser pájaro, rol 2
+                        
                         //this.dron2 = new Birdron(this.drones.get(1).getId(), this.getAid(), dataAccess.getKey() );
                         //this.dron3 = new Birdron(this.drones.get(2).getId(), this.getAid(), dataAccess.getKey() );
                         //this.dron4 = new Birdron(this.drones.get(3).getId(), this.getAid(), dataAccess.getKey() );
 
                     } catch (Exception ex) {
                         Logger.getLogger(Megatron.class.getName()).log(Level.SEVERE, null, ex);
-                        System.err.println("Error al instanciar los drones");
-                        
-                        System.out.println("Megatron: Cambiando a estado Cancel");
+                        System.err.println("Megatron: ERROR al instanciar los drones");
+                        System.err.println("Megatron: Cambiando a estado Cancel");
                         state = State.Cancel;
                     }
                     
@@ -227,24 +279,90 @@ public class Megatron extends SingleAgent {
                 // Esperar x percepciones
                 case Feel:
                     System.out.println("Megatron------ Estado: Feel");
+                    numeroDron = -1;
+            
+                    try {
+                        System.out.println("Megatron: Esperando mensaje");
+                        inbox = receiveACLMessage();
+                        System.out.println("Megatron: Mensaje recibido");
+                        System.out.println("\tM: " + inbox.getSender().getLocalName() + " " + inbox.getPerformative() + " " + inbox.getContent());
+                    } catch (InterruptedException ex) {
+                        Logger.getLogger(Megatron.class.getName()).log(Level.SEVERE, null, ex);
+                        System.err.println("Megatron: Error al recibir el mensaje");
+                        System.err.println("Megatron: Cambiando a estado Cancel");
+                        state = State.Cancel;
+                    }
+            
+                    if(!inbox.getSender().getLocalName().equals("Canis")){
+                        System.out.println("Megatron: Recibido de un Decepticon");
+
+                        if(inbox.getPerformativeInt() == ACLMessage.INFORM){
+                            System.out.println("Megatron: Informe");
+                            // lo que recibes:
+                            // {"result":{"battery":100,"x":30,"y":0,"sensor":[2,2,2,2,2,2,2,2,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"energy":1000,"goal":false}}
+                            // lo que tienes que sacar de esa cadena:
+                            JsonDBA json = new JsonDBA();
+                            String result = (String) json.getElement(inbox.getContent(), "battery");
+                            Coord nuevaCordenada = new Coord( int x = json.getElement(inbox.getContent(), "x"), json.getElement(inbox.getContent(), "y") );
+                            ArrayList nuevoSensor = new ArrayList(json.getElement(inbox.getContent(), "sensor"));
+                            int energia = json.getElement(inbox.getContent(), "energy");
+                            boolean enMeta = json.getElement(inbox.getContent(), "goal");
+                            
+                            if(inbox.getSender().getLocalName().equals(this.dron1.getName()))
+                                numeroDron = 0;
+                            else if(inbox.getSender().getLocalName().equals(this.dron2.getName()))
+                                numeroDron = 1;
+                            else if(inbox.getSender().getLocalName().equals(this.dron3.getName()))
+                                numeroDron = 2;
+                            else if(inbox.getSender().getLocalName().equals(this.dron4.getName()))
+                                numeroDron = 3;
+                            
+                            updateMap(nuevaCordenada, nuevoSensor, numeroDron);
+                            updateDataDron(nuevaCordenada,energia,numeroDron, ... etc);
+                        
+                            System.out.println("Megatron: Cambiando a estado Heuristic");
+                            state = State.Heuristic;
+                        }
+                    }
+                    
                     break;
 
                 // Heuristica
                 case Heuristic:
                     System.out.println("Megatron------ Estado: Heuristic");
+                    
+                    if(necesitaRecargar()){ // Heuristica refuel
+                        System.err.println("Megatron: Necesita repostar");
+                        Refuel(this.drones.get(numeroDron).getName());
+                        System.err.println("Megatron: Cambiando a estado Feel");
+                        state = State.Feel; // o cancel si ya han llegado todos
+                    }else{
+                        sigAction = mapv0(numeroDron);
+                        System.out.println("Megatron: Dron "+ numeroDron + " accion " + sigAction);
+                    
+                        System.out.println("Megatron: Cambiando a estado Action");
+                        state = State.Action; // o cancel si ya han llegado todos
+                    }
+                    
                     break;
 
                 // Dar orden(es) a x drones
                 case Action:
                     System.out.println("Megatron------ Estado: Action");
+                    
+                    System.out.println("Megatron: Realizando la acción " + sigAction + " en " + this.drones.get(numeroDron).getName());
+                    Move(this.drones.get(numeroDron).getName(), sigAction);
+                    
+                    System.out.println("Megatron: Cambiando a estado Feel");
+                    state = State.Feel;
+                            
                     break;
 
                 // Cancelar todo para reiniciar
                 case Cancel:
                     System.out.println("Megatron------ Estado: Cancel");
                     Cancel();
-
-                    System.out.println("Megatron: Cambiando a estado Muerto");
+                    System.out.println("Megatron: Muriendo");
                     live = false;
                     break;
             }
