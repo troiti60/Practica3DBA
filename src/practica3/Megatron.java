@@ -381,38 +381,67 @@ public class Megatron extends SingleAgent {
      * @throws Exception
      * @author Daniel Sánchez Alcaide
      */
-    private Stack<Action> busqueda(Nodo start, Nodo goal) throws Exception {
-       Stack<Action> camino = new Stack<Action>();
-       Comparator<Nodo> comp = new ComparadorHeuristicaNodo();
-       PriorityQueue<Nodo> abiertos = new PriorityQueue<Nodo>((Collection<? extends Nodo>) comp);
-       ArrayList<Nodo> cerrados = new ArrayList<Nodo>();
-       Nodo current = start;
-       abiertos.add(current);
-       //El vértice no es la meta y abiertos no está vacío
-       while(!abiertos.isEmpty() && !current.equals(goal)){
-           //Sacamos el nodo de abiertos
-           current = abiertos.poll();
-           //Metemos el nodo en cerrados
-           cerrados.add(current);
-           //Examinamos los nodos vecinos
-           ArrayList<Nodo> vecinos = current.getAdy();
-           for(int i=0;i<vecinos.size();i++){
-               Nodo vecino = vecinos.get(i);
-               //Comprobamos que no esté ni en abiertos ni en cerrados
-               if(!abiertos.contains(vecino) && !cerrados.contains(vecino)){
-                   //Guardamos el camino hacia el nodo actual desde los vecinos
-                   vecino.setCamino(current);
-                   abiertos.add(vecino);
-               }
-               if(abiertos.contains(vecino)){
-                   //Si el vecino está en abiertos comparamos los valores de g 
-                   //para los posibles nodos padre
-                   if(vecino.getCamino().g(start) > current.g(start))
-                       vecino.setCamino(current);
-               }
-           }
+    private Action busqueda(Nodo start, Nodo goal) throws Exception {
+        Comparator<Nodo> comp = new ComparadorHeuristicaNodo();
+        PriorityQueue<Nodo> abiertos = new PriorityQueue<Nodo>((Collection<? extends Nodo>) comp);
+        ArrayList<Nodo> cerrados = new ArrayList<Nodo>();
+        Nodo current = start;
+        abiertos.add(current);
+        //El vértice no es la meta y abiertos no está vacío
+        while(!abiertos.isEmpty() && !current.equals(goal)){
+            //Sacamos el nodo de abiertos
+            current = abiertos.poll();
+            //Metemos el nodo en cerrados
+            cerrados.add(current);
+            //Examinamos los nodos vecinos
+            ArrayList<Nodo> vecinos = current.getAdy();
+            for (Nodo vecino : vecinos) {
+                //Comprobamos que no esté ni en abiertos ni en cerrados
+                if(!abiertos.contains(vecino) && !cerrados.contains(vecino)){
+                    //Guardamos el camino hacia el nodo actual desde los vecinos
+                    vecino.setCamino(current);
+                    abiertos.add(vecino);
+                }
+                if(abiertos.contains(vecino)){
+                    //Si el vecino está en abiertos comparamos los valores de g 
+                    //para los posibles nodos padre
+                    if(vecino.getCamino().g(start) > current.g(start))
+                        vecino.setCamino(current);
+                }
+            }
+        }
+        //Recorremos el camino desde el nodo objetivo hacia atrás para obtener la accion
+        if(current.equals(goal)){
+            while(!current.getCamino().equals(start)){
+                current = current.getCamino();
+            }
+            //Posibles nodos adyacentes
+            //Nodo al norte
+            if(current.getCamino().N().equals(start.getCoord()))
+                return Action.N;
+            //Nodo al noreste
+            if(current.getCamino().NE().equals(start.getCoord()))
+                return Action.NE;
+            //Nodo al este
+            if(current.getCamino().E().equals(start.getCoord()))
+                return Action.E;
+            //Nodo al sureste
+            if(current.getCamino().SE().equals(start.getCoord()))
+                return Action.SE;            
+            //Nodo al sur
+            if(current.getCamino().S().equals(start.getCoord()))
+                return Action.S;            
+            //Nodo al suroeste
+            if(current.getCamino().SO().equals(start.getCoord()))
+                return Action.SW;            
+            //Nodo al oeste
+            if(current.getCamino().O().equals(start.getCoord()))
+                return Action.W;            
+            //Nodo al noroeste
+            if(current.getCamino().NO().equals(start.getCoord()))
+                return Action.NW;
        }
-       return camino;
+        return null;
     }
     
     /**
