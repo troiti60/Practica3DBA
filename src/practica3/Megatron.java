@@ -525,10 +525,10 @@ public class Megatron extends SingleAgent {
         return toDo;
     }
     /**
-     * 
-     * @return next action to be done by specified drone
-     * @author Jesús Cobo Sánchez
-     */
+    * Go to origin or next coord not explored
+    * @return next action to be done by specified drone
+    * @author Jesús Cobo Sánchez
+    */
     private Stack<Action> mapv2(int drone) throws Exception{
         Stack<Action> actions=new Stack<Action>();
         HashMap<Coord,Nodo> map = myMap.getMap();
