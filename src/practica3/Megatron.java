@@ -32,6 +32,7 @@ public class Megatron extends SingleAgent {
     private JsonDBA json;
     private DataAccess dataAccess;
     private Decepticon dron1,dron2,dron3,dron4;
+    private Boolean map2_comprobation=false;
     
 /**
      * Enum with possible movement actions
@@ -494,5 +495,45 @@ public class Megatron extends SingleAgent {
         }
         return toDo;
     }
+    /**
+     * 
+     * @return next action to be done by specified drone
+     * @author Jesús Cobo Sánchez
+     */
+    private Stack<Action> mapv2(int drone) throws Exception{
+        Stack<Action> actions=new Stack<Action>();
+        HashMap<Coord,Nodo> map = myMap.getMap();
+        Nodo origen= new Nodo(0,0,0); //suponemos que esta libre
+        Nodo current;
+        Nodo next=null;
+        current=new Nodo(drones.get(drone).getCurrent().getX(),drones.get(drone).getCurrent().getY(),
+                map.get(drones.get(drone).getCurrent()).getRadar());
+        
+        if(current.getRadar()==2){
+            //encontrado
+        }      
+        else if(current!=origen && !map2_comprobation){
+            actions=busqueda(current,origen);    
+        }else{
+            int x=1, y=0;
+            boolean search_next=false;
+            while(!search_next){
+                Coord coord=new Coord(x,y);
+                if(!map.get(coord).isVisitado() || !map.containsKey(coord)){
+                    next=map.get(coord);
+                    search_next=true;
+                }else{
+                    if(x>y) y++;
+                    else x++;
+                }
+            }
+            actions=busqueda(current,next);
+            search_next=false;
+        }
+        
+        return actions;
+    }
 
 }
+
+
