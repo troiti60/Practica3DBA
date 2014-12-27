@@ -171,16 +171,18 @@ public class Megatron extends SingleAgent {
     }
     
     
-    //################################
-    // Parametrizar, que reciba un tipo de Action y que sea lo que envie
-    // Modificado para que tenga distintos tipos de destinatarios
-    // Método movido desde la clase Decepticon
-    // #################################
+    
+    /**
+     * It will send the order to move depending the action.
+     * @author JC
+     * @param nameDron Agent's name will recibe the message
+     * @param action   Kind of movement.
+     */
     public void Move(String nameDron, Action action){
         JsonDBA json = new JsonDBA();
         ACLMessage outbox;
         LinkedHashMap<String,String> hm = new LinkedHashMap<>();
-        hm.put("command", "moveX"); //hm.put("command", action);
+        hm.put("command", action.toString());
         hm.put("key",dataAccess.getKey());
         String msg = json.crearJson(hm);
         
@@ -192,10 +194,11 @@ public class Megatron extends SingleAgent {
         this.send(outbox);
     }
     
-    //################################
-    // Modificado para que tenga distintos tipos de destinatarios
-    // Método movido desde la clase Decepticon
-    // #################################
+    /**
+     * it will send the order to refuel
+     * @author JC
+     * @param nameDron Agent's name will recibe the message
+     */
     public void Refuel(String nameDron){
         JsonDBA json = new JsonDBA();
         ACLMessage outbox;
@@ -302,11 +305,21 @@ public class Megatron extends SingleAgent {
                             // {"result":{"battery":100,"x":30,"y":0,"sensor":[2,2,2,2,2,2,2,2,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"energy":1000,"goal":false}}
                             // lo que tienes que sacar de esa cadena:
                             JsonDBA json = new JsonDBA();
-                            String result = (String) json.getElement(inbox.getContent(), "battery");
+                            String result = (String) json.getElement(inbox.getContent(), "result");
+                            int battery =  json.getElementInteger(result, "battery");
+                            int x = (Integer) json.getElementInteger(result, "x");
+                            int y = (Integer) json.getElementInteger(result, "y");
+                            Coord nuevaCordenada = new Coord(x,y);
+                            ArrayList<Integer> sensor = json.jsonElementToArrayInt(json.getElement(result, "sensor"));
+                            int energy = json.getElementInteger(result, "result");
+                            boolean goal = (boolean) json.getElement(result, "goal");
+                            
+                                           
+                            /*String result = (String) json.getElement(inbox.getContent(), "battery");
                             Coord nuevaCordenada = new Coord( int x = json.getElement(inbox.getContent(), "x"), json.getElement(inbox.getContent(), "y") );
                             ArrayList nuevoSensor = new ArrayList(json.getElement(inbox.getContent(), "sensor"));
                             int energia = json.getElement(inbox.getContent(), "energy");
-                            boolean enMeta = json.getElement(inbox.getContent(), "goal");
+                            boolean enMeta = json.getElement(inbox.getContent(), "goal");*/
                             
                             if(inbox.getSender().getLocalName().equals(this.dron1.getName()))
                                 numeroDron = 0;
@@ -317,8 +330,8 @@ public class Megatron extends SingleAgent {
                             else if(inbox.getSender().getLocalName().equals(this.dron4.getName()))
                                 numeroDron = 3;
                             
-                            updateMap(nuevaCordenada, nuevoSensor, numeroDron);
-                            updateDataDron(nuevaCordenada,energia,numeroDron, ... etc);
+                            updateMap(nuevaCordenada, sensor, numeroDron);
+                            //updateDataDron(); esto no 
                         
                             System.out.println("Megatron: Cambiando a estado Heuristic");
                             state = State.Heuristic;
