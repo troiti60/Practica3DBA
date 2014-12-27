@@ -136,13 +136,13 @@ public class Decepticon extends SingleAgent {
     public void Checkin(){
         JsonDBA json = new JsonDBA();
         ACLMessage outbox;
-        LinkedHashMap<String,String> hm = new LinkedHashMap<>();
+        LinkedHashMap<String,Object> hm = new LinkedHashMap<>();
         hm.put("command", "checkin");
-        hm.put("rol",Integer.toString(rol));
+        hm.put("rol",rol);
         hm.put("key",key);
         String msg = json.crearJson(hm);
         
-        msg = "{\"command\":\"checkin\",\"rol\":"+1+",\"key\":\""+ this.key +"\"}";
+        //msg = "{\"command\":\"checkin\",\"rol\":"+1+",\"key\":\""+ this.key +"\"}";
         System.out.println("Contenido del mensaje enviado: " + msg);
         
         outbox = new ACLMessage();
