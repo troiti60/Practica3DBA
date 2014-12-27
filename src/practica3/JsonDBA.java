@@ -76,7 +76,7 @@ public class JsonDBA {
     
     public Object getElement(String msg, String element){
  
-        return gson.fromJson(msg, HashMap.class).get(element);
+        return gson.fromJson(msg, LinkedHashMap.class).get(element);
     }
 
     /**
@@ -114,7 +114,7 @@ public class JsonDBA {
      * @param cadena: contiene la cadena de enteros
      * @return Array de enteros
      */
-    public ArrayList<Integer> jsonElementToArrayInt(JsonElement cadena) {
+    public ArrayList<Integer> jsonElementToArrayInt(Object cadena) {
         //JsonParser parser = new JsonParser();
         ArrayList<Integer> arr_int = new ArrayList<>();
         JsonElement element = parser.parse(cadena.toString());
@@ -124,6 +124,18 @@ public class JsonDBA {
             arr_int.add(jse.getAsInt());
         }
         return arr_int;
+    }
+    /**
+     * Get Integer element from Json string message.
+     * @author JC
+     * @param msg   Whole message
+     * @param element   Element's key
+     * @return Integer element
+     */
+    public int getElementInteger(String msg, String element) {
+        Gson gson = new Gson();
+        
+        return (int) Double.parseDouble(gson.fromJson(msg, LinkedHashMap.class).get(element).toString());
     }
     /**
      * Deserializa una cadena Json que se encuentra dentro de otra cadena Json
