@@ -16,6 +16,7 @@ public class Birdron extends Decepticon{
 
     public Birdron(AgentID aid, AgentID boss1,String mykey) throws Exception {
         super(aid,boss1,1,mykey);
+        System.out.println("Birdron: Instanciado");
     }
     
 }
