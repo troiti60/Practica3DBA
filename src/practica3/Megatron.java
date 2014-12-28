@@ -28,11 +28,18 @@ public class Megatron extends SingleAgent {
 
     private ArrayList<DataDecepticon> drones;
     private Map myMap;
+    private int energyOfWorld;
     private ACLMessage inbox, outbox;
     private JsonDBA json;
     private DataAccess dataAccess;
     private Decepticon dron1,dron2,dron3,dron4;
     private Boolean map2_comprobation=false;
+    
+    private State state;
+    private String msg;
+    private boolean live;
+    private Action sigAction;
+    private int numeroDron;
     
 /**
      * Enum with possible movement actions
@@ -140,6 +147,21 @@ public class Megatron extends SingleAgent {
         
         System.out.println("Megatron: Mapa actualizado");
     }
+    
+    /**
+     * Method to update data related to Decepticon
+     * 
+     * @param numDron The number of Decepticon to update
+     * @param newCoord The new coordinate
+     * @param newFuel The current fuel
+     * @author Fco Javier Ortega Rodriguez
+     * 
+     */
+    private void updateDataDecepticon(int numDron, Coord newCoord, int newFuel){
+        this.drones.get(numDron).setPosition(newCoord);
+        this.drones.get(numDron).setFuel(newFuel);
+    }
+    
     /**
      * Send the message to subscribe to the world
      * @author JC con su flow
@@ -219,11 +241,11 @@ public class Megatron extends SingleAgent {
     
     @Override
     public void execute() {
-        State state = State.Subscribe;
-        String msg = null;
-        boolean live = true;
-        Action sigAction = null;
-        int numeroDron = -1;
+        state = State.Subscribe;
+        msg = null;
+        live = true;
+        sigAction = null;
+        numeroDron = -1;
         System.out.println("Megatron: Iniciado");
         
         while(live){
@@ -288,7 +310,7 @@ public class Megatron extends SingleAgent {
                     try {
                         System.out.println("Megatron: Esperando mensaje");
                         inbox = receiveACLMessage();
-                        System.out.println("Megatron: Mensaje recibido");
+                        System.out.println("Megatron: Mensaje recibido de " + inbox.getSender().toString());
                         System.out.println("\tM: " + inbox.getSender().getLocalName() + " " + inbox.getPerformative() + " " + inbox.getContent());
                     } catch (InterruptedException ex) {
                         Logger.getLogger(Megatron.class.getName()).log(Level.SEVERE, null, ex);
@@ -297,15 +319,13 @@ public class Megatron extends SingleAgent {
                         state = State.Cancel;
                     }
             
-                    if(!inbox.getSender().getLocalName().equals("Canis")){
+                    //if(!inbox.getSender().getLocalName().equals("Canis")){
                         System.out.println("Megatron: Recibido de un Decepticon");
 
                         if(inbox.getPerformativeInt() == ACLMessage.INFORM){
                             System.out.println("Megatron: Informe");
-                            // lo que recibes:
-                            // {"result":{"battery":100,"x":30,"y":0,"sensor":[2,2,2,2,2,2,2,2,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"energy":1000,"goal":false}}
-                            // lo que tienes que sacar de esa cadena:
-                            JsonDBA json = new JsonDBA();
+                     
+                            json = new JsonDBA();
                             String result = (String) json.getElement(inbox.getContent(), "result");
                             int battery =  json.getElementInteger(result, "battery");
                             int x = (Integer) json.getElementInteger(result, "x");
@@ -316,11 +336,17 @@ public class Megatron extends SingleAgent {
                             boolean goal = (boolean) json.getElement(result, "goal");
                             
                                            
-                            /*String result = (String) json.getElement(inbox.getContent(), "battery");
-                            Coord nuevaCordenada = new Coord( int x = json.getElement(inbox.getContent(), "x"), json.getElement(inbox.getContent(), "y") );
-                            ArrayList nuevoSensor = new ArrayList(json.getElement(inbox.getContent(), "sensor"));
-                            int energia = json.getElement(inbox.getContent(), "energy");
-                            boolean enMeta = json.getElement(inbox.getContent(), "goal");*/
+                            System.out.println("\tBateria     " + battery);
+                            System.out.println("\tCoordenadas (" + x + "," + y + ")");
+                            System.out.println("\tEnergia     " + energy);
+                            
+                            if(goal)
+                                System.out.println("\tGoal     Si");
+                            else
+                                System.out.println("\tGoal     No");
+                            
+                            System.out.println("\tSensor      " + sensor.toString());
+                            
                             
                             if(inbox.getSender().getLocalName().equals(this.dron1.getName()))
                                 numeroDron = 0;
@@ -332,12 +358,13 @@ public class Megatron extends SingleAgent {
                                 numeroDron = 3;
                             
                             updateMap(nuevaCordenada, sensor, numeroDron);
-                            //updateDataDron(); esto no 
-                        
+                            updateDataDecepticon(numeroDron, nuevaCordenada, battery);
+                            energyOfWorld = energy;
+                            
                             System.out.println("Megatron: Cambiando a estado Heuristic");
                             state = State.Heuristic;
                         }
-                    }
+                    //}
                     
                     break;
 
@@ -345,7 +372,7 @@ public class Megatron extends SingleAgent {
                 case Heuristic:
                     System.out.println("Megatron------ Estado: Heuristic");
                     
-                    if(necesitaRecargar()){ // Heuristica refuel
+                    if(false){ // Heuristica refuel
                         System.err.println("Megatron: Necesita repostar");
                         Refuel(this.drones.get(numeroDron).getName());
                         System.err.println("Megatron: Cambiando a estado Feel");
@@ -537,6 +564,7 @@ public class Megatron extends SingleAgent {
         }
         return toDo;
     }
+    
     /**
     * Go to origin or next coord not explored
     * @return next action to be done by specified drone
@@ -545,7 +573,7 @@ public class Megatron extends SingleAgent {
     private Stack<Action> mapv2(int drone) throws Exception{
         Stack<Action> actions=new Stack<Action>();
         HashMap<Coord,Nodo> map = myMap.getMap();
-        Nodo origen= new Nodo(0,0,0); //suponemos que esta libre
+        Nodo origen=new Nodo(0,0,0); //suponemos que esta libre
         Nodo current;
         Nodo next=null;
         current=new Nodo(drones.get(drone).getCurrent().getX(),drones.get(drone).getCurrent().getY(),
@@ -575,7 +603,6 @@ public class Megatron extends SingleAgent {
         
         return actions;
     }
-
 }
 
 
