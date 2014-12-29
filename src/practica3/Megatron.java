@@ -583,7 +583,10 @@ public class Megatron extends SingleAgent {
             //encontrado
         }      
         else if(current!=origen && !map2_comprobation){
-            actions=busqueda(current,origen);    
+            actions=busqueda(current,origen); 
+            if(current==origen){
+                map2_comprobation=true;
+            }
         }else{
             int x=1, y=0;
             boolean search_next=false;
