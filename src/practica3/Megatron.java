@@ -570,8 +570,8 @@ public class Megatron extends SingleAgent {
     * @return next action to be done by specified drone
     * @author Jesús Cobo Sánchez
     */
-    private Stack<Action> mapv2(int drone) throws Exception{
-        Stack<Action> actions=new Stack<Action>();
+    private Action mapv2(int drone) throws Exception{
+        Action actions=null;
         HashMap<Coord,Nodo> map = myMap.getMap();
         Nodo origen=new Nodo(0,0,0); //suponemos que esta libre
         Nodo current;
