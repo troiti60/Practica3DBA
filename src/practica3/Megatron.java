@@ -579,31 +579,33 @@ public class Megatron extends SingleAgent {
         current=new Nodo(drones.get(drone).getCurrent().getX(),drones.get(drone).getCurrent().getY(),
                 map.get(drones.get(drone).getCurrent()).getRadar());
         
+        if(current==origen){
+            map2_comprobation=true;
+        }
+        
         if(current.getRadar()==2){
             //encontrado
         }      
         else if(current!=origen && !map2_comprobation){
-            actions=busqueda(current,origen); 
-            if(current==origen){
-                map2_comprobation=true;
-            }
+            actions=busqueda(current,origen);             
         }else{
-            int x=1, y=0;
-            boolean search_next=false;
-            while(!search_next){
-                Coord coord=new Coord(x,y);
-                if(!map.get(coord).isVisitado() || !map.containsKey(coord)){
-                    next=map.get(coord);
-                    search_next=true;
+            Coord coord=null;
+            ArrayList<Nodo> ady=current.getAdy();
+            boolean comp=false;
+            int i=0;
+            while(!comp){
+                if(!ady.get(i).isVisitado()){
+                    coord=ady.get(i).getCoord();
+                    comp=true;
                 }else{
-                    if(x>y) y++;
-                    else x++;
+                    coord=ady.get(ady.size()-1).getCoord();
                 }
-            }
+                i++;
+            }            
+            next=map.get(coord);
             actions=busqueda(current,next);
-            search_next=false;
-        }
-        
+
+        }             
         return actions;
     }
 }
