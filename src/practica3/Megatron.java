@@ -325,21 +325,21 @@ public class Megatron extends SingleAgent {
                         if(inbox.getPerformativeInt() == ACLMessage.INFORM){
                             System.out.println("Megatron: Informe");
                      
-                            json = new JsonDBA();
-                            String result = (String) json.getElement(inbox.getContent(), "result");
+                            json = new JsonDBA();                          
+                            String result =  json.getElement(inbox.getContent(), "result").toString();
                             int battery =  json.getElementInteger(result, "battery");
-                            int x = (Integer) json.getElementInteger(result, "x");
-                            int y = (Integer) json.getElementInteger(result, "y");
+                            System.out.println("Mostrando Bateria: "+battery);
+                            int x = json.getElementInteger(result, "x");
+                            int y = json.getElementInteger(result, "y");
                             Coord nuevaCordenada = new Coord(x,y);
-                            ArrayList<Integer> sensor = json.jsonElementToArrayInt(json.getElement(result, "sensor"));
-                            int energy = json.getElementInteger(result, "result");
+                            System.out.println("Coordenadas guardadas: "+"("+x+" , "+y+")");
+                            ArrayList<Integer> sensor = json.jsonElementToArrayInt(json.getElement(result, "sensor"));                     
+                            int energy = json.getElementInteger(result, "energy");
+                            System.out.println("Mostrando energia restante: "+energy);
                             boolean goal = (boolean) json.getElement(result, "goal");
                             
-                                           
-                            System.out.println("\tBateria     " + battery);
-                            System.out.println("\tCoordenadas (" + x + "," + y + ")");
-                            System.out.println("\tEnergia     " + energy);
                             
+                                                                                            
                             if(goal)
                                 System.out.println("\tGoal     Si");
                             else
