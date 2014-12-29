@@ -421,10 +421,11 @@ public class Megatron extends SingleAgent {
      * @throws Exception
      * @author Daniel Sánchez Alcaide
      */
-    private Action busqueda(Nodo start, Nodo goal) throws Exception {
+    private Stack<Action> busqueda(Nodo start, Nodo goal) throws Exception {
         Comparator<Nodo> comp = new ComparadorHeuristicaNodo();
         PriorityQueue<Nodo> abiertos = new PriorityQueue<Nodo>((Collection<? extends Nodo>) comp);
         ArrayList<Nodo> cerrados = new ArrayList<Nodo>();
+        Stack<Action> caminito = new Stack<Action>();
         Nodo current = start;
         abiertos.add(current);
         //El vértice no es la meta y abiertos no está vacío
@@ -453,35 +454,33 @@ public class Megatron extends SingleAgent {
         //Recorremos el camino desde el nodo objetivo hacia atrás para obtener la accion
         if(current.equals(goal)){
             while(!current.getCamino().equals(start)){
-                current = current.getCamino();
+                //El padre está al norte
+                if(current.getCamino().getCoord().equals(current.N()))
+                    caminito.add(Action.S);
+                //El padre está al sur
+                if(current.getCamino().getCoord().equals(current.S()))
+                    caminito.add(Action.N);
+                //El padre está al este
+                if(current.getCamino().getCoord().equals(current.E()))
+                    caminito.add(Action.W);
+                //El padre está al oeste
+                if(current.getCamino().getCoord().equals(current.O()))
+                    caminito.add(Action.E);
+                //El padre está al noreste
+                if(current.getCamino().getCoord().equals(current.NE()))
+                    caminito.add(Action.SW);
+                //El padre está al noroeste
+                if(current.getCamino().getCoord().equals(current.NO()))
+                    caminito.add(Action.SE);
+                //El padre está al sureste
+                if(current.getCamino().getCoord().equals(current.SE()))
+                    caminito.add(Action.NW);
+                //El padre está al suroeste
+                if(current.getCamino().getCoord().equals(current.SO()))
+                    caminito.add(Action.NE);
             }
-            //Posibles nodos adyacentes
-            //Nodo al norte
-            if(current.getCamino().N().equals(start.getCoord()))
-                return Action.N;
-            //Nodo al noreste
-            if(current.getCamino().NE().equals(start.getCoord()))
-                return Action.NE;
-            //Nodo al este
-            if(current.getCamino().E().equals(start.getCoord()))
-                return Action.E;
-            //Nodo al sureste
-            if(current.getCamino().SE().equals(start.getCoord()))
-                return Action.SE;            
-            //Nodo al sur
-            if(current.getCamino().S().equals(start.getCoord()))
-                return Action.S;            
-            //Nodo al suroeste
-            if(current.getCamino().SO().equals(start.getCoord()))
-                return Action.SW;            
-            //Nodo al oeste
-            if(current.getCamino().O().equals(start.getCoord()))
-                return Action.W;            
-            //Nodo al noroeste
-            if(current.getCamino().NO().equals(start.getCoord()))
-                return Action.NW;
        }
-        return null;
+        return caminito;
     }
     
     /**
@@ -587,7 +586,7 @@ public class Megatron extends SingleAgent {
             //encontrado
         }      
         else if(current!=origen && !map2_comprobation){
-            actions=busqueda(current,origen);             
+            actions=busqueda(current,origen).firstElement();             
         }else{
             Coord coord=null;
             ArrayList<Nodo> ady=current.getAdy();
@@ -603,7 +602,7 @@ public class Megatron extends SingleAgent {
                 i++;
             }            
             next=map.get(coord);
-            actions=busqueda(current,next);
+            actions=busqueda(current,next).firstElement();
 
         }             
         return actions;
