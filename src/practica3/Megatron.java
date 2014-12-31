@@ -371,20 +371,23 @@ public class Megatron extends SingleAgent {
                 // Heuristica
                 case Heuristic:
                     System.out.println("Megatron------ Estado: Heuristic");
-                    
-                    if(false){ // Heuristica refuel
-                        System.err.println("Megatron: Necesita repostar");
-                        Refuel(this.drones.get(numeroDron).getName());
-                        System.err.println("Megatron: Cambiando a estado Feel");
-                        state = State.Feel; // o cancel si ya han llegado todos
-                    }else{
-                        sigAction = mapv0(numeroDron);
-                        System.out.println("Megatron: Dron "+ numeroDron + " accion " + sigAction);
-                    
-                        System.out.println("Megatron: Cambiando a estado Action");
-                        state = State.Action; // o cancel si ya han llegado todos
-                    }
-                    
+                    Nodo goal = new Nodo(0,0,2);//En realidad debería ser la meta
+                    try {
+                        if(fuelH(numeroDron,goal)){ // Heuristica refuel
+                            System.err.println("Megatron: Necesita repostar");
+                            Refuel(this.drones.get(numeroDron).getName());
+                            System.err.println("Megatron: Cambiando a estado Feel");
+                            state = State.Feel; // o cancel si ya han llegado todos
+                        }else{
+                            sigAction = mapv0(numeroDron);
+                            System.out.println("Megatron: Dron "+ numeroDron + " accion " + sigAction);
+
+                            System.out.println("Megatron: Cambiando a estado Action");
+                            state = State.Action; // o cancel si ya han llegado todos
+                        }
+                    } catch (Exception ex) {
+                        Logger.getLogger(Megatron.class.getName()).log(Level.SEVERE, null, ex);
+                    }                    
                     break;
 
                 // Dar orden(es) a x drones
@@ -607,6 +610,39 @@ public class Megatron extends SingleAgent {
         }             
         return actions;
     }
+
+    /**
+    * Fuel heuristic
+    * @param pasos steps from current position to reach goal
+    * @param drone the integer of the current bot
+    * @param goal goal Nodo
+    * @return true if steps to reach goal equals pasos, false otherwise
+    * @author Daniel Sánchez Alcaide
+    */
+
+    private boolean fuelH(int drone, Nodo goal) throws Exception{
+        boolean res = false;
+        int consumo = 1;
+        switch(drones.get(drone).getRole()){
+            //mosca
+            case 0: consumo = 2;
+                break;
+            //pájaro (del terror)
+            case 1: consumo = 1;
+                break;
+            //halcón (milenario)
+            case 2: consumo = 4;
+                break;
+        }
+        HashMap<Coord,Nodo> map = myMap.getMap();
+        Nodo current = new Nodo(drones.get(drone).getCurrent().getX(),
+                drones.get(drone).getCurrent().getY(),
+                map.get(drones.get(drone).getCurrent()).getRadar());
+        if (busqueda(current,goal).capacity() * consumo == 100){
+        //Esto consume mucho tiempo de CPU, es mejor crear una variable en la clase y 
+        //guardar ahí la pila cuando se llame a la búsqueda desde los mapeos o desde donde sea
+            res =  true;
+        }
+        return res;
+    }
 }
-
-
