@@ -568,6 +568,177 @@ public class Megatron extends SingleAgent {
     }
     
     /**
+     * Search a given region in one of two different ways
+     * 
+     * @param drone ID of the drone
+     * @param mode Mode of the drone: 0 - North/South, 1 - East/West
+     * @param regionMin Lower bound of the assigned region
+     * @param regionMax Upper bound of the assigned region
+     * @throws Exception 
+     * @author Alexander Straub
+     */
+    private void mapv1(int drone, int mode, Coord regionMin, Coord regionMax) throws Exception {
+        if (this.drones.get(drone).hasWork()) return;
+        
+        // Get search window size in one direction
+        int offset = 5;
+        if (this.drones.get(drone).getRole() == 0) offset = 1;
+        else if (this.drones.get(drone).getRole() == 1) offset = 2;
+        
+        int sign = 1;
+        
+        // Store coord to check
+        Coord coord = this.drones.get(drone).getCurrent();
+        
+        switch (mode) {
+            case 0: // North/South
+                if (this.drones.get(drone).getLastAction() == Action.N) sign = -1;
+                coord.setY(coord.getY() + sign * offset);
+                
+                // If coord hits a wall, go sideways then opposite direction
+                if (coord.getY() < regionMin.getY() || coord.getY() > regionMax.getY() || 
+                        (this.myMap.getMap().containsKey(coord) && this.myMap.getMap().get(coord).getRadar() == 1)) {
+                    
+                    // Initialize to get as furthest to the side as the current
+                    // search window
+                    coord = this.drones.get(drone).getCurrent();
+                    boolean possible = true;
+                    int sideDirection = 1; // 1 - West, -1 - East, TODO: get this info from somewhere
+                    int stepsSide = 0, stepsOpposite = 0;
+                    
+                    // While it is possible to go sideways, do it
+                    while (possible && stepsSide < offset && stepsOpposite < offset) { // TODO: prevent from going outside the region
+                        // If sideways is free, go there
+                        if (this.myMap.getMap().get(new Coord(coord.getX() + sideDirection, coord.getY())).getRadar() != 1) {
+                            coord.setX(coord.getX() + sideDirection);
+                            stepsSide++;
+                            
+                            if (sideDirection == 1) this.drones.get(drone).push(Action.W);
+                            else if (sideDirection == -1) this.drones.get(drone).push(Action.E);
+                        }
+                        // If sideways is not possible, but sideways and in the
+                        // opposite direction, go there
+                        else if (this.myMap.getMap().get(new Coord(coord.getX() + sideDirection, coord.getY() - sign)).getRadar() != 1) {
+                            coord.setX(coord.getX() + sideDirection);
+                            coord.setY(coord.getY() - sign);
+                            stepsSide++;
+                            stepsOpposite++;
+                            
+                            if (sideDirection == 1 && sign == -1) this.drones.get(drone).push(Action.SW);
+                            else if (sideDirection == 1 && sign == 1) this.drones.get(drone).push(Action.NW);
+                            else if (sideDirection == -1 && sign == -1) this.drones.get(drone).push(Action.SE);
+                            else if (sideDirection == -1 && sign == 1) this.drones.get(drone).push(Action.NE);
+                        } else {
+                            possible = false;
+                        }
+                    }
+                    
+                    // After the last side step go into the opposite direction,
+                    // thus this algorithm knows where to go in the next
+                    // execution
+                    if (this.myMap.getMap().get(new Coord(coord.getX(), coord.getY() - sign)).getRadar() != 1) {
+                        if (sign == -1) this.drones.get(drone).push(Action.S);
+                        else if (sign == 1) this.drones.get(drone).push(Action.N);
+                    }
+                } else {
+                    this.drones.get(drone).push(this.drones.get(drone).getLastAction());
+                }
+                
+                break;
+            case 1: // East/West
+                if (this.drones.get(drone).getLastAction() == Action.W) sign = -1;
+                coord.setX(coord.getX() + sign * offset);
+                
+                // If coord hits a wall, go sideways then opposite direction
+                if (coord.getX() < regionMin.getX() || coord.getX() > regionMax.getX() || 
+                        (this.myMap.getMap().containsKey(coord) && this.myMap.getMap().get(coord).getRadar() == 1)) {
+                    
+                    // Initialize to get as furthest to the side as the current
+                    // search window
+                    coord = this.drones.get(drone).getCurrent();
+                    boolean possible = true;
+                    int sideDirection = 1; // 1 - South, -1 - North, TODO: get this info from somewhere
+                    int stepsSide = 0, stepsOpposite = 0;
+                    
+                    // While it is possible to go sideways, do it
+                    while (possible && stepsSide < offset && stepsOpposite < offset) { // TODO: prevent from going outside the region
+                        // If sideways is free, go there
+                        if (this.myMap.getMap().get(new Coord(coord.getX(), coord.getY() + sideDirection)).getRadar() != 1) {
+                            coord.setY(coord.getY() + sideDirection);
+                            stepsSide++;
+                            
+                            if (sideDirection == 1) this.drones.get(drone).push(Action.S);
+                            else if (sideDirection == -1) this.drones.get(drone).push(Action.N);
+                        }
+                        // If sideways is not possible, but sideways and in the
+                        // opposite direction, go there
+                        else if (this.myMap.getMap().get(new Coord(coord.getX() - sign, coord.getY() + sideDirection)).getRadar() != 1) {
+                            coord.setX(coord.getX() - sign);
+                            coord.setY(coord.getY() + sideDirection);
+                            stepsSide++;
+                            stepsOpposite++;
+                            
+                            if (sideDirection == 1 && sign == -1) this.drones.get(drone).push(Action.SE);
+                            else if (sideDirection == 1 && sign == 1) this.drones.get(drone).push(Action.SW);
+                            else if (sideDirection == -1 && sign == -1) this.drones.get(drone).push(Action.NE);
+                            else if (sideDirection == -1 && sign == 1) this.drones.get(drone).push(Action.NW);
+                        } else {
+                            possible = false;
+                        }
+                    }
+                    
+                    // After the last side step go into the opposite direction,
+                    // thus this algorithm knows where to go in the next
+                    // execution
+                    if (this.myMap.getMap().get(new Coord(coord.getX() - sign, coord.getY())).getRadar() != 1) {
+                        if (sign == -1) this.drones.get(drone).push(Action.E);
+                        else if (sign == 1) this.drones.get(drone).push(Action.W);
+                    }
+                } else {
+                    this.drones.get(drone).push(this.drones.get(drone).getLastAction());
+                }
+                
+                break;
+        }
+    }
+    
+    /**
+     * Search the whole map in North-South-pattern
+     * 
+     * @param drone ID of the drone
+     * @throws Exception 
+     * @author Alexander Straub
+     */
+    private void mapv1(int drone) throws Exception {
+        mapv1(drone, 0, new Coord(0, 0), new Coord(100, 100));
+    }
+    
+    /**
+     * Search the whole map in one of two possible ways
+     * 
+     * @param drone ID of the drone
+     * @param mode Mode of the drone: 0 - North/South, 1 - East/West
+     * @throws Exception 
+     * @author Alexander Straub
+     */
+    private void mapv1(int drone, int mode) throws Exception {
+        mapv1(drone, mode, new Coord(0, 0), new Coord(100, 100));
+    }
+    
+    /**
+     * Search a region of the map using North-South-pattern
+     * 
+     * @param drone ID of the drone
+     * @param regionMin Lower bound of the assigned region
+     * @param regionMax Upper bound of the assigned region
+     * @throws Exception 
+     * @author Alexander Straub
+     */
+    private void mapv1(int drone, Coord regionMin, Coord regionMax) throws Exception {
+        mapv1(drone, 0, regionMin, regionMax);
+    }
+    
+    /**
     * Go to origin or next coord not explored
     * @return next action to be done by specified drone
     * @author Jesús Cobo Sánchez
