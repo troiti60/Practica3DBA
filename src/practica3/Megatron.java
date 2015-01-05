@@ -34,10 +34,12 @@ public class Megatron extends SingleAgent {
     private DataAccess dataAccess;
     private Decepticon dron1,dron2,dron3,dron4;
     private Boolean map2_comprobation=false;
+    private Nodo nodoGoal;
     
     private State state;
     private String msg;
     private boolean live;
+    private boolean encontrado = false;//Ponerla a true cuando encontremos la meta
     private Action sigAction;
     private int numeroDron;
     
@@ -337,12 +339,13 @@ public class Megatron extends SingleAgent {
                             int energy = json.getElementInteger(result, "energy");
                             System.out.println("Mostrando energia restante: "+energy);
                             boolean goal = (boolean) json.getElement(result, "goal");
-                            
-                            
+                            //Metido por Daniel Sánchez
+                            encontrado = goal;
                                                                                             
-                            if(goal)
+                            if(goal){
                                 System.out.println("\tGoal     Si");
-                            else
+                                nodoGoal = new Nodo(nuevaCordenada,2);
+                            }else
                                 System.out.println("\tGoal     No");
                             
                             System.out.println("\tSensor      " + sensor.toString());
@@ -371,9 +374,8 @@ public class Megatron extends SingleAgent {
                 // Heuristica
                 case Heuristic:
                     System.out.println("Megatron------ Estado: Heuristic");
-                    Nodo goal = new Nodo(0,0,2);//En realidad debería ser la meta
                     try {
-                        if(fuelH(numeroDron,goal)){ // Heuristica refuel
+                        if(fuelH(numeroDron,nodoGoal)){ // Heuristica refuel
                             System.err.println("Megatron: Necesita repostar");
                             Refuel(this.drones.get(numeroDron).getName());
                             System.err.println("Megatron: Cambiando a estado Feel");
@@ -426,9 +428,12 @@ public class Megatron extends SingleAgent {
      */
     private Stack<Action> busqueda(Nodo start, Nodo goal) throws Exception {
         Comparator<Nodo> comp = new ComparadorHeuristicaNodo();
-        PriorityQueue<Nodo> abiertos = new PriorityQueue<Nodo>((Collection<? extends Nodo>) comp);
-        ArrayList<Nodo> cerrados = new ArrayList<Nodo>();
-        Stack<Action> caminito = new Stack<Action>();
+        PriorityQueue<Nodo> abiertos;
+        abiertos = new PriorityQueue<>(comp);
+        ArrayList<Nodo> cerrados;
+        cerrados = new ArrayList<>();
+        Stack<Action> caminito;
+        caminito = new Stack<>();
         Nodo current = start;
         abiertos.add(current);
         //El vértice no es la meta y abiertos no está vacío
@@ -805,14 +810,18 @@ public class Megatron extends SingleAgent {
             case 2: consumo = 4;
                 break;
         }
-        HashMap<Coord,Nodo> map = myMap.getMap();
-        Nodo current = new Nodo(drones.get(drone).getCurrent().getX(),
-                drones.get(drone).getCurrent().getY(),
-                map.get(drones.get(drone).getCurrent()).getRadar());
-        if (busqueda(current,goal).capacity() * consumo == 100){
-        //Esto consume mucho tiempo de CPU, es mejor crear una variable en la clase y 
-        //guardar ahí la pila cuando se llame a la búsqueda desde los mapeos o desde donde sea
-            res =  true;
+        if(!encontrado && drones.get(drone).getFuel() <= consumo){
+            res = true;
+        }else{
+            HashMap<Coord,Nodo> map = myMap.getMap();
+            Nodo current = new Nodo(drones.get(drone).getCurrent().getX(),
+                    drones.get(drone).getCurrent().getY(),
+                    map.get(drones.get(drone).getCurrent()).getRadar());
+            if (busqueda(current,goal).capacity() * consumo == 100){
+            //Esto consume mucho tiempo de CPU, es mejor crear una variable en la clase y 
+            //guardar ahí la pila cuando se llame a la búsqueda desde los mapeos o desde donde sea
+                res =  true;
+            }
         }
         return res;
     }
