@@ -23,6 +23,9 @@ public class DataDecepticon {
     private boolean alive;
     private Stack<Action> todo;
     Action lastAction;
+    
+    private boolean inGoal;
+    private Coord myGoal;
 
     /**
      * Builds a new DataDecepticon object from its name
@@ -36,6 +39,8 @@ public class DataDecepticon {
         alive=true;
         fuel=100;
         todo=new Stack<Action>();
+        myGoal = null;
+        inGoal = false;
     }
 
     /**
@@ -188,4 +193,19 @@ public class DataDecepticon {
         this.alive = alive;
     }
     
+    public void setInGoal(){
+        this.inGoal = true;
+    }
+    
+    public boolean getInGoal(){
+        return this.inGoal;
+    }
+    
+    public void setGoal(Coord goal){
+        this.myGoal = goal;
+    }
+    
+    public Coord getGoal(){
+        return this.myGoal;
+    }
 }
