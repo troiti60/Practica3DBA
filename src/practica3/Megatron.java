@@ -40,7 +40,6 @@ public class Megatron extends SingleAgent {
     private State state;
     private String msg;
     private boolean live;
-    private boolean encontrado = false;//Ponerla a true cuando encontremos la meta
     private Action sigAction;
     private int numeroDron;
     
@@ -385,9 +384,6 @@ public class Megatron extends SingleAgent {
                             else if(inbox.getSender().getLocalName().equals(this.dron4.getName()))
                                 numeroDron = 3;
                             
-                            //Metido por Daniel Sánchez
-                            encontrado = goal;
-                            
                             System.out.println("\tSensor      " + sensor.toString());
                             
                             updateMap(nuevaCordenada, sensor, numeroDron);
@@ -521,8 +517,8 @@ public class Megatron extends SingleAgent {
     private Stack<Action> busqueda(Nodo start, Nodo goal) throws Exception {
         Comparator<Nodo> comp = new ComparadorHeuristicaNodo();
         PriorityQueue<Nodo> abiertos;
-        //abiertos = new PriorityQueue<>(comp);
-        abiertos = new PriorityQueue<>();
+        abiertos = new PriorityQueue<>(10,comp);
+        //abiertos = new PriorityQueue<>();
         
         ArrayList<Nodo> cerrados;
         cerrados = new ArrayList<>();
@@ -904,7 +900,7 @@ public class Megatron extends SingleAgent {
             case 2: consumo = 4;
                 break;
         }
-        if(!encontrado && drones.get(drone).getFuel() <= consumo){
+        if(!zoneGoalFound && drones.get(drone).getFuel() <= consumo){
             res = true;
         }else{
             HashMap<Coord,Nodo> map = myMap.getMap();
@@ -912,8 +908,8 @@ public class Megatron extends SingleAgent {
                     drones.get(drone).getCurrent().getY(),
                     map.get(drones.get(drone).getCurrent()).getRadar());
             if (busqueda(current,goal).capacity() * consumo == 100){
-            //Esto consume mucho tiempo de CPU, es mejor crear una variable en la clase y 
-            //guardar ahí la pila cuando se llame a la búsqueda desde los mapeos o desde donde sea
+                //Esto consume mucho tiempo de CPU, es mejor crear una variable en la clase y
+                //guardar ahí la pila cuando se llame a la búsqueda desde los mapeos o desde donde sea
                 res =  true;
             }
         }
