@@ -30,11 +30,11 @@ public class DataAccess {
     /**
      * Name Decepticons
      */
-    private static final String nameMegatron = "BotPrincipal95";
-    private static final String nameDron1 = "BotEntorno95";
-    private static final String nameDron2 = "BotEntorno95";
-    private static final String nameDron3 = "BotEntorno95";
-    private static final String nameDron4 = "BotEntorno95";
+    private static final String nameMegatron = "BotM";
+    private static final String nameDron1 = "BotD1";
+    private static final String nameDron2 = "BotD2";
+    private static final String nameDron3 = "BotD3";
+    private static final String nameDron4 = "BotD4";
 
     /**
      * key
@@ -187,7 +187,7 @@ public class DataAccess {
      * @author Javier Ortega Rodríguez, Antonio Troitiño
      */
     public static String getNameDron3() {
-        return DataAccess.nameDron1;
+        return DataAccess.nameDron3;
     }
     
     /**
@@ -197,7 +197,7 @@ public class DataAccess {
      * @author Javier Ortega Rodríguez, Antonio Troitiño
      */
     public static String getNameDron4() {
-        return DataAccess.nameDron1;
+        return DataAccess.nameDron4;
     }
     
     /**
