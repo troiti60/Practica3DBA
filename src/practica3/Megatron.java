@@ -34,7 +34,11 @@ public class Megatron extends SingleAgent {
     private JsonDBA json;
     private DataAccess dataAccess;
     private Decepticon dron1,dron2,dron3,dron4;
-    private Boolean map2_comprobation=false;
+    private boolean map2_comprobation=false;
+    private int map2_contador=0;
+    private boolean map2_direccion=true;
+    private boolean map2_iod=false;
+    private boolean map2_bordeando=false;
     private Nodo nodoGoal;
     
     private State state;
@@ -841,39 +845,140 @@ public class Megatron extends SingleAgent {
     private Action mapv2(int drone) throws Exception{
         Action actions=null;
         HashMap<Coord,Nodo> map = myMap.getMap();
-        Nodo origen=new Nodo(0,0,0); //suponemos que esta libre
         Nodo current;
         Nodo next=null;
         current=new Nodo(drones.get(drone).getCurrent().getX(),drones.get(drone).getCurrent().getY(),
                 map.get(drones.get(drone).getCurrent()).getRadar());
         
-        if(current==origen){
-            map2_comprobation=true;
+        if(map2_bordeando){
+            //funcion de bordear obstaculos
         }
         
-        if(current.getRadar()==2){
-            //encontrado
-        }      
-        else if(current!=origen && !map2_comprobation){
-            actions=busqueda(current,origen).firstElement();             
-        }else{
-            Coord coord=null;
-            ArrayList<Nodo> ady=current.getAdy();
-            boolean comp=false;
-            int i=0;
-            while(!comp){
-                if(!ady.get(i).isVisitado()){
-                    coord=ady.get(i).getCoord();
-                    comp=true;
+            
+        if(map2_comprobation==false){
+            //ir esquina inferor derecha
+            if(current.getY()>50){
+                map2_direccion=false;
+                map2_iod=false;
+                if(map.get(current.SE()).getRadar()==2 && map.get(current.S()).getRadar()==2 
+                        && map.get(current.E()).getRadar()==2){
+                    map2_comprobation=true;
                 }else{
-                    coord=ady.get(ady.size()-1).getCoord();
+                    if(map.get(current.E()).getRadar()==0){
+                        actions=Action.E;
+                    }else if(map.get(current.SE()).getRadar()==0){
+                        actions=Action.SE;
+                    }else if(map.get(current.S()).getRadar()==0){
+                        actions=Action.S;
+                    }else if(map.get(current.NE()).getRadar()==0){
+                        actions=Action.NE;
+                    }else if(map.get(current.N()).getRadar()==0){
+                        actions=Action.N;
+                    }else if(map.get(current.NO()).getRadar()==0){
+                        actions=Action.NW;
+                    }else if(map.get(current.O()).getRadar()==0){
+                        actions=Action.W;
+                    }else{
+                        actions=Action.SW;
+                    }
                 }
-                i++;
-            }            
-            next=map.get(coord);
-            actions=busqueda(current,next).firstElement();
+                //ir esquina superior izquierda
+            }else{
+                map2_direccion=true;
+                map2_iod=true;
+                if(map.get(current.NO()).getRadar()==2 && map.get(current.N()).getRadar()==2
+                        && map.get(current.O()).getRadar()==2){
+                    map2_comprobation=true;
+                }else{
+                    if(map.get(current.NO()).getRadar()==0){
+                        actions=Action.NW;
+                    }else if(map.get(current.N()).getRadar()==0){
+                        actions=Action.N;
+                    }else if(map.get(current.O()).getRadar()==0){
+                        actions=Action.W;
+                    }else if(map.get(current.SO()).getRadar()==0){
+                        actions=Action.SW;
+                    }else if(map.get(current.NE()).getRadar()==0){
+                        actions=Action.NE;
+                    }else if(map.get(current.E()).getRadar()==0){
+                        actions=Action.E;
+                    }else if(map.get(current.SE()).getRadar()==0){
+                        actions=Action.SE;
+                    }else{
+                        actions=Action.S;
+                    }
+                }
 
-        }             
+            }           
+        //segunda ruta
+        }else{
+            //hacia abajo e izquierda
+            if(!map2_iod && map2_direccion && map2_contador==current.getX()){
+                if(map.get(current.S()).getRadar()==0){
+                    actions=Action.S;
+                }else if(map.get(current.S()).getRadar()==2){
+                    map2_contador-=3;
+                    actions=Action.W;
+                }else{
+                    //bordear obstaculo
+                    map2_bordeando=true;
+                }
+                //hacia arriba e izquierda
+            }else if(!map2_iod && !map2_direccion && map2_contador==current.getX()){
+                if(map.get(current.N()).getRadar()==0){
+                    actions=Action.N;
+                }else if(map.get(current.N()).getRadar()==2){
+                    map2_direccion=true;
+                    map2_contador-=3;
+                    actions=Action.W;
+                }else{
+                    //bordear obstaculo
+                    map2_bordeando=true;
+                }
+                //hacia abajo y derecha
+            }else if(map2_iod && map2_direccion && map2_contador==current.getX()){
+                if(map.get(current.S()).getRadar()==0){
+                    actions=Action.S;
+                }else if(map.get(current.S()).getRadar()==2){
+                    map2_contador+=3;
+                    actions=Action.E;
+                }else{
+                    //bordear obstaculo
+                    map2_bordeando=true;
+                }
+                //hacia arriba y derecha
+            }else if(map2_iod && !map2_direccion && map2_contador==current.getX()){
+                if(map.get(current.N()).getRadar()==0){
+                    actions=Action.N;
+                }else if(map.get(current.N()).getRadar()==2){
+                    map2_direccion=true;
+                    map2_contador+=3;
+                    actions=Action.E;
+                }else{
+                    map2_bordeando=true;
+                    //bordear obstaculo bordearObstaculo(coord x)
+                }
+                //ir hacia la x cambiada
+            }else{
+                //ir hacia la izquierda
+                if(current.getX()>map2_contador){
+                   if(map.get(current.E()).getRadar()==0){
+                       actions=Action.E;
+                   }else{
+                       //bordear
+                       map2_bordeando=true;
+                   }
+                    //ir hacia la derecha
+                }else{
+                    if(map.get(current.O()).getRadar()==0){
+                        actions=Action.W;
+                    }else{
+                        //bordear
+                        map2_bordeando=true;
+                    }
+                }
+            } 
+        }
         return actions;
     }
 
