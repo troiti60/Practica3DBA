@@ -46,8 +46,8 @@ public class Map {
     public void checkAdjacent(Nodo node){
          Nodo aux;
 
-        if (this.map.containsKey(node.getCoord().NO())) {
-            aux = this.map.get(node.getCoord().NO());
+        if (this.map.containsKey(node.getCoord().NW())) {
+            aux = this.map.get(node.getCoord().NW());
             node.add(aux);
             aux.add(node);
         }
@@ -76,13 +76,13 @@ public class Map {
             node.add(aux);
             aux.add(node);
         }
-        if (this.map.containsKey(node.getCoord().SO())) {
-            aux = this.map.get(node.getCoord().SO());
+        if (this.map.containsKey(node.getCoord().SW())) {
+            aux = this.map.get(node.getCoord().SW());
             node.add(aux);
             aux.add(node);
         }
-        if (this.map.containsKey(node.getCoord().O())) {
-            aux = this.map.get(node.getCoord().O());
+        if (this.map.containsKey(node.getCoord().W())) {
+            aux = this.map.get(node.getCoord().W());
             node.add(aux);
             aux.add(node);
         }
