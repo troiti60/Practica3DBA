@@ -9,6 +9,7 @@ package practica3;
 import static java.lang.Math.pow;
 import static java.lang.Math.sqrt;
 import java.util.Vector;
+import practica3.Megatron.Action;
 
 /**
  * Representa coordenadas en 2D
@@ -121,7 +122,7 @@ public class Coord {
      * @return Coordenada en el oeste
      * @author Alexander Straub
      */
-    public Coord O() {
+    public Coord W() {
         return new Coord(x - 1, y);
     }
 
@@ -151,7 +152,7 @@ public class Coord {
      * @return Coordenada en el suroeste
      * @author Alexander Straub
      */
-    public Coord SO() {
+    public Coord SW() {
         return new Coord(x - 1, y + 1);
     }
 
@@ -161,8 +162,53 @@ public class Coord {
      * @return Coordenada en el noroeste
      * @author Alexander Straub
      */
-    public Coord NO() {
+    public Coord NW() {
         return new Coord(x - 1, y - 1);
+    }
+    
+    public Coord neighbour(Action action) {
+        if (action == Action.N) return N();
+        if (action == Action.NW) return NW();
+        if (action == Action.W) return W();
+        if (action == Action.SW) return SW();
+        if (action == Action.S) return S();
+        if (action == Action.SE) return SE();
+        if (action == Action.E) return E();
+        return NE();
+    }
+    
+    /**
+     * Return position with modified x coordinate
+     * 
+     * @param offsetX Value to add to the current x coordinate
+     * @return Modified coordinate
+     * @author Alexander Straub
+     */
+    public Coord addX(int offsetX) {
+        return new Coord(this.x + offsetX, this.y);
+    }
+    
+    /**
+     * Return position with modified y coordinate
+     * 
+     * @param offsetY Value to add to the current y coordinate
+     * @return Modified coordinate
+     * @author Alexander Straub
+     */
+    public Coord addY(int offsetY) {
+        return new Coord(this.x, this.y + offsetY);
+    }
+    
+    /**
+     * Return position with modified coordinates
+     * 
+     * @param offsetX Value to add to the current x coordinate
+     * @param offsetY Value to add to the current y coordinate
+     * @return Modified coordinates
+     * @author Alexander Straub
+     */
+    public Coord add(int offsetX, int offsetY) {
+        return new Coord(this.x + offsetX, this.y + offsetY);
     }
 
     /**
