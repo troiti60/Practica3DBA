@@ -34,7 +34,7 @@ public class Map {
             map.put(key, newNode);
             checkAdjacent(newNode);
             
-        
+            
         }
     }
      /**

@@ -49,7 +49,11 @@ public class Megatron extends SingleAgent {
     private boolean zoneGoalFound = false;
 
     // For mapv3
-    private Stack<Action> pathToClosestUnexploredCell = null;
+    private Stack<Action> pathToClosestUnexploredCell = new Stack<>();
+    private Action lastAction = null;
+    
+    // Image of the map for visualization
+    private MapImage mapImage = null;
 
     /**
      * Enum with possible movement actions
@@ -128,6 +132,9 @@ public class Megatron extends SingleAgent {
         this.drones.add(new DataDecepticon(DataAccess.getNameDron3()));
         this.drones.add(new DataDecepticon(DataAccess.getNameDron4()));
 
+        int resolution = 100;
+        if (this.dataAccess.getWorld().equals("newyork")) resolution = 500;
+        this.mapImage = new MapImage(resolution);
     }
 
     /**
@@ -145,12 +152,14 @@ public class Megatron extends SingleAgent {
             System.err.println("ERROR: Megatron received an empty perception!");
         } else {
             drones.get(dron).setPosition(pos);
+            this.mapImage.setDronePosition(dron, pos);
             int cont = Math.round((float) Math.sqrt(perception.size()));
             cont = (cont - 1) / 2;
             int count = 0;
             for (int i = 0 - cont; i <= cont; i++) {
                 for (int j = 0 - cont; j <= cont; j++) {
                     myMap.addNode(new Coord(pos.getX() + j, pos.getY() + i), perception.get(count));
+                    this.mapImage.setCell(perception.get(count), new Coord(pos.getX() + j, pos.getY() + i));
                     count++;
                 }
             }
@@ -298,7 +307,7 @@ public class Megatron extends SingleAgent {
                     System.out.println("Megatron------ Estado: Create");
                     try {
                         this.dron1 = new Birdron(this.drones.get(0).getId(), this.getAid(), dataAccess.getKey());
-                        this.drones.get(0).setRole(2); // por ser pájaro, rol 2
+                        this.drones.get(0).setRole(1); // por ser pájaro, rol 2
 
                     } catch (Exception ex) {
                         Logger.getLogger(Megatron.class.getName()).log(Level.SEVERE, null, ex);
@@ -382,7 +391,8 @@ public class Megatron extends SingleAgent {
                         int energy = json.getElementInteger(result, "energy");
                         System.out.println("Mostrando energia restante: " + energy);
                         boolean goal = (boolean) json.getElement(result, "goal");
-
+                        boolean goalFound = (boolean)sensor.contains(3);
+                        
                         if (inbox.getSender().getLocalName().equals(this.dron1.getName())) {
                             numeroDron = 0;
                         } else if (inbox.getSender().getLocalName().equals(this.dron2.getName())) {
@@ -404,17 +414,46 @@ public class Megatron extends SingleAgent {
 
                             this.drones.get(numeroDron).setInGoal();
                             this.drones.get(numeroDron).setGoal(nuevaCordenada);
-
+                            
+                            state = State.Heuristic;
+                        } else if (goalFound) {
                             if (!zoneGoalFound) {
-                                zoneGoalFound = true;
-                                System.err.println("Paso " + pasos + "\n\n###################\nD:" + numeroDron + " En objetivo\n###########\n");
-                                System.out.println("Megatron: Cambiando a estado LauncRest");
-                                state = State.LaunchRest;
-                                    // Es el primer dron que llega, asignar metas al resto
+                                // Es el primer dron que llega, asignar metas al resto
                                 // Llamar al método para aparcar
+                                
+                                int resolution;
+                                switch (this.drones.get(numeroDron).getRole()) {
+                                    case 0: resolution = 3; break;
+                                    case 1: resolution = 5; break;
+                                    default: resolution = 11; break;
+                                }
+                                
+                                int mapWidth = 100;
+                                if (this.dataAccess.getWorld().equals("newyork")) mapWidth = 500;
+                                
+                                int index = sensor.indexOf(3);
+                                int i = index % resolution; i -= resolution / 2;
+                                int j = index / resolution; j -= resolution / 2;
+                                
+                                Coord coordGoal = nuevaCordenada.add(i, j);
+                                if (coordGoal.getX() >= 0 && coordGoal.getY() >= 0 && 
+                                        coordGoal.getX() < mapWidth && coordGoal.getY() < mapWidth) {
+                                    
+                                    zoneGoalFound = true;
+                                    System.err.println("Paso " + pasos + "\n\n###################\nD:" + numeroDron + " ha encontrado el objetivo\n###########\n");
+                                    System.out.println("Megatron: Cambiando a estado LaunchRest");
+                                    state = State.LaunchRest;
+                                    
+                                    nodoGoal = new Nodo(coordGoal, 3);
+                                    
+                                    // DEBUG: only until goal has been found
+                                    state = State.Cancel;
+                                } else {
+                                    System.out.println("\tGoal     No");
+                                    System.out.println("Megatron: Cambiando a estado Heuristic");
+                                    state = State.Heuristic;
+                                }
                             }
-
-                            nodoGoal = new Nodo(nuevaCordenada, 2);
                         } else {
                             System.out.println("\tGoal     No");
                             System.out.println("Megatron: Cambiando a estado Heuristic");
@@ -455,7 +494,7 @@ public class Megatron extends SingleAgent {
                                         + nodoGoal.toString());
                                 sigAction = busqueda(this.myMap.getMap().get(this.drones.get(numeroDron).getCurrent()), nodoGoal).firstElement();
                             } else {
-                                sigAction = mapv0(numeroDron);
+                                sigAction = mapv3(numeroDron);
                             }
 
                             System.out.println("Megatron: Dron " + numeroDron + " accion " + sigAction);
@@ -507,6 +546,10 @@ public class Megatron extends SingleAgent {
                     Cancel();
                     System.out.println("Megatron: Muriendo");
                     live = false;
+                    
+                    try {
+                        this.mapImage.saveToFile();
+                    } catch (Exception e) {}
 
                     break;
             }
@@ -1036,7 +1079,11 @@ public class Megatron extends SingleAgent {
     /**
      * Exploration of the following form: (example 5x5)
      *
-     * 14 13 12 11 10 15 x x x 9 0 x D x 8 1 x x x 7 2 3 4 5 6
+     * 14 13 12 11 10
+     * 15  x  x  x  9
+     *  0  x  D  x  8
+     *  1  x  x  x  7
+     *  2  3  4  5  6
      *
      * Beginning with the cell 0 the method tries to find a cell at the border
      * of the visual range of the drone that has not yet been explored
@@ -1054,9 +1101,12 @@ public class Megatron extends SingleAgent {
 
         // If mapv3 returns an illegal action, stop there (maybe then use another
         // heuristic)
-        if (this.myMap.getMap().get(this.drones.get(drone).getCurrent().neighbour(ret)).getRadar() == 1) {
+        if (this.myMap.getMap().get(this.drones.get(drone).getCurrent().neighbour(ret)).getRadar() == 1 || 
+                this.myMap.getMap().get(this.drones.get(drone).getCurrent().neighbour(ret)).getRadar() == 2) {
             System.err.println("ERROR: mapv3 devolvió una acción ilegal");
-            ret = null;
+            
+            this.pathToClosestUnexploredCell.clear();
+            ret = mapv3_(drone);
         }
 
         return ret;
@@ -1065,7 +1115,11 @@ public class Megatron extends SingleAgent {
     /**
      * Exploration of the following form: (example 5x5)
      *
-     * 14 13 12 11 10 15 x x x 9 0 x D x 8 1 x x x 7 2 3 4 5 6
+     * 14 13 12 11 10
+     * 15  x  x  x  9
+     *  0  x  D  x  8
+     *  1  x  x  x  7
+     *  2  3  4  5  6
      *
      * Beginning with the cell 0 the method tries to find a cell at the border
      * of the visual range of the drone that has not yet been explored
@@ -1074,6 +1128,8 @@ public class Megatron extends SingleAgent {
      * considered usable, use a path finding algorithm to get to the next
      * unexplored cell, there resetting back to the exploration pattern.
      *
+     * PLEASE do NOT call this function directly but call mapv3(int).
+     * 
      * @param drone ID of the drone
      * @return Next action for the specified drone
      * @author Alexander Straub
@@ -1081,331 +1137,483 @@ public class Megatron extends SingleAgent {
     private Action mapv3_(int drone) throws Exception {
         Coord position = this.drones.get(drone).getCurrent();
 
-        if (this.pathToClosestUnexploredCell == null || this.pathToClosestUnexploredCell.isEmpty()) {
+        if (this.pathToClosestUnexploredCell.isEmpty()) {
             // Get the border cells of the visual range of the specified drone
             Nodo borderCell;
 
             switch (this.drones.get(drone).getRole()) {
                 case 0: // Mosca
                     borderCell = this.myMap.getMap().get(position.W());
-                    if (borderCell != null && borderCell.getRadar() != 1) {
+                    if (borderCell != null && borderCell.getRadar() != 1 && borderCell.getRadar() != 2 && !borderCell.explored()) {
+                        if (this.lastAction != Action.W) {
+                            this.pathToClosestUnexploredCell.add(Action.W);
+                            this.pathToClosestUnexploredCell.add(Action.W);
+                        }
+                        this.lastAction = Action.W;
                         return Action.W;
                     }
 
-                    borderCell = this.myMap.getMap().get(position.SW());
-                    if (borderCell != null && borderCell.getRadar() != 1) {
-                        return Action.SW;
-                    }
-
                     borderCell = this.myMap.getMap().get(position.S());
-                    if (borderCell != null && borderCell.getRadar() != 1) {
+                    if (borderCell != null && borderCell.getRadar() != 1 && borderCell.getRadar() != 2 && !borderCell.explored()) {
+                        if (this.lastAction != Action.S) {
+                            this.pathToClosestUnexploredCell.add(Action.S);
+                            this.pathToClosestUnexploredCell.add(Action.S);
+                        }
+                        this.lastAction = Action.S;
                         return Action.S;
                     }
 
-                    borderCell = this.myMap.getMap().get(position.SE());
-                    if (borderCell != null && borderCell.getRadar() != 1) {
-                        return Action.SE;
-                    }
-
                     borderCell = this.myMap.getMap().get(position.E());
-                    if (borderCell != null && borderCell.getRadar() != 1) {
+                    if (borderCell != null && borderCell.getRadar() != 1 && borderCell.getRadar() != 2 && !borderCell.explored()) {
+                        if (this.lastAction != Action.E) {
+                            this.pathToClosestUnexploredCell.add(Action.E);
+                            this.pathToClosestUnexploredCell.add(Action.E);
+                        }
+                        this.lastAction = Action.E;
                         return Action.E;
                     }
 
+                    borderCell = this.myMap.getMap().get(position.N());
+                    if (borderCell != null && borderCell.getRadar() != 1 && borderCell.getRadar() != 2 && !borderCell.explored()) {
+                        if (this.lastAction != Action.N) {
+                            this.pathToClosestUnexploredCell.add(Action.N);
+                            this.pathToClosestUnexploredCell.add(Action.N);
+                        }
+                        this.lastAction = Action.N;
+                        return Action.N;
+                    }
+                    
+                    borderCell = this.myMap.getMap().get(position.SW());
+                    if (borderCell != null && borderCell.getRadar() != 1 && borderCell.getRadar() != 2 && !borderCell.explored()) {
+                        this.lastAction = Action.SW;
+                        return Action.SW;
+                    }
+                    
+                    borderCell = this.myMap.getMap().get(position.SE());
+                    if (borderCell != null && borderCell.getRadar() != 1 && borderCell.getRadar() != 2 && !borderCell.explored()) {
+                        this.lastAction = Action.SE;
+                        return Action.SE;
+                    }
+
                     borderCell = this.myMap.getMap().get(position.NE());
-                    if (borderCell != null && borderCell.getRadar() != 1) {
+                    if (borderCell != null && borderCell.getRadar() != 1 && borderCell.getRadar() != 2 && !borderCell.explored()) {
+                        this.lastAction = Action.NE;
                         return Action.NE;
                     }
 
-                    borderCell = this.myMap.getMap().get(position.N());
-                    if (borderCell != null && borderCell.getRadar() != 1) {
-                        return Action.N;
-                    }
-
                     borderCell = this.myMap.getMap().get(position.NW());
-                    if (borderCell != null && borderCell.getRadar() != 1) {
+                    if (borderCell != null && borderCell.getRadar() != 1 && borderCell.getRadar() != 2 && !borderCell.explored()) {
+                        this.lastAction = Action.NW;
                         return Action.NW;
                     }
                     break;
                 case 1: // Pájaro
                     borderCell = this.myMap.getMap().get(position.addX(-2));
-                    if (borderCell != null && borderCell.getRadar() != 1) {
+                    if (borderCell != null && borderCell.getRadar() != 1 && borderCell.getRadar() != 2 && !borderCell.explored()) {
+                        if (this.lastAction != Action.W) {
+                            this.pathToClosestUnexploredCell.add(Action.W);
+                            this.pathToClosestUnexploredCell.add(Action.W);
+                            this.pathToClosestUnexploredCell.add(Action.W);
+                            this.pathToClosestUnexploredCell.add(Action.W);
+                        }
+                        this.lastAction = Action.W;
                         return Action.W;
                     }
 
+                    borderCell = this.myMap.getMap().get(position.addY(2));
+                    if (borderCell != null && borderCell.getRadar() != 1 && borderCell.getRadar() != 2 && !borderCell.explored()) {
+                        if (this.lastAction != Action.S) {
+                            this.pathToClosestUnexploredCell.add(Action.S);
+                            this.pathToClosestUnexploredCell.add(Action.S);
+                            this.pathToClosestUnexploredCell.add(Action.S);
+                            this.pathToClosestUnexploredCell.add(Action.S);
+                        }
+                        this.lastAction = Action.S;
+                        return Action.S;
+                    }
+
+                    borderCell = this.myMap.getMap().get(position.addX(2));
+                    if (borderCell != null && borderCell.getRadar() != 1 && borderCell.getRadar() != 2 && !borderCell.explored()) {
+                        if (this.lastAction != Action.E) {
+                            this.pathToClosestUnexploredCell.add(Action.E);
+                            this.pathToClosestUnexploredCell.add(Action.E);
+                            this.pathToClosestUnexploredCell.add(Action.E);
+                            this.pathToClosestUnexploredCell.add(Action.E);
+                        }
+                        this.lastAction = Action.E;
+                        return Action.E;
+                    }
+
+                    borderCell = this.myMap.getMap().get(position.addY(-2));
+                    if (borderCell != null && borderCell.getRadar() != 1 && borderCell.getRadar() != 2 && !borderCell.explored()) {
+                        if (this.lastAction != Action.N) {
+                            this.pathToClosestUnexploredCell.add(Action.N);
+                            this.pathToClosestUnexploredCell.add(Action.N);
+                            this.pathToClosestUnexploredCell.add(Action.N);
+                            this.pathToClosestUnexploredCell.add(Action.N);
+                        }
+                        this.lastAction = Action.N;
+                        return Action.N;
+                    }
+                    
                     borderCell = this.myMap.getMap().get(position.add(-2, 1));
-                    if (borderCell != null && borderCell.getRadar() != 1) {
+                    if (borderCell != null && borderCell.getRadar() != 1 && borderCell.getRadar() != 2 && !borderCell.explored()) {
+                        this.lastAction = Action.SW;
                         return Action.SW;
                     }
 
                     borderCell = this.myMap.getMap().get(position.add(-2, 2));
-                    if (borderCell != null && borderCell.getRadar() != 1) {
+                    if (borderCell != null && borderCell.getRadar() != 1 && borderCell.getRadar() != 2 && !borderCell.explored()) {
+                        this.lastAction = Action.SW;
                         return Action.SW;
                     }
 
                     borderCell = this.myMap.getMap().get(position.add(-1, 2));
-                    if (borderCell != null && borderCell.getRadar() != 1) {
-                        return Action.S;
+                    if (borderCell != null && borderCell.getRadar() != 1 && borderCell.getRadar() != 2 && !borderCell.explored()) {
+                        this.lastAction = Action.SW;
+                        return Action.SW;
                     }
-
-                    borderCell = this.myMap.getMap().get(position.addY(2));
-                    if (borderCell != null && borderCell.getRadar() != 1) {
-                        return Action.S;
-                    }
-
+                    
                     borderCell = this.myMap.getMap().get(position.add(1, 2));
-                    if (borderCell != null && borderCell.getRadar() != 1) {
+                    if (borderCell != null && borderCell.getRadar() != 1 && borderCell.getRadar() != 2 && !borderCell.explored()) {
+                        this.lastAction = Action.SE;
                         return Action.SE;
                     }
 
                     borderCell = this.myMap.getMap().get(position.add(2, 2));
-                    if (borderCell != null && borderCell.getRadar() != 1) {
+                    if (borderCell != null && borderCell.getRadar() != 1 && borderCell.getRadar() != 2 && !borderCell.explored()) {
+                        this.lastAction = Action.SE;
                         return Action.SE;
                     }
 
                     borderCell = this.myMap.getMap().get(position.add(2, 1));
-                    if (borderCell != null && borderCell.getRadar() != 1) {
-                        return Action.E;
+                    if (borderCell != null && borderCell.getRadar() != 1 && borderCell.getRadar() != 2 && !borderCell.explored()) {
+                        this.lastAction = Action.SE;
+                        return Action.SE;
                     }
-
-                    borderCell = this.myMap.getMap().get(position.addX(2));
-                    if (borderCell != null && borderCell.getRadar() != 1) {
-                        return Action.E;
-                    }
-
+                    
                     borderCell = this.myMap.getMap().get(position.add(2, -1));
-                    if (borderCell != null && borderCell.getRadar() != 1) {
+                    if (borderCell != null && borderCell.getRadar() != 1 && borderCell.getRadar() != 2 && !borderCell.explored()) {
+                        this.lastAction = Action.NE;
                         return Action.NE;
                     }
 
                     borderCell = this.myMap.getMap().get(position.add(2, -2));
-                    if (borderCell != null && borderCell.getRadar() != 1) {
+                    if (borderCell != null && borderCell.getRadar() != 1 && borderCell.getRadar() != 2 && !borderCell.explored()) {
+                        this.lastAction = Action.NE;
                         return Action.NE;
                     }
 
                     borderCell = this.myMap.getMap().get(position.add(1, -2));
-                    if (borderCell != null && borderCell.getRadar() != 1) {
-                        return Action.N;
-                    }
-
-                    borderCell = this.myMap.getMap().get(position.addY(-2));
-                    if (borderCell != null && borderCell.getRadar() != 1) {
-                        return Action.N;
+                    if (borderCell != null && borderCell.getRadar() != 1 && borderCell.getRadar() != 2 && !borderCell.explored()) {
+                        this.lastAction = Action.NE;
+                        return Action.NE;
                     }
 
                     borderCell = this.myMap.getMap().get(position.add(-1, -2));
-                    if (borderCell != null && borderCell.getRadar() != 1) {
+                    if (borderCell != null && borderCell.getRadar() != 1 && borderCell.getRadar() != 2 && !borderCell.explored()) {
+                        this.lastAction = Action.NW;
                         return Action.NW;
                     }
 
                     borderCell = this.myMap.getMap().get(position.add(-2, -2));
-                    if (borderCell != null && borderCell.getRadar() != 1) {
+                    if (borderCell != null && borderCell.getRadar() != 1 && borderCell.getRadar() != 2 && !borderCell.explored()) {
+                        this.lastAction = Action.NW;
                         return Action.NW;
                     }
 
                     borderCell = this.myMap.getMap().get(position.add(-2, -1));
-                    if (borderCell != null && borderCell.getRadar() != 1) {
+                    if (borderCell != null && borderCell.getRadar() != 1 && borderCell.getRadar() != 2 && !borderCell.explored()) {
+                        this.lastAction = Action.NW;
                         return Action.NW;
                     }
                     break;
                 case 2: // Halcón
                     borderCell = this.myMap.getMap().get(position.addX(-5));
-                    if (borderCell != null && borderCell.getRadar() != 1) {
+                    if (borderCell != null && borderCell.getRadar() != 1 && borderCell.getRadar() != 2 && !borderCell.explored()) {
+                        if (this.lastAction != Action.W) {
+                            this.pathToClosestUnexploredCell.add(Action.W);
+                            this.pathToClosestUnexploredCell.add(Action.W);
+                            this.pathToClosestUnexploredCell.add(Action.W);
+                            this.pathToClosestUnexploredCell.add(Action.W);
+                            this.pathToClosestUnexploredCell.add(Action.W);
+                            this.pathToClosestUnexploredCell.add(Action.W);
+                            this.pathToClosestUnexploredCell.add(Action.W);
+                            this.pathToClosestUnexploredCell.add(Action.W);
+                            this.pathToClosestUnexploredCell.add(Action.W);
+                            this.pathToClosestUnexploredCell.add(Action.W);
+                        }
+                        this.lastAction = Action.W;
                         return Action.W;
                     }
+                
+                    borderCell = this.myMap.getMap().get(position.addY(5));
+                    if (borderCell != null && borderCell.getRadar() != 1 && borderCell.getRadar() != 2 && !borderCell.explored()) {
+                        if (this.lastAction != Action.S) {
+                            this.pathToClosestUnexploredCell.add(Action.S);
+                            this.pathToClosestUnexploredCell.add(Action.S);
+                            this.pathToClosestUnexploredCell.add(Action.S);
+                            this.pathToClosestUnexploredCell.add(Action.S);
+                            this.pathToClosestUnexploredCell.add(Action.S);
+                            this.pathToClosestUnexploredCell.add(Action.S);
+                            this.pathToClosestUnexploredCell.add(Action.S);
+                            this.pathToClosestUnexploredCell.add(Action.S);
+                            this.pathToClosestUnexploredCell.add(Action.S);
+                            this.pathToClosestUnexploredCell.add(Action.S);
+                        }
+                        this.lastAction = Action.S;
+                        return Action.S;
+                    }
 
+                    borderCell = this.myMap.getMap().get(position.addX(5));
+                    if (borderCell != null && borderCell.getRadar() != 1 && borderCell.getRadar() != 2 && !borderCell.explored()) {
+                        if (this.lastAction != Action.E) {
+                            this.pathToClosestUnexploredCell.add(Action.E);
+                            this.pathToClosestUnexploredCell.add(Action.E);
+                            this.pathToClosestUnexploredCell.add(Action.E);
+                            this.pathToClosestUnexploredCell.add(Action.E);
+                            this.pathToClosestUnexploredCell.add(Action.E);
+                            this.pathToClosestUnexploredCell.add(Action.E);
+                            this.pathToClosestUnexploredCell.add(Action.E);
+                            this.pathToClosestUnexploredCell.add(Action.E);
+                            this.pathToClosestUnexploredCell.add(Action.E);
+                            this.pathToClosestUnexploredCell.add(Action.E);
+                        }
+                        this.lastAction = Action.E;
+                        return Action.E;
+                    }
+                
+                    borderCell = this.myMap.getMap().get(position.addY(-5));
+                    if (borderCell != null && borderCell.getRadar() != 1 && borderCell.getRadar() != 2 && !borderCell.explored()) {
+                        if (this.lastAction != Action.N) {
+                            this.pathToClosestUnexploredCell.add(Action.N);
+                            this.pathToClosestUnexploredCell.add(Action.N);
+                            this.pathToClosestUnexploredCell.add(Action.N);
+                            this.pathToClosestUnexploredCell.add(Action.N);
+                            this.pathToClosestUnexploredCell.add(Action.N);
+                            this.pathToClosestUnexploredCell.add(Action.N);
+                            this.pathToClosestUnexploredCell.add(Action.N);
+                            this.pathToClosestUnexploredCell.add(Action.N);
+                            this.pathToClosestUnexploredCell.add(Action.N);
+                            this.pathToClosestUnexploredCell.add(Action.N);
+                        }
+                        this.lastAction = Action.N;
+                        return Action.N;
+                    }
+                
                     borderCell = this.myMap.getMap().get(position.add(-5, 1));
-                    if (borderCell != null && borderCell.getRadar() != 1) {
+                    if (borderCell != null && borderCell.getRadar() != 1 && borderCell.getRadar() != 2 && !borderCell.explored()) {
+                        this.lastAction = Action.SW;
                         return Action.SW;
                     }
 
                     borderCell = this.myMap.getMap().get(position.add(-5, 2));
-                    if (borderCell != null && borderCell.getRadar() != 1) {
+                    if (borderCell != null && borderCell.getRadar() != 1 && borderCell.getRadar() != 2 && !borderCell.explored()) {
+                        this.lastAction = Action.SW;
                         return Action.SW;
                     }
 
                     borderCell = this.myMap.getMap().get(position.add(-5, 3));
-                    if (borderCell != null && borderCell.getRadar() != 1) {
+                    if (borderCell != null && borderCell.getRadar() != 1 && borderCell.getRadar() != 2 && !borderCell.explored()) {
+                        this.lastAction = Action.SW;
                         return Action.SW;
                     }
 
                     borderCell = this.myMap.getMap().get(position.add(-5, 4));
-                    if (borderCell != null && borderCell.getRadar() != 1) {
+                    if (borderCell != null && borderCell.getRadar() != 1 && borderCell.getRadar() != 2 && !borderCell.explored()) {
+                        this.lastAction = Action.SW;
                         return Action.SW;
                     }
 
                     borderCell = this.myMap.getMap().get(position.add(-5, 5));
-                    if (borderCell != null && borderCell.getRadar() != 1) {
+                    if (borderCell != null && borderCell.getRadar() != 1 && borderCell.getRadar() != 2 && !borderCell.explored()) {
+                        this.lastAction = Action.SW;
                         return Action.SW;
                     }
 
                     borderCell = this.myMap.getMap().get(position.add(-4, 5));
-                    if (borderCell != null && borderCell.getRadar() != 1) {
-                        return Action.S;
+                    if (borderCell != null && borderCell.getRadar() != 1 && borderCell.getRadar() != 2 && !borderCell.explored()) {
+                        this.lastAction = Action.SW;
+                        return Action.SW;
                     }
 
                     borderCell = this.myMap.getMap().get(position.add(-3, 5));
-                    if (borderCell != null && borderCell.getRadar() != 1) {
-                        return Action.S;
+                    if (borderCell != null && borderCell.getRadar() != 1 && borderCell.getRadar() != 2 && !borderCell.explored()) {
+                        this.lastAction = Action.SW;
+                        return Action.SW;
                     }
 
                     borderCell = this.myMap.getMap().get(position.add(-2, 5));
-                    if (borderCell != null && borderCell.getRadar() != 1) {
-                        return Action.S;
+                    if (borderCell != null && borderCell.getRadar() != 1 && borderCell.getRadar() != 2 && !borderCell.explored()) {
+                        this.lastAction = Action.SW;
+                        return Action.SW;
                     }
 
                     borderCell = this.myMap.getMap().get(position.add(-1, 5));
-                    if (borderCell != null && borderCell.getRadar() != 1) {
-                        return Action.S;
-                    }
-
-                    borderCell = this.myMap.getMap().get(position.addY(5));
-                    if (borderCell != null && borderCell.getRadar() != 1) {
-                        return Action.S;
+                    if (borderCell != null && borderCell.getRadar() != 1 && borderCell.getRadar() != 2 && !borderCell.explored()) {
+                        this.lastAction = Action.SW;
+                        return Action.SW;
                     }
 
                     borderCell = this.myMap.getMap().get(position.add(1, 5));
-                    if (borderCell != null && borderCell.getRadar() != 1) {
+                    if (borderCell != null && borderCell.getRadar() != 1 && borderCell.getRadar() != 2 && !borderCell.explored()) {
+                        this.lastAction = Action.SE;
                         return Action.SE;
                     }
 
                     borderCell = this.myMap.getMap().get(position.add(2, 5));
-                    if (borderCell != null && borderCell.getRadar() != 1) {
+                    if (borderCell != null && borderCell.getRadar() != 1 && borderCell.getRadar() != 2 && !borderCell.explored()) {
+                        this.lastAction = Action.SE;
                         return Action.SE;
                     }
 
                     borderCell = this.myMap.getMap().get(position.add(3, 5));
-                    if (borderCell != null && borderCell.getRadar() != 1) {
+                    if (borderCell != null && borderCell.getRadar() != 1 && borderCell.getRadar() != 2 && !borderCell.explored()) {
+                        this.lastAction = Action.SE;
                         return Action.SE;
                     }
 
                     borderCell = this.myMap.getMap().get(position.add(4, 5));
-                    if (borderCell != null && borderCell.getRadar() != 1) {
+                    if (borderCell != null && borderCell.getRadar() != 1 && borderCell.getRadar() != 2 && !borderCell.explored()) {
+                        this.lastAction = Action.SE;
                         return Action.SE;
                     }
 
                     borderCell = this.myMap.getMap().get(position.add(5, 5));
-                    if (borderCell != null && borderCell.getRadar() != 1) {
+                    if (borderCell != null && borderCell.getRadar() != 1 && borderCell.getRadar() != 2 && !borderCell.explored()) {
+                        this.lastAction = Action.SE;
                         return Action.SE;
                     }
 
                     borderCell = this.myMap.getMap().get(position.add(5, 4));
-                    if (borderCell != null && borderCell.getRadar() != 1) {
-                        return Action.E;
+                    if (borderCell != null && borderCell.getRadar() != 1 && borderCell.getRadar() != 2 && !borderCell.explored()) {
+                        this.lastAction = Action.SE;
+                        return Action.SE;
                     }
 
                     borderCell = this.myMap.getMap().get(position.add(5, 3));
-                    if (borderCell != null && borderCell.getRadar() != 1) {
-                        return Action.E;
+                    if (borderCell != null && borderCell.getRadar() != 1 && borderCell.getRadar() != 2 && !borderCell.explored()) {
+                        this.lastAction = Action.SE;
+                        return Action.SE;
                     }
 
                     borderCell = this.myMap.getMap().get(position.add(5, 2));
-                    if (borderCell != null && borderCell.getRadar() != 1) {
-                        return Action.E;
+                    if (borderCell != null && borderCell.getRadar() != 1 && borderCell.getRadar() != 2 && !borderCell.explored()) {
+                        this.lastAction = Action.SE;
+                        return Action.SE;
                     }
 
                     borderCell = this.myMap.getMap().get(position.add(5, 1));
-                    if (borderCell != null && borderCell.getRadar() != 1) {
-                        return Action.E;
-                    }
-
-                    borderCell = this.myMap.getMap().get(position.addX(5));
-                    if (borderCell != null && borderCell.getRadar() != 1) {
-                        return Action.E;
+                    if (borderCell != null && borderCell.getRadar() != 1 && borderCell.getRadar() != 2 && !borderCell.explored()) {
+                        this.lastAction = Action.SE;
+                        return Action.SE;
                     }
 
                     borderCell = this.myMap.getMap().get(position.add(5, -1));
-                    if (borderCell != null && borderCell.getRadar() != 1) {
+                    if (borderCell != null && borderCell.getRadar() != 1 && borderCell.getRadar() != 2 && !borderCell.explored()) {
+                        this.lastAction = Action.NE;
                         return Action.NE;
                     }
 
                     borderCell = this.myMap.getMap().get(position.add(5, -2));
-                    if (borderCell != null && borderCell.getRadar() != 1) {
+                    if (borderCell != null && borderCell.getRadar() != 1 && borderCell.getRadar() != 2 && !borderCell.explored()) {
+                        this.lastAction = Action.NE;
                         return Action.NE;
                     }
 
                     borderCell = this.myMap.getMap().get(position.add(5, -3));
-                    if (borderCell != null && borderCell.getRadar() != 1) {
+                    if (borderCell != null && borderCell.getRadar() != 1 && borderCell.getRadar() != 2 && !borderCell.explored()) {
+                        this.lastAction = Action.NE;
                         return Action.NE;
                     }
 
                     borderCell = this.myMap.getMap().get(position.add(5, -4));
-                    if (borderCell != null && borderCell.getRadar() != 1) {
+                    if (borderCell != null && borderCell.getRadar() != 1 && borderCell.getRadar() != 2 && !borderCell.explored()) {
+                        this.lastAction = Action.NE;
                         return Action.NE;
                     }
 
                     borderCell = this.myMap.getMap().get(position.add(5, -5));
-                    if (borderCell != null && borderCell.getRadar() != 1) {
+                    if (borderCell != null && borderCell.getRadar() != 1 && borderCell.getRadar() != 2 && !borderCell.explored()) {
+                        this.lastAction = Action.NE;
                         return Action.NE;
                     }
 
                     borderCell = this.myMap.getMap().get(position.add(4, -5));
-                    if (borderCell != null && borderCell.getRadar() != 1) {
-                        return Action.N;
+                    if (borderCell != null && borderCell.getRadar() != 1 && borderCell.getRadar() != 2 && !borderCell.explored()) {
+                        this.lastAction = Action.NE;
+                        return Action.NE;
                     }
 
                     borderCell = this.myMap.getMap().get(position.add(3, -5));
-                    if (borderCell != null && borderCell.getRadar() != 1) {
-                        return Action.N;
+                    if (borderCell != null && borderCell.getRadar() != 1 && borderCell.getRadar() != 2 && !borderCell.explored()) {
+                        this.lastAction = Action.NE;
+                        return Action.NE;
                     }
 
                     borderCell = this.myMap.getMap().get(position.add(2, -5));
-                    if (borderCell != null && borderCell.getRadar() != 1) {
-                        return Action.N;
+                    if (borderCell != null && borderCell.getRadar() != 1 && borderCell.getRadar() != 2 && !borderCell.explored()) {
+                        this.lastAction = Action.NE;
+                        return Action.NE;
                     }
 
                     borderCell = this.myMap.getMap().get(position.add(1, -5));
-                    if (borderCell != null && borderCell.getRadar() != 1) {
-                        return Action.N;
-                    }
-
-                    borderCell = this.myMap.getMap().get(position.addY(-5));
-                    if (borderCell != null && borderCell.getRadar() != 1) {
-                        return Action.N;
+                    if (borderCell != null && borderCell.getRadar() != 1 && borderCell.getRadar() != 2 && !borderCell.explored()) {
+                        this.lastAction = Action.NE;
+                        return Action.NE;
                     }
 
                     borderCell = this.myMap.getMap().get(position.add(-1, -5));
-                    if (borderCell != null && borderCell.getRadar() != 1) {
+                    if (borderCell != null && borderCell.getRadar() != 1 && borderCell.getRadar() != 2 && !borderCell.explored()) {
+                        this.lastAction = Action.NW;
                         return Action.NW;
                     }
 
                     borderCell = this.myMap.getMap().get(position.add(-2, -5));
-                    if (borderCell != null && borderCell.getRadar() != 1) {
+                    if (borderCell != null && borderCell.getRadar() != 1 && borderCell.getRadar() != 2 && !borderCell.explored()) {
+                        this.lastAction = Action.NW;
                         return Action.NW;
                     }
 
                     borderCell = this.myMap.getMap().get(position.add(-3, -5));
-                    if (borderCell != null && borderCell.getRadar() != 1) {
+                    if (borderCell != null && borderCell.getRadar() != 1 && borderCell.getRadar() != 2 && !borderCell.explored()) {
+                        this.lastAction = Action.NW;
                         return Action.NW;
                     }
 
                     borderCell = this.myMap.getMap().get(position.add(-4, -5));
-                    if (borderCell != null && borderCell.getRadar() != 1) {
+                    if (borderCell != null && borderCell.getRadar() != 1 && borderCell.getRadar() != 2 && !borderCell.explored()) {
+                        this.lastAction = Action.NW;
                         return Action.NW;
                     }
 
                     borderCell = this.myMap.getMap().get(position.add(-5, -5));
-                    if (borderCell != null && borderCell.getRadar() != 1) {
+                    if (borderCell != null && borderCell.getRadar() != 1 && borderCell.getRadar() != 2 && !borderCell.explored()) {
+                        this.lastAction = Action.NW;
                         return Action.NW;
                     }
 
                     borderCell = this.myMap.getMap().get(position.add(-5, -4));
-                    if (borderCell != null && borderCell.getRadar() != 1) {
+                    if (borderCell != null && borderCell.getRadar() != 1 && borderCell.getRadar() != 2 && !borderCell.explored()) {
+                        this.lastAction = Action.NW;
                         return Action.NW;
                     }
 
                     borderCell = this.myMap.getMap().get(position.add(-5, -3));
-                    if (borderCell != null && borderCell.getRadar() != 1) {
+                    if (borderCell != null && borderCell.getRadar() != 1 && borderCell.getRadar() != 2 && !borderCell.explored()) {
+                        this.lastAction = Action.NW;
                         return Action.NW;
                     }
 
                     borderCell = this.myMap.getMap().get(position.add(-5, -2));
-                    if (borderCell != null && borderCell.getRadar() != 1) {
+                    if (borderCell != null && borderCell.getRadar() != 1 && borderCell.getRadar() != 2 && !borderCell.explored()) {
+                        this.lastAction = Action.NW;
                         return Action.NW;
                     }
 
                     borderCell = this.myMap.getMap().get(position.add(-5, -1));
-                    if (borderCell != null && borderCell.getRadar() != 1) {
+                    if (borderCell != null && borderCell.getRadar() != 1 && borderCell.getRadar() != 2 && !borderCell.explored()) {
+                        this.lastAction = Action.NW;
                         return Action.NW;
                     }
             }
