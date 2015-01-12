@@ -9,10 +9,12 @@ import es.upv.dsic.gti_ia.core.ACLMessage;
 import es.upv.dsic.gti_ia.core.AgentID;
 import es.upv.dsic.gti_ia.core.SingleAgent;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Stack;
 import java.util.logging.Level;
@@ -568,17 +570,15 @@ public class Megatron extends SingleAgent {
      * @author Daniel Sánchez Alcaide
      */
     private Stack<Action> busqueda(Nodo start, Nodo goal) throws Exception {
-        Comparator<Nodo> comp = new ComparadorHeuristicaNodo();
-        PriorityQueue<Nodo> abiertos;
-        abiertos = new PriorityQueue<>(10, comp);
-        //abiertos = new PriorityQueue<>();
-
-        ArrayList<Nodo> cerrados;
-        cerrados = new ArrayList<>();
-        Stack<Action> caminito;
-        caminito = new Stack<>();
+        Comparator<Nodo> comp = new ComparadorHeuristicaNodo(goal);
+        PriorityQueue<Nodo> abiertos = new PriorityQueue<>(10, comp);
+        ArrayList<Nodo> cerrados = new ArrayList<>();
+        
+        Stack<Action> caminito = new Stack<>();
+        
         Nodo current = start;
         abiertos.add(current);
+        
         //El vértice no es la meta y abiertos no está vacío
         while (!abiertos.isEmpty() && !current.equals(goal)) {
             //Sacamos el nodo de abiertos
@@ -641,6 +641,93 @@ public class Megatron extends SingleAgent {
             }
         }
         return caminito;
+    }
+    
+    /**
+     * Search for the best way to go from one node to another
+     *
+     * @param start Node where to start
+     * @param target Node where to get to
+     * @return Stack of actions
+     * @author Alexander Straub
+     */
+    private Stack<Action> dijkstra(Nodo start, Nodo target) {
+        // Sanity check for the parameters
+        if (start == null || target == null || start.equals(target)) return null;
+        
+        // Get the map
+        HashMap<Coord, Nodo> map = this.myMap.getAccessibleMap();
+        start = map.get(start.getCoord());
+        target = map.get(target.getCoord());
+
+        // Initialize
+        List<Nodo> nodes = new ArrayList<>(map.values());
+        for (Iterator<Nodo> i = nodes.iterator(); i.hasNext();) {
+            i.next().resetBusqueda();
+        }
+        start.setDistancia(0.0);
+
+        // While there are nodes unexplored
+        while (!nodes.isEmpty()) {
+            // Get node with less distance
+            Nodo minNode = (Nodo) Collections.min(nodes);
+            nodes.remove(minNode);
+
+            // Get neighbours of the current node
+            for (Iterator<Nodo> i = minNode.getAdy().iterator(); i.hasNext();) {
+                Nodo neighbour = i.next();
+
+                // If the neighbour is still in the list
+                if (nodes.contains(neighbour)) {
+                    // Calculate alternative distance
+                    double alternative = minNode.getDistancia() + 1;
+
+                    // If the distance is better, add to the path
+                    if (alternative < neighbour.getDistancia()) {
+                        neighbour.setDistancia(alternative);
+                        neighbour.setCamino(minNode);
+                    }
+                }
+            }
+        }
+
+        // Check if a path is even possible
+        if (target.getDistancia() == Double.MAX_VALUE) return null;
+
+        // Starting with the target node, trace back to the start
+        Stack<Action> actions = new Stack<>();
+        
+        while (target != null && target != start) {
+            // Get next direction
+            if (target.getCoord().equals(target.getCamino().getCoord().NW())) {
+                actions.push(Action.NW);
+            }
+            if (target.getCoord().equals(target.getCamino().getCoord().N())) {
+                actions.push(Action.N);
+            }
+            if (target.getCoord().equals(target.getCamino().getCoord().NE())) {
+                actions.push(Action.NE);
+            }
+            if (target.getCoord().equals(target.getCamino().getCoord().E())) {
+                actions.push(Action.E);
+            }
+            if (target.getCoord().equals(target.getCamino().getCoord().SE())) {
+                actions.push(Action.SE);
+            }
+            if (target.getCoord().equals(target.getCamino().getCoord().S())) {
+                actions.push(Action.S);
+            }
+            if (target.getCoord().equals(target.getCamino().getCoord().SW())) {
+                actions.push(Action.SW);
+            }
+            if (target.getCoord().equals(target.getCamino().getCoord().W())) {
+                actions.push(Action.W);
+            }
+            
+            target = target.getCamino();
+        }
+
+        return actions;
     }
 
     /**
@@ -1640,7 +1727,7 @@ public class Megatron extends SingleAgent {
             }
 
             // Find way to the previously found closest node
-            this.pathToClosestUnexploredCell = busqueda(this.myMap.getMap().get(position), closestNode);
+            this.pathToClosestUnexploredCell = dijkstra(this.myMap.getMap().get(position), closestNode);
         }
 
         // Return next action to follow the path to the closest unexplored node
