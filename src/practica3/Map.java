@@ -14,10 +14,12 @@ import java.util.HashMap;
  */
 public class Map {
     private HashMap<Coord,Nodo> map;
+    private HashMap<Coord,Nodo> accessible;
     private static Nodo target=null;
     
     public Map(){
-        this.map = new HashMap<Coord, Nodo>(100000);
+        this.map = new HashMap<Coord, Nodo>(10000);
+        this.accessible = new HashMap<Coord, Nodo>(10000);
     }
     /**
      * Associates the specified value with the specified key in this map
@@ -25,16 +27,20 @@ public class Map {
      * value is ignored.
      * @param key Position of the node in the map. Used as key in the HashMap 
      * @param value Radar value for that position
-     * @author Antonio Troitiño del Río
+     * @author Antonio Troitiño del Río, Alexander Straub
      */
     public void addNode(Coord key,int value){
+        Nodo newNode=new Nodo(key,value);
+        
         if(!map.containsKey(key)){
-            Nodo newNode=new Nodo(key,value);
             if(value==3&&target==null) target=newNode;
             map.put(key, newNode);
             checkAdjacent(newNode);
-            
-            
+        }
+        
+        // Add if it is not a wall, also to a map for accessible cells
+        if (!this.accessible.containsKey(key) && (value == 0 || value == 3)) {
+            this.accessible.put(key, newNode);
         }
     }
      /**
@@ -93,6 +99,15 @@ public class Map {
      * @author Antonio Trotiño de Río
      */
     public HashMap<Coord,Nodo> getMap(){return map;}
+    
+    /**
+     * Returns the map with only accessible cells
+     * 
+     * @return Map containing accessible cells
+     * @author Alexander Straub
+     */
+    public HashMap<Coord,Nodo> getAccessibleMap() { return this.accessible; }
+    
     /**
      * Returns the first node added to the map with a 
      * radar value of 3
