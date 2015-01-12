@@ -133,7 +133,7 @@ public class Megatron extends SingleAgent {
         this.drones.add( new DataDecepticon(DataAccess.getNameDron2()));
         this.drones.add( new DataDecepticon(DataAccess.getNameDron3()));
         this.drones.add( new DataDecepticon(DataAccess.getNameDron4()));
-        draw = new Ventana();
+        draw = new Ventana();     
         draw.setResizable(true);
         draw.setVisible(true);
 

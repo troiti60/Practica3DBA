@@ -37,12 +37,12 @@ public class Ventana extends javax.swing.JFrame {
         coordPanel    = new JPanel();
         
         batteryDrone.setStringPainted(true);
-        Border border = BorderFactory.createTitledBorder("Drone Battery");
+        Border border = BorderFactory.createTitledBorder("Spectro Drone Battery");
         batteryDrone.setBorder(border);
         batteryDrone.setBounds(540, 10, 200, 100);
         
         batteryTotal.setStringPainted(true);
-        Border border2 = BorderFactory.createTitledBorder("Total Battery");
+        Border border2 = BorderFactory.createTitledBorder("World's Total Battery");
         batteryTotal.setBorder(border2);
         batteryTotal.setBounds(540, 110, 200, 100);
         
@@ -91,10 +91,7 @@ public class Ventana extends javax.swing.JFrame {
         coordX.repaint();
         coordY.setText("["+cY+"]");
         coordY.repaint();
-        //coordPanel.repaint();
-        
-        
-        
+        //coordPanel.repaint();                  
     }
     
     
