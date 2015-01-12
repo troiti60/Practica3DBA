@@ -19,6 +19,7 @@ import java.util.PriorityQueue;
 import java.util.Stack;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import practica3.Draw.Ventana;
 
 /**
  * Class that controls the rest of Decepticons
@@ -40,7 +41,8 @@ public class Megatron extends SingleAgent {
     private boolean map2_iod = false;
     private boolean map2_bordeando = false;
     private Nodo nodoGoal;
-
+    private Ventana draw;
+    
     private State state;
     private String msg;
     private boolean live;
@@ -129,10 +131,13 @@ public class Megatron extends SingleAgent {
     protected void init() {
         this.myMap = new Map();
         this.dataAccess = DataAccess.crearInstancia();
-        this.drones.add(new DataDecepticon(DataAccess.getNameDron1()));
-        this.drones.add(new DataDecepticon(DataAccess.getNameDron2()));
-        this.drones.add(new DataDecepticon(DataAccess.getNameDron3()));
-        this.drones.add(new DataDecepticon(DataAccess.getNameDron4()));
+        this.drones.add( new DataDecepticon(DataAccess.getNameDron1()));
+        this.drones.add( new DataDecepticon(DataAccess.getNameDron2()));
+        this.drones.add( new DataDecepticon(DataAccess.getNameDron3()));
+        this.drones.add( new DataDecepticon(DataAccess.getNameDron4()));
+        draw = new Ventana();     
+        draw.setResizable(true);
+        draw.setVisible(true);
 
         int resolution = 100;
         if (this.dataAccess.getWorld().equals("newyork")) resolution = 500;
@@ -166,7 +171,12 @@ public class Megatron extends SingleAgent {
                 }
             }
         }
-
+        
+        draw.getJpanel().updateDraw(myMap, drones.get(dron));
+        draw.setLabelCoordinate(pos.getX(), pos.getY());     
+        draw.setBatteryDroneValue(drones.get(dron).getFuel());
+        draw.setTotalBatteryValue(energyOfWorld);
+        
         System.out.println("Megatron: Mapa actualizado");
     }
 

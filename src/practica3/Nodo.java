@@ -69,6 +69,17 @@ public class Nodo implements Comparable<Nodo> {
         this.radar = radar;
         this.explorado = 0;
     }
+    
+    /**
+     * Constructor por copia
+     * @param  n nodo a copiar;
+     * @author JC
+     */
+    public Nodo(Nodo n){
+        this.coord = n.coord;
+        this.radar = n.radar;
+        this.explorado = n.explorado;
+    }
 
     /**
      * Función booleana que devuelve si el nodo está completamente explorado o
