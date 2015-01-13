@@ -1,21 +1,27 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package practica3;
 
 import es.upv.dsic.gti_ia.core.AgentID;
 
 /**
  *
- * @author rod
+ * @author Alexander Straub
  */
-public class Flytron extends Decepticon{
+public final class Flytron extends Decepticon{
 
-    public Flytron(AgentID aid, AgentID boss1,String mykey) throws Exception {
-        super(aid,boss1,0,mykey);
+    /**
+     * Constructor
+     * 
+     * @param aid ID of the new decepticon
+     * @param megatron ID of megatron
+     * @param key Key for communication
+     * @throws Exception 
+     * @author Alexander Straub
+     */
+    public Flytron(AgentID aid, AgentID megatron, String key) throws Exception {
+        super(aid, megatron, 0, key);
+        this.name = "Flytron " + this.getName();
+        
+        System.out.println(this.name + ": Instantiated");
     }
     
 }

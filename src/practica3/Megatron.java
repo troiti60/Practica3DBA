@@ -859,6 +859,7 @@ public class Megatron extends SingleAgent {
      * @param regionMin Lower bound of the assigned region
      * @param regionMax Upper bound of the assigned region
      * @throws Exception
+     * @deprecated 
      * @author Alexander Straub
      */
     private void mapv1(int drone, int mode, Coord regionMin, Coord regionMax) throws Exception {
@@ -1020,6 +1021,7 @@ public class Megatron extends SingleAgent {
      *
      * @param drone ID of the drone
      * @throws Exception
+     * @deprecated 
      * @author Alexander Straub
      */
     private void mapv1(int drone) throws Exception {
@@ -1032,6 +1034,7 @@ public class Megatron extends SingleAgent {
      * @param drone ID of the drone
      * @param mode Mode of the drone: 0 - North/South, 1 - East/West
      * @throws Exception
+     * @deprecated 
      * @author Alexander Straub
      */
     private void mapv1(int drone, int mode) throws Exception {
@@ -1045,6 +1048,7 @@ public class Megatron extends SingleAgent {
      * @param regionMin Lower bound of the assigned region
      * @param regionMax Upper bound of the assigned region
      * @throws Exception
+     * @deprecated 
      * @author Alexander Straub
      */
     private void mapv1(int drone, Coord regionMin, Coord regionMax) throws Exception {
@@ -1247,7 +1251,8 @@ public class Megatron extends SingleAgent {
      * considered usable, use a path finding algorithm to get to the next
      * unexplored cell, there resetting to the exploration pattern above.
      *
-     * PLEASE do NOT call this function directly but call mapv3(int).
+     * PLEASE do NOT call this function directly as it may return an action
+     * leading to a crash. Please call mapv3(int) instead.
      * 
      * @param drone ID of the drone
      * @return Next action for the specified drone
