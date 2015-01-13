@@ -14,11 +14,12 @@ public final class Falcdron extends Decepticon{
      * @param aid ID of the new decepticon
      * @param megatron ID of megatron
      * @param key Key for communication
+     * @param map Reference to the map
      * @throws Exception 
      * @author Alexander Straub
      */
-    public Falcdron(AgentID aid, AgentID megatron, String key) throws Exception {
-        super(aid, megatron, 2, key);
+    public Falcdron(AgentID aid, AgentID megatron, String key, Map map) throws Exception {
+        super(aid, megatron, 2, key, map);
         this.name = "Falcdron " + this.getName();
         
         System.out.println(this.name + ": Instantiated");
