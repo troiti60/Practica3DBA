@@ -9,6 +9,7 @@ import es.upv.dsic.gti_ia.core.ACLMessage;
 import es.upv.dsic.gti_ia.core.AgentID;
 import es.upv.dsic.gti_ia.core.SingleAgent;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -668,7 +669,7 @@ public class Megatron extends SingleAgent {
             }
         }
         //Limpieza de Nodos
-        ArrayList<Nodo> m = (ArrayList)myMap.getMap().values();
+        Collection<Nodo> m = myMap.getMap().values();
         for(Nodo n : m){
             n.setCamino(null);
         }
