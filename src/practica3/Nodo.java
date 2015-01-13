@@ -397,7 +397,11 @@ public class Nodo implements Comparable<Nodo> {
      * @author Daniel Sánchez Alcaide
      */
     public double g(Nodo start){
-        return sqrt(((this.getX()-start.getX())*(this.getX()-start.getX()))+((this.getY()-start.getY())*(this.getY()-start.getY())));
+        double pasos = 0;
+        while(this.getCamino().getCoord() != start.getCoord()){
+            pasos += 1;
+        }
+        return pasos;
     }
     
     /**
