@@ -667,6 +667,11 @@ public class Megatron extends SingleAgent {
                 }
             }
         }
+        //Limpieza de Nodos
+        ArrayList<Nodo> m = (ArrayList)myMap.getMap().values();
+        for(Nodo n : m){
+            n.setCamino(null);
+        }
         return caminito;
     }
     
