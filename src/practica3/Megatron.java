@@ -298,6 +298,7 @@ public class Megatron extends SingleAgent {
 
                     } else {
                         System.err.println("Megatron ERROR: " + inbox.getPerformative());
+                        state = State.Cancel;
                     }
                     break;
 

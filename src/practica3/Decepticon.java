@@ -19,7 +19,7 @@ import java.util.Stack;
  * 
  * @author Antonio Troitiño del Rio, Alexander Straub
  */
-public class Decepticon extends SingleAgent {
+public abstract class Decepticon extends SingleAgent {
 
     // ID of Megatron
     private final AgentID megatron;
@@ -27,6 +27,7 @@ public class Decepticon extends SingleAgent {
     // Information about the decepticon
     private final int role;
     private boolean alive;
+    private final int visualRange;
     
     // Communication
     private final String key;
@@ -51,16 +52,18 @@ public class Decepticon extends SingleAgent {
      * @param aid ID of the new decepticon
      * @param megatron ID of megatron
      * @param role Type: 0-Flydron, 1-Birdron, 2-Falcdron
+     * @param visualRange Visual range of the drone
      * @param key Key for communication
      * @param map Reference to the map
      * @throws Exception 
      * @author Antonio Troitiño del Rio
      */
-    public Decepticon(AgentID aid, AgentID megatron, int role, String key, Map map) throws Exception {
+    public Decepticon(AgentID aid, AgentID megatron, int role, int visualRange, String key, Map map) throws Exception {
         super(aid);
         this.megatron = megatron;
         this.alive = true;
         this.role = role;
+        this.visualRange = visualRange;
         this.key = key;
         this.json = new JsonDBA();
         this.map = map;
@@ -1061,380 +1064,30 @@ public class Decepticon extends SingleAgent {
         if (this.map3_pathToUnexploredCell.isEmpty()) {
             // Get the border cells of the visual range of the specified drone
             if (!findWay) {
-                Nodo[] borderCells;
-                Megatron.Action[] actions;
+                ArrayList<Nodo> borderCells = new ArrayList<>();
+                ArrayList<Megatron.Action> actions = new ArrayList<>();
                 
-                switch (this.role) {
-                    case 0: // Mosca
-                        borderCells = new Nodo[8];
-                        actions = new Megatron.Action[8];
-                        
-                        // Different order of directions, depending on start position
-                        if (this.startPosition.getY() == 0) {
-                            borderCells[0] = this.map.getMap().get(position.E());
-                            actions[0] = Megatron.Action.E;
-                            borderCells[1] = this.map.getMap().get(position.N());
-                            actions[1] = Megatron.Action.N;
-                            borderCells[2] = this.map.getMap().get(position.W());
-                            actions[2] = Megatron.Action.W;
-                            borderCells[3] = this.map.getMap().get(position.S());
-                            actions[3] = Megatron.Action.S;
-                            
-                            borderCells[4] = this.map.getMap().get(position.NE());
-                            actions[4] = Megatron.Action.NE;
-                            borderCells[5] = this.map.getMap().get(position.NW());
-                            actions[5] = Megatron.Action.NW;
-                            borderCells[6] = this.map.getMap().get(position.SW());
-                            actions[6] = Megatron.Action.SW;
-                            borderCells[7] = this.map.getMap().get(position.SE());
-                            actions[7] = Megatron.Action.SE;
-                        } else {
-                            borderCells[0] = this.map.getMap().get(position.W());
-                            actions[0] = Megatron.Action.W;
-                            borderCells[1] = this.map.getMap().get(position.S());
-                            actions[1] = Megatron.Action.S;
-                            borderCells[2] = this.map.getMap().get(position.E());
-                            actions[2] = Megatron.Action.E;
-                            borderCells[3] = this.map.getMap().get(position.N());
-                            actions[3] = Megatron.Action.N;
-                            
-                            borderCells[4] = this.map.getMap().get(position.SW());
-                            actions[4] = Megatron.Action.SW;
-                            borderCells[5] = this.map.getMap().get(position.SE());
-                            actions[5] = Megatron.Action.SE;
-                            borderCells[6] = this.map.getMap().get(position.NE());
-                            actions[6] = Megatron.Action.NE;
-                            borderCells[7] = this.map.getMap().get(position.NW());
-                            actions[7] = Megatron.Action.NW;
-                        }
-                        
-                        // Main directions 3x for optimal exploration
-                        for (int i = 0; i < 4; i++) {
-                            if (borderCells[i] != null && borderCells[i].getRadar() != 1 && borderCells[i].getRadar() != 2 && !borderCells[i].explored()) {
-                                if (this.map3_lastAction != actions[i]) {
-                                    this.map3_pathToUnexploredCell.add(actions[i]);
-                                    this.map3_pathToUnexploredCell.add(actions[i]);
-                                }
-                                this.map3_lastAction = actions[i];
-                                return actions[i];
+                mapv3_getBorderCells(position, borderCells, actions);
+                
+                // Main directions rep times for optimal exploration
+                for (int i = 0; i < 4; i++) {
+                    if (borderCells.get(i) != null && borderCells.get(i).getRadar() != 1 && borderCells.get(i).getRadar() != 2 && !borderCells.get(i).explored()) {
+                        if (this.map3_lastAction != actions.get(i)) {
+                            for (int j = 0; j < this.visualRange - 1; j++) {
+                                this.map3_pathToUnexploredCell.add(actions.get(i));
                             }
                         }
-                        
-                        // Diagonal directions only once
-                        for (int i = 4; i < 8; i++) {
-                            if (borderCells[i] != null && borderCells[i].getRadar() != 1 && borderCells[i].getRadar() != 2 && !borderCells[i].explored()) {
-                                this.map3_lastAction = actions[i];
-                                return actions[i];
-                            }
-                        }
-                        break;
-                    case 1: // Pájaro
-                        borderCells = new Nodo[16];
-                        actions = new Megatron.Action[16];
-                        
-                        // Different order of directions, depending on start position
-                        if (this.startPosition.getY() == 0) {
-                            borderCells[0] = this.map.getMap().get(position.addX(2));
-                            actions[0] = Megatron.Action.E;
-                            borderCells[1] = this.map.getMap().get(position.addY(-2));
-                            actions[1] = Megatron.Action.N;
-                            borderCells[2] = this.map.getMap().get(position.addX(-2));
-                            actions[2] = Megatron.Action.W;
-                            borderCells[3] = this.map.getMap().get(position.addY(2));
-                            actions[3] = Megatron.Action.S;
-                            
-                            borderCells[4] = this.map.getMap().get(position.add(2, -1));
-                            actions[4] = Megatron.Action.NE;
-                            borderCells[5] = this.map.getMap().get(position.add(2, -2));
-                            actions[5] = Megatron.Action.NE;
-                            borderCells[6] = this.map.getMap().get(position.add(1, -2));
-                            actions[6] = Megatron.Action.NE;
-                            
-                            borderCells[7] = this.map.getMap().get(position.add(-1, -2));
-                            actions[7] = Megatron.Action.NW;
-                            borderCells[8] = this.map.getMap().get(position.add(-2, -2));
-                            actions[8] = Megatron.Action.NW;
-                            borderCells[9] = this.map.getMap().get(position.add(-2, -1));
-                            actions[9] = Megatron.Action.NW;
-                            
-                            borderCells[10] = this.map.getMap().get(position.add(-2, 1));
-                            actions[10] = Megatron.Action.SW;
-                            borderCells[11] = this.map.getMap().get(position.add(-2, 2));
-                            actions[11] = Megatron.Action.SW;
-                            borderCells[12] = this.map.getMap().get(position.add(-1, 2));
-                            actions[12] = Megatron.Action.SW;
-                            
-                            borderCells[13] = this.map.getMap().get(position.add(1, 2));
-                            actions[13] = Megatron.Action.SE;
-                            borderCells[14] = this.map.getMap().get(position.add(2, 2));
-                            actions[14] = Megatron.Action.SE;
-                            borderCells[15] = this.map.getMap().get(position.add(2, 1));
-                            actions[15] = Megatron.Action.SE;
-                        } else {
-                            borderCells[0] = this.map.getMap().get(position.addX(-2));
-                            actions[0] = Megatron.Action.W;
-                            borderCells[1] = this.map.getMap().get(position.addY(2));
-                            actions[1] = Megatron.Action.S;
-                            borderCells[2] = this.map.getMap().get(position.addX(2));
-                            actions[2] = Megatron.Action.E;
-                            borderCells[3] = this.map.getMap().get(position.addY(-2));
-                            actions[3] = Megatron.Action.N;
-                            
-                            borderCells[4] = this.map.getMap().get(position.add(-2, 1));
-                            actions[4] = Megatron.Action.SW;
-                            borderCells[5] = this.map.getMap().get(position.add(-2, 2));
-                            actions[5] = Megatron.Action.SW;
-                            borderCells[6] = this.map.getMap().get(position.add(-1, 2));
-                            actions[6] = Megatron.Action.SW;
-                            
-                            borderCells[7] = this.map.getMap().get(position.add(1, 2));
-                            actions[7] = Megatron.Action.SE;
-                            borderCells[8] = this.map.getMap().get(position.add(2, 2));
-                            actions[8] = Megatron.Action.SE;
-                            borderCells[9] = this.map.getMap().get(position.add(2, 1));
-                            actions[9] = Megatron.Action.SE;
-                            
-                            borderCells[10] = this.map.getMap().get(position.add(2, -1));
-                            actions[10] = Megatron.Action.NE;
-                            borderCells[11] = this.map.getMap().get(position.add(2, -2));
-                            actions[11] = Megatron.Action.NE;
-                            borderCells[12] = this.map.getMap().get(position.add(1, -2));
-                            actions[12] = Megatron.Action.NE;
-                            
-                            borderCells[13] = this.map.getMap().get(position.add(-1, -2));
-                            actions[13] = Megatron.Action.NW;
-                            borderCells[14] = this.map.getMap().get(position.add(-2, -2));
-                            actions[14] = Megatron.Action.NW;
-                            borderCells[15] = this.map.getMap().get(position.add(-2, -1));
-                            actions[15] = Megatron.Action.NW;
-                        }
-                        
-                        // Main directions 3x for optimal exploration
-                        for (int i = 0; i < 4; i++) {
-                            if (borderCells[i] != null && borderCells[i].getRadar() != 1 && borderCells[i].getRadar() != 2 && !borderCells[i].explored()) {
-                                if (this.map3_lastAction != actions[i]) {
-                                    this.map3_pathToUnexploredCell.add(actions[i]);
-                                    this.map3_pathToUnexploredCell.add(actions[i]);
-                                    this.map3_pathToUnexploredCell.add(actions[i]);
-                                    this.map3_pathToUnexploredCell.add(actions[i]);
-                                }
-                                this.map3_lastAction = actions[i];
-                                return actions[i];
-                            }
-                        }
-                        
-                        // Diagonal directions only once
-                        for (int i = 4; i < 16; i++) {
-                            if (borderCells[i] != null && borderCells[i].getRadar() != 1 && borderCells[i].getRadar() != 2 && !borderCells[i].explored()) {
-                                this.map3_lastAction = actions[i];
-                                return actions[i];
-                            }
-                        }
-                        break;
-                    case 2: // Halcón
-                        borderCells = new Nodo[40];
-                        actions = new Megatron.Action[40];
-                        
-                        // Different order of directions, depending on start position
-                        if (this.startPosition.getY() == 0) {
-                            borderCells[0] = this.map.getMap().get(position.addX(5));
-                            actions[0] = Megatron.Action.E;
-                            borderCells[1] = this.map.getMap().get(position.addY(-5));
-                            actions[1] = Megatron.Action.N;
-                            borderCells[2] = this.map.getMap().get(position.addX(-5));
-                            actions[2] = Megatron.Action.W;
-                            borderCells[3] = this.map.getMap().get(position.addY(5));
-                            actions[3] = Megatron.Action.S;
-                            
-                            borderCells[4] = this.map.getMap().get(position.add(5, -1));
-                            actions[4] = Megatron.Action.NE;
-                            borderCells[5] = this.map.getMap().get(position.add(5, -2));
-                            actions[5] = Megatron.Action.NE;
-                            borderCells[6] = this.map.getMap().get(position.add(5, -3));
-                            actions[6] = Megatron.Action.NE;
-                            borderCells[7] = this.map.getMap().get(position.add(5, -4));
-                            actions[7] = Megatron.Action.NE;
-                            borderCells[8] = this.map.getMap().get(position.add(5, -5));
-                            actions[8] = Megatron.Action.NE;
-                            borderCells[9] = this.map.getMap().get(position.add(4, -5));
-                            actions[9] = Megatron.Action.NE;
-                            borderCells[10] = this.map.getMap().get(position.add(3, -5));
-                            actions[10] = Megatron.Action.NE;
-                            borderCells[11] = this.map.getMap().get(position.add(2, -5));
-                            actions[11] = Megatron.Action.NE;
-                            borderCells[12] = this.map.getMap().get(position.add(1, -5));
-                            actions[12] = Megatron.Action.NE;
-                            
-                            borderCells[13] = this.map.getMap().get(position.add(-1, -5));
-                            actions[13] = Megatron.Action.NW;
-                            borderCells[14] = this.map.getMap().get(position.add(-2, -5));
-                            actions[14] = Megatron.Action.NW;
-                            borderCells[15] = this.map.getMap().get(position.add(-3, -5));
-                            actions[15] = Megatron.Action.NW;
-                            borderCells[16] = this.map.getMap().get(position.add(-4, -5));
-                            actions[16] = Megatron.Action.NW;
-                            borderCells[17] = this.map.getMap().get(position.add(-5, -5));
-                            actions[17] = Megatron.Action.NW;
-                            borderCells[18] = this.map.getMap().get(position.add(-5, -4));
-                            actions[18] = Megatron.Action.NW;
-                            borderCells[19] = this.map.getMap().get(position.add(-5, -3));
-                            actions[19] = Megatron.Action.NW;
-                            borderCells[20] = this.map.getMap().get(position.add(-5, -2));
-                            actions[20] = Megatron.Action.NW;
-                            borderCells[21] = this.map.getMap().get(position.add(-5, -1));
-                            actions[21] = Megatron.Action.NW;
-                            
-                            borderCells[22] = this.map.getMap().get(position.add(-5, 1));
-                            actions[22] = Megatron.Action.SW;
-                            borderCells[23] = this.map.getMap().get(position.add(-5, 2));
-                            actions[23] = Megatron.Action.SW;
-                            borderCells[24] = this.map.getMap().get(position.add(-5, 3));
-                            actions[24] = Megatron.Action.SW;
-                            borderCells[25] = this.map.getMap().get(position.add(-5, 4));
-                            actions[25] = Megatron.Action.SW;
-                            borderCells[26] = this.map.getMap().get(position.add(-5, 5));
-                            actions[26] = Megatron.Action.SW;
-                            borderCells[27] = this.map.getMap().get(position.add(-4, 5));
-                            actions[27] = Megatron.Action.SW;
-                            borderCells[28] = this.map.getMap().get(position.add(-3, 5));
-                            actions[28] = Megatron.Action.SW;
-                            borderCells[29] = this.map.getMap().get(position.add(-2, 5));
-                            actions[29] = Megatron.Action.SW;
-                            borderCells[30] = this.map.getMap().get(position.add(-1, 5));
-                            actions[30] = Megatron.Action.SW;
-                            
-                            borderCells[31] = this.map.getMap().get(position.add(1, 5));
-                            actions[31] = Megatron.Action.SE;
-                            borderCells[32] = this.map.getMap().get(position.add(2, 5));
-                            actions[32] = Megatron.Action.SE;
-                            borderCells[33] = this.map.getMap().get(position.add(3, 5));
-                            actions[33] = Megatron.Action.SE;
-                            borderCells[34] = this.map.getMap().get(position.add(4, 5));
-                            actions[34] = Megatron.Action.SE;
-                            borderCells[35] = this.map.getMap().get(position.add(5, 5));
-                            actions[35] = Megatron.Action.SE;
-                            borderCells[36] = this.map.getMap().get(position.add(5, 4));
-                            actions[36] = Megatron.Action.SE;
-                            borderCells[37] = this.map.getMap().get(position.add(5, 3));
-                            actions[37] = Megatron.Action.SE;
-                            borderCells[38] = this.map.getMap().get(position.add(5, 2));
-                            actions[38] = Megatron.Action.SE;
-                            borderCells[39] = this.map.getMap().get(position.add(5, 1));
-                            actions[39] = Megatron.Action.SE;
-                        } else {
-                            borderCells[0] = this.map.getMap().get(position.addX(-5));
-                            actions[0] = Megatron.Action.W;
-                            borderCells[1] = this.map.getMap().get(position.addY(5));
-                            actions[1] = Megatron.Action.S;
-                            borderCells[2] = this.map.getMap().get(position.addX(5));
-                            actions[2] = Megatron.Action.E;
-                            borderCells[3] = this.map.getMap().get(position.addY(-5));
-                            actions[3] = Megatron.Action.N;
-                            
-                            borderCells[4] = this.map.getMap().get(position.add(-5, 1));
-                            actions[4] = Megatron.Action.SW;
-                            borderCells[5] = this.map.getMap().get(position.add(-5, 2));
-                            actions[5] = Megatron.Action.SW;
-                            borderCells[6] = this.map.getMap().get(position.add(-5, 3));
-                            actions[6] = Megatron.Action.SW;
-                            borderCells[7] = this.map.getMap().get(position.add(-5, 4));
-                            actions[7] = Megatron.Action.SW;
-                            borderCells[8] = this.map.getMap().get(position.add(-5, 5));
-                            actions[8] = Megatron.Action.SW;
-                            borderCells[9] = this.map.getMap().get(position.add(-4, 5));
-                            actions[9] = Megatron.Action.SW;
-                            borderCells[10] = this.map.getMap().get(position.add(-3, 5));
-                            actions[10] = Megatron.Action.SW;
-                            borderCells[11] = this.map.getMap().get(position.add(-2, 5));
-                            actions[11] = Megatron.Action.SW;
-                            borderCells[12] = this.map.getMap().get(position.add(-1, 5));
-                            actions[12] = Megatron.Action.SW;
-                            
-                            borderCells[13] = this.map.getMap().get(position.add(1, 5));
-                            actions[13] = Megatron.Action.SE;
-                            borderCells[14] = this.map.getMap().get(position.add(2, 5));
-                            actions[14] = Megatron.Action.SE;
-                            borderCells[15] = this.map.getMap().get(position.add(3, 5));
-                            actions[15] = Megatron.Action.SE;
-                            borderCells[16] = this.map.getMap().get(position.add(4, 5));
-                            actions[16] = Megatron.Action.SE;
-                            borderCells[17] = this.map.getMap().get(position.add(5, 5));
-                            actions[17] = Megatron.Action.SE;
-                            borderCells[18] = this.map.getMap().get(position.add(5, 4));
-                            actions[18] = Megatron.Action.SE;
-                            borderCells[19] = this.map.getMap().get(position.add(5, 3));
-                            actions[19] = Megatron.Action.SE;
-                            borderCells[20] = this.map.getMap().get(position.add(5, 2));
-                            actions[20] = Megatron.Action.SE;
-                            borderCells[21] = this.map.getMap().get(position.add(5, 1));
-                            actions[21] = Megatron.Action.SE;
-                            
-                            borderCells[22] = this.map.getMap().get(position.add(5, -1));
-                            actions[22] = Megatron.Action.NE;
-                            borderCells[23] = this.map.getMap().get(position.add(5, -2));
-                            actions[23] = Megatron.Action.NE;
-                            borderCells[24] = this.map.getMap().get(position.add(5, -3));
-                            actions[24] = Megatron.Action.NE;
-                            borderCells[25] = this.map.getMap().get(position.add(5, -4));
-                            actions[25] = Megatron.Action.NE;
-                            borderCells[26] = this.map.getMap().get(position.add(5, -5));
-                            actions[26] = Megatron.Action.NE;
-                            borderCells[27] = this.map.getMap().get(position.add(4, -5));
-                            actions[27] = Megatron.Action.NE;
-                            borderCells[28] = this.map.getMap().get(position.add(3, -5));
-                            actions[28] = Megatron.Action.NE;
-                            borderCells[29] = this.map.getMap().get(position.add(2, -5));
-                            actions[29] = Megatron.Action.NE;
-                            borderCells[30] = this.map.getMap().get(position.add(1, -5));
-                            actions[30] = Megatron.Action.NE;
-                            
-                            borderCells[31] = this.map.getMap().get(position.add(-1, -5));
-                            actions[31] = Megatron.Action.NW;
-                            borderCells[32] = this.map.getMap().get(position.add(-2, -5));
-                            actions[32] = Megatron.Action.NW;
-                            borderCells[33] = this.map.getMap().get(position.add(-3, -5));
-                            actions[33] = Megatron.Action.NW;
-                            borderCells[34] = this.map.getMap().get(position.add(-4, -5));
-                            actions[34] = Megatron.Action.NW;
-                            borderCells[35] = this.map.getMap().get(position.add(-5, -5));
-                            actions[35] = Megatron.Action.NW;
-                            borderCells[36] = this.map.getMap().get(position.add(-5, -4));
-                            actions[36] = Megatron.Action.NW;
-                            borderCells[37] = this.map.getMap().get(position.add(-5, -3));
-                            actions[37] = Megatron.Action.NW;
-                            borderCells[38] = this.map.getMap().get(position.add(-5, -2));
-                            actions[38] = Megatron.Action.NW;
-                            borderCells[39] = this.map.getMap().get(position.add(-5, -1));
-                            actions[39] = Megatron.Action.NW;
-                        }
-                        
-                        // Main directions 3x for optimal exploration
-                        for (int i = 0; i < 4; i++) {
-                            if (borderCells[i] != null && borderCells[i].getRadar() != 1 && borderCells[i].getRadar() != 2 && !borderCells[i].explored()) {
-                                if (this.map3_lastAction != actions[i]) {
-                                    this.map3_pathToUnexploredCell.add(actions[i]);
-                                    this.map3_pathToUnexploredCell.add(actions[i]);
-                                    this.map3_pathToUnexploredCell.add(actions[i]);
-                                    this.map3_pathToUnexploredCell.add(actions[i]);
-                                    this.map3_pathToUnexploredCell.add(actions[i]);
-                                    this.map3_pathToUnexploredCell.add(actions[i]);
-                                    this.map3_pathToUnexploredCell.add(actions[i]);
-                                    this.map3_pathToUnexploredCell.add(actions[i]);
-                                    this.map3_pathToUnexploredCell.add(actions[i]);
-                                    this.map3_pathToUnexploredCell.add(actions[i]);
-                                }
-                                this.map3_lastAction = actions[i];
-                                return actions[i];
-                            }
-                        }
-                        
-                        // Diagonal directions only once
-                        for (int i = 4; i < 40; i++) {
-                            if (borderCells[i] != null && borderCells[i].getRadar() != 1 && borderCells[i].getRadar() != 2 && !borderCells[i].explored()) {
-                                this.map3_lastAction = actions[i];
-                                return actions[i];
-                            }
-                        }
+                        this.map3_lastAction = actions.get(i);
+                        return actions.get(i);
+                    }
+                }
+
+                // Diagonal directions only once
+                for (int i = 4; i < borderCells.size(); i++) {
+                    if (borderCells.get(i) != null && borderCells.get(i).getRadar() != 1 && borderCells.get(i).getRadar() != 2 && !borderCells.get(i).explored()) {
+                        this.map3_lastAction = actions.get(i);
+                        return actions.get(i);
+                    }
                 }
             }
 
@@ -1443,7 +1096,7 @@ public class Decepticon extends SingleAgent {
             Nodo closestNode = null;
             Nodo currentNode;
 
-            for (Iterator<Nodo> it = this.map.getMap().values().iterator();
+            for (Iterator<Nodo> it = this.map.getAccessibleMap().values().iterator();
                     it.hasNext();) {
 
                 currentNode = it.next();
@@ -1466,5 +1119,16 @@ public class Decepticon extends SingleAgent {
         // Return next action to follow the path to the closest unexplored node
         return this.map3_pathToUnexploredCell.pop();
     }
+    
+    /**
+     * Return the border cells in the right order, together with the respective
+     * actions.
+     * 
+     * @param position Current position of the drone
+     * @param borderCells Array to fill with border cells
+     * @param actions Array to fill with actions for the border cells
+     * @author Alexander Straub
+     */
+    protected abstract void mapv3_getBorderCells(Coord position, ArrayList<Nodo> borderCells, ArrayList<Megatron.Action> actions);
 
 }
