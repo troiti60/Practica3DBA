@@ -67,6 +67,13 @@ public class DataAccess {
         this.passwd = "Gaugin";
         this.ssl = false;
         this.world  = "beach";
+        //this.world  = "pyrenees";
+        //this.world  = "alps";
+        //this.world  = "andes";
+        //this.world  = "valleys";
+        //this.world  = "faun";
+        //this.world  = "everst";
+        //this.world  = "newyork";
         this.key = null;
     }
 
