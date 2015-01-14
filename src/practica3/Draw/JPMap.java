@@ -7,9 +7,7 @@ package practica3.Draw;
 
 import java.awt.Color;
 import java.awt.Graphics;
-import java.util.HashMap;
 import java.util.Iterator;
-import org.apache.tools.ant.taskdefs.PathConvert;
 import practica3.Coord;
 import practica3.Decepticon;
 import practica3.Map;
