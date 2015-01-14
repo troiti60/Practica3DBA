@@ -26,7 +26,7 @@ public class JPMap extends javax.swing.JPanel {
      */
     public JPMap() {
         initComponents();
-        map = new Map();
+        map = new Map(100);
         dronePos = null;
         lastDronePos = null;
     }

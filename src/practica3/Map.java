@@ -19,11 +19,24 @@ public class Map {
     /**
      * Constructor
      * 
+     * @param resolution Resolution of the map
      * @author Antonio Troitiño del Río
      */
-    public Map() {
-        this.map = new HashMap<>(10000);
-        this.accessible = new HashMap<>(10000);
+    public Map(int resolution) {
+        this.map = new HashMap<>((resolution + 2) * (resolution + 2));
+        this.accessible = new HashMap<>((resolution + 2) * (resolution + 2));
+        
+        // Add border at top and bottom
+        for (int i = -1; i <= resolution; i++) {
+            addNode(new Coord(i, -1), 2);
+            addNode(new Coord(i, resolution), 2);
+        }
+        
+        // Add border at sides
+        for (int i = 0; i < resolution; i++) {
+            addNode(new Coord(-1, i), 2);
+            addNode(new Coord(resolution, i), 2);
+        }
     }
 
     /**
@@ -34,7 +47,7 @@ public class Map {
      * @param value Radar value for that position
      * @author Antonio Troitiño del Río, Alexander Straub
      */
-    public void addNode(Coord key, int value) {
+    public final void addNode(Coord key, int value) {
         Node newNode = new Node(key, value);
 
         if (!map.containsKey(key)) {

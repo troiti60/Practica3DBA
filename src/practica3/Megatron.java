@@ -115,16 +115,18 @@ public class Megatron extends SingleAgent {
 
     @Override
     protected void init() {
-        this.myMap = new Map();
         this.dataAccess = DataAccess.createInstance();
-        draw = new Window();
-        draw.setResizable(true);
-        draw.setVisible(true);
-
+        
         int resolution = 100;
         if (this.dataAccess.getWorld().equals("newyork")) {
             resolution = 500;
         }
+        
+        this.myMap = new Map(resolution);
+        draw = new Window();
+        draw.setResizable(true);
+        draw.setVisible(true);
+
         this.mapImage = new MapImage(resolution);
     }
 
