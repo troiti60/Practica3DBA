@@ -12,8 +12,12 @@ import java.util.Comparator;
  *
  * @author Daniel Sánchez Alcaide
  */
-public class ComparadorHeuristicaNodo implements Comparator<Nodo>{
-    private static Nodo goal = Map.getTarget();
+public class ComparadorHeuristicaNodo implements Comparator<Nodo> {
+    private final Nodo goal;
+    
+    public ComparadorHeuristicaNodo(Nodo goal) {
+        this.goal = goal;
+    }
     
     /**
      * Compare two nodes for the priority queue comparator
