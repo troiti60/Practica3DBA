@@ -399,10 +399,10 @@ public abstract class Decepticon extends SingleAgent {
     protected Stack<Megatron.Action> map1_pathToUnexploredCell = new Stack<>();
 
     // For mapv2
-    private boolean map2_comprobation = false;
-    private int map2_contador = 0;
-    private boolean map2_direccion = true;
-    private boolean map2_iod = false;
+    private boolean map2_comprobation = false;//false ->part1 || true ->part2
+    private int map2_contador = 0;//coord x
+    private boolean map2_direccion = true;//true down || false up
+    private boolean map2_iod = false;//false <- || true ->
     private boolean map2_bordeando = false;
 
     // For mapv3
@@ -888,12 +888,17 @@ public abstract class Decepticon extends SingleAgent {
         Megatron.Action actions = null;
         HashMap<Coord, Node> localMap = this.map.getMap();
         Node current;
-        Node next = null;
         current = new Node(this.currentPosition.getX(), this.currentPosition.getY(),
                 localMap.get(this.currentPosition).getRadar());
 
         if (map2_bordeando) {
             //funcion de bordear obstaculos
+            if(map2_direccion){
+                actions=BordearDerecha(map2_contador,0,lastAction,current);
+            }else{
+                actions=BordearDerecha(map2_contador,1,lastAction,current);
+            }
+            
         }
 
         if (map2_comprobation == false) {
@@ -905,21 +910,21 @@ public abstract class Decepticon extends SingleAgent {
                         && localMap.get(current.E()).getRadar() == 2) {
                     map2_comprobation = true;
                 } else {
-                    if (localMap.get(current.E()).getRadar() == 0) {
+                    if (localMap.get(current.E()).getRadar() == 0 && lastAction!=Megatron.Action.W) {
                         actions = Megatron.Action.E;
-                    } else if (localMap.get(current.SE()).getRadar() == 0) {
+                    } else if (localMap.get(current.SE()).getRadar() == 0 && lastAction!=Megatron.Action.NW) {
                         actions = Megatron.Action.SE;
-                    } else if (localMap.get(current.S()).getRadar() == 0) {
+                    } else if (localMap.get(current.S()).getRadar() == 0 && lastAction!=Megatron.Action.N) {
                         actions = Megatron.Action.S;
-                    } else if (localMap.get(current.NE()).getRadar() == 0) {
+                    } else if (localMap.get(current.NE()).getRadar() == 0 && lastAction!=Megatron.Action.SW) {
                         actions = Megatron.Action.NE;
-                    } else if (localMap.get(current.N()).getRadar() == 0) {
+                    } else if (localMap.get(current.N()).getRadar() == 0 && lastAction!=Megatron.Action.S) {
                         actions = Megatron.Action.N;
-                    } else if (localMap.get(current.NW()).getRadar() == 0) {
+                    } else if (localMap.get(current.NW()).getRadar() == 0 && lastAction!=Megatron.Action.SE) {
                         actions = Megatron.Action.NW;
-                    } else if (localMap.get(current.W()).getRadar() == 0) {
+                    } else if (localMap.get(current.W()).getRadar() == 0 && lastAction!=Megatron.Action.E) {
                         actions = Megatron.Action.W;
-                    } else {
+                    } else if(lastAction!=Megatron.Action.NE){
                         actions = Megatron.Action.SW;
                     }
                 }
@@ -931,21 +936,21 @@ public abstract class Decepticon extends SingleAgent {
                         && localMap.get(current.W()).getRadar() == 2) {
                     map2_comprobation = true;
                 } else {
-                    if (localMap.get(current.NW()).getRadar() == 0) {
+                    if (localMap.get(current.NW()).getRadar() == 0 && lastAction!=Megatron.Action.SE) {
                         actions = Megatron.Action.NW;
-                    } else if (localMap.get(current.N()).getRadar() == 0) {
+                    } else if (localMap.get(current.N()).getRadar() == 0 && lastAction!=Megatron.Action.S) {
                         actions = Megatron.Action.N;
-                    } else if (localMap.get(current.W()).getRadar() == 0) {
+                    } else if (localMap.get(current.W()).getRadar() == 0 && lastAction!=Megatron.Action.E) {
                         actions = Megatron.Action.W;
-                    } else if (localMap.get(current.SW()).getRadar() == 0) {
+                    } else if (localMap.get(current.SW()).getRadar() == 0 && lastAction!=Megatron.Action.NE) {
                         actions = Megatron.Action.SW;
-                    } else if (localMap.get(current.NE()).getRadar() == 0) {
+                    } else if (localMap.get(current.NE()).getRadar() == 0 && lastAction!=Megatron.Action.SW) {
                         actions = Megatron.Action.NE;
-                    } else if (localMap.get(current.E()).getRadar() == 0) {
+                    } else if (localMap.get(current.E()).getRadar() == 0 && lastAction!=Megatron.Action.W) {
                         actions = Megatron.Action.E;
-                    } else if (localMap.get(current.SE()).getRadar() == 0) {
+                    } else if (localMap.get(current.SE()).getRadar() == 0 && lastAction!=Megatron.Action.NW) {
                         actions = Megatron.Action.SE;
-                    } else {
+                    } else if(lastAction!=Megatron.Action.N){
                         actions = Megatron.Action.S;
                     }
                 }
@@ -955,7 +960,7 @@ public abstract class Decepticon extends SingleAgent {
         } else {
             //hacia abajo e izquierda
             if (!map2_iod && map2_direccion && map2_contador == current.getX()) {
-                if (localMap.get(current.S()).getRadar() == 0) {
+                if (localMap.get(current.S()).getRadar() == 0 && lastAction!=Megatron.Action.N) {
                     actions = Megatron.Action.S;
                 } else if (localMap.get(current.S()).getRadar() == 2) {
                     map2_contador -= 3;
@@ -963,10 +968,17 @@ public abstract class Decepticon extends SingleAgent {
                 } else {
                     //bordear obstaculo
                     map2_bordeando = true;
+                    if(localMap.get(current.SE()).getRadar() == 0 && lastAction!=Megatron.Action.NW){
+                        actions=Megatron.Action.SE;
+                    }else if(localMap.get(current.E()).getRadar() == 0 && lastAction!=Megatron.Action.W){
+                        actions=Megatron.Action.E;
+                    }else if(localMap.get(current.NE()).getRadar() == 0 && lastAction!=Megatron.Action.SW){
+                        actions=Megatron.Action.NE;
+                    }
                 }
                 //hacia arriba e izquierda
             } else if (!map2_iod && !map2_direccion && map2_contador == current.getX()) {
-                if (localMap.get(current.N()).getRadar() == 0) {
+                if (localMap.get(current.N()).getRadar() == 0 && lastAction!=Megatron.Action.S) {
                     actions = Megatron.Action.N;
                 } else if (localMap.get(current.N()).getRadar() == 2) {
                     map2_direccion = true;
@@ -975,10 +987,17 @@ public abstract class Decepticon extends SingleAgent {
                 } else {
                     //bordear obstaculo
                     map2_bordeando = true;
+                    if(localMap.get(current.NE()).getRadar() == 0 && lastAction!=Megatron.Action.SW){
+                        actions=Megatron.Action.NE;
+                    }else if(localMap.get(current.E()).getRadar() == 0 && lastAction!=Megatron.Action.W){
+                        actions=Megatron.Action.E;
+                    }else if(localMap.get(current.SE()).getRadar() == 0 && lastAction!=Megatron.Action.NW){
+                        actions=Megatron.Action.SE;
+                    }
                 }
                 //hacia abajo y derecha
             } else if (map2_iod && map2_direccion && map2_contador == current.getX()) {
-                if (localMap.get(current.S()).getRadar() == 0) {
+                if (localMap.get(current.S()).getRadar() == 0 && lastAction!=Megatron.Action.N) {
                     actions = Megatron.Action.S;
                 } else if (localMap.get(current.S()).getRadar() == 2) {
                     map2_contador += 3;
@@ -986,6 +1005,13 @@ public abstract class Decepticon extends SingleAgent {
                 } else {
                     //bordear obstaculo
                     map2_bordeando = true;
+                    if(localMap.get(current.SE()).getRadar() == 0 && lastAction!=Megatron.Action.NW){
+                        actions=Megatron.Action.SE;
+                    }else if(localMap.get(current.E()).getRadar() == 0 && lastAction!=Megatron.Action.W){
+                        actions=Megatron.Action.E;
+                    }else if(localMap.get(current.NE()).getRadar() == 0 && lastAction!=Megatron.Action.SW){
+                        actions=Megatron.Action.NE;
+                    }
                 }
                 //hacia arriba y derecha
             } else if (map2_iod && !map2_direccion && map2_contador == current.getX()) {
@@ -997,30 +1023,84 @@ public abstract class Decepticon extends SingleAgent {
                     actions = Megatron.Action.E;
                 } else {
                     map2_bordeando = true;
-                    //bordear obstaculo bordearObstaculo(coord x)
+                    if(localMap.get(current.NE()).getRadar() == 0 && lastAction!=Megatron.Action.SW){
+                        actions=Megatron.Action.NE;
+                    }else if(localMap.get(current.E()).getRadar() == 0 && lastAction!=Megatron.Action.W){
+                        actions=Megatron.Action.E;
+                    }else if(localMap.get(current.SE()).getRadar() == 0 && lastAction!=Megatron.Action.NW){
+                        actions=Megatron.Action.SE;
+                    }
                 }
                 //ir hacia la x cambiada
             } else {
-                //ir hacia la izquierda
-                if (current.getX() > map2_contador) {
-                    if (localMap.get(current.E()).getRadar() == 0) {
-                        actions = Megatron.Action.E;
-                    } else {
-                        //bordear
-                        map2_bordeando = true;
+                if(current.getX()>map2_contador){
+                    if(localMap.get(current.W()).getRadar() == 0 && lastAction!=Megatron.Action.E){
+                        actions=Megatron.Action.W;
+                    }else{
+                        map2_bordeando=true;
                     }
-                    //ir hacia la derecha
-                } else {
-                    if (localMap.get(current.W()).getRadar() == 0) {
-                        actions = Megatron.Action.W;
-                    } else {
-                        //bordear
-                        map2_bordeando = true;
+                }else{
+                    if(localMap.get(current.E()).getRadar() == 0 && lastAction!=Megatron.Action.W){
+                        actions=Megatron.Action.E;
+                    }else{
+                        map2_bordeando=true;
                     }
                 }
             }
         }
         return actions;
+    }
+    
+    /**
+     * Avoid obstacles
+     * @param int x -> go to coord x
+     * @param int direction -> direction of the drone [0-> up to down, 1-> down to up]
+     * @param lastAction -> last action of the drone
+     * @return next action to be done to avoid obstacles by specified drone
+     * @throws java.lang.Exception
+     * @author Jesús Cobo Sánchez
+     */
+    private Megatron.Action BordearDerecha(int x, int direction, Megatron.Action lastAction, Node current){
+        Megatron.Action action=null;
+        HashMap<Coord, Node> localMap = this.map.getMap();
+        
+        if(direction==0 && x!=current.getX()){
+            if (localMap.get(current.W()).getRadar() == 0 && lastAction!=Megatron.Action.E) {
+                action = Megatron.Action.W;
+            } else if (localMap.get(current.SW()).getRadar() == 0 && lastAction!=Megatron.Action.NE) {
+                action = Megatron.Action.SW;
+            } else if (localMap.get(current.S()).getRadar() == 0 && lastAction!=Megatron.Action.N) {
+                action = Megatron.Action.S;
+            } else if (localMap.get(current.SE()).getRadar() == 0 && lastAction!=Megatron.Action.NW) {
+                action = Megatron.Action.SE;
+            } else if (localMap.get(current.E()).getRadar() == 0 && lastAction!=Megatron.Action.W) {
+                action = Megatron.Action.E;
+            } else if (localMap.get(current.NE()).getRadar() == 0 && lastAction!=Megatron.Action.SW) {
+                action = Megatron.Action.NE;
+            } else if (localMap.get(current.N()).getRadar() == 0 && lastAction!=Megatron.Action.S) {
+                action = Megatron.Action.N;
+            }
+        }else if(direction==1 && x!=current.getX()){
+            if (localMap.get(current.E()).getRadar() == 0 && lastAction!=Megatron.Action.W) {
+                action = Megatron.Action.E;
+            } else if (localMap.get(current.NW()).getRadar() == 0 && lastAction!=Megatron.Action.SE) {
+                action = Megatron.Action.NW;
+            } else if (localMap.get(current.N()).getRadar() == 0 && lastAction!=Megatron.Action.S) {
+                action = Megatron.Action.N;
+            } else if (localMap.get(current.NE()).getRadar() == 0 && lastAction!=Megatron.Action.SW) {
+                action = Megatron.Action.NE;
+            } else if (localMap.get(current.E()).getRadar() == 0 && lastAction!=Megatron.Action.W) {
+                action = Megatron.Action.E;
+            } else if (localMap.get(current.SE()).getRadar() == 0 && lastAction!=Megatron.Action.NW) {
+                action = Megatron.Action.SE;
+            } else if (localMap.get(current.S()).getRadar() == 0 && lastAction!=Megatron.Action.N) {
+                action = Megatron.Action.S;
+            }
+        }else if(x==current.getX()){
+            map2_bordeando=false;
+        }
+        
+        return action;
     }
 
     /**
