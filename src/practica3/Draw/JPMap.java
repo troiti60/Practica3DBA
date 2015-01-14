@@ -7,11 +7,9 @@ package practica3.Draw;
 
 import java.awt.Color;
 import java.awt.Graphics;
-import java.util.HashMap;
 import java.util.Iterator;
-import org.apache.tools.ant.taskdefs.PathConvert;
 import practica3.Coord;
-import practica3.DataDecepticon;
+import practica3.Decepticon;
 import practica3.Map;
 import practica3.Nodo;
 
@@ -33,10 +31,10 @@ public class JPMap extends javax.swing.JPanel {
 
     }
 
-    public void updateDraw(Map m, DataDecepticon dron) {
+    public void updateDraw(Map m, Decepticon dron) {
         map = m;
-        dronPos = dron.getCurrent();
-        dronLastPos = dron.getLast();
+        dronPos = dron.getPosition();
+        dronLastPos = dron.getLastPosition();
         this.repaint();
     }
 
