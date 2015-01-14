@@ -408,6 +408,12 @@ public abstract class Decepticon extends SingleAgent {
     // For mapv3
     protected Stack<Megatron.Action> map3_pathToUnexploredCell = new Stack<>();
     protected Megatron.Action map3_lastAction = null;
+    
+    // For mapv4
+    protected boolean map4_start = true;
+    protected boolean map4_stop = false;
+    protected Coord map4_target = null;
+    protected Stack<Megatron.Action> map4_pathToUnexploredCell = new Stack<>();
 
     /**
      * The best path to reach the goal, once we have found it, using A*
@@ -1123,7 +1129,7 @@ public abstract class Decepticon extends SingleAgent {
      * @throws java.lang.Exception
      * @author Alexander Straub
      */
-    public Megatron.Action mapv3() throws Exception {
+    public final Megatron.Action mapv3() throws Exception {
         Megatron.Action ret = mapv3(false);
 
         // If mapv3 returns an illegal action, try again
@@ -1248,4 +1254,151 @@ public abstract class Decepticon extends SingleAgent {
      */
     protected abstract void mapv3_getBorderCells(Coord position, ArrayList<Node> borderCells, ArrayList<Megatron.Action> actions);
 
+    /**
+     * First go to the nearest corner, then try to cross the map
+     * 
+     * @return Next action
+     * @author Alexander Straub
+     */
+    public final Megatron.Action mapv4() {
+        // If it's the first time executing, go to the nearest corner
+        if (this.map4_start) {
+            this.map4_start = false;
+            
+            if (this.startPosition.getX() <= this.map.getResolution() / 2) {
+                // Get to (0,0)
+                for (int i = 0; i < this.startPosition.getX() - 1; i++) {
+                    this.map4_pathToUnexploredCell.push(Megatron.Action.W);
+                }
+                return Megatron.Action.W;
+            } else {
+                // Get to (res-1,0)
+                for (int i = 0; i < this.map.getResolution() - this.startPosition.getX() - 2; i++) {
+                    this.map4_pathToUnexploredCell.push(Megatron.Action.E);
+                }
+                return Megatron.Action.E;
+            }
+        }
+        
+        // If actions are pre-planned: execute them
+        if (!this.map4_pathToUnexploredCell.isEmpty()) {
+            return this.map4_pathToUnexploredCell.pop();
+        }
+        
+        // Try to cross the map
+        Megatron.Action ret = mapv4_crossMap();
+        
+//        // Go to the other corner and cross again
+//        if (ret == null) {
+//            this.map4_stop = false;
+//            
+//            if (this.getPosition().getX() == 0) {
+//                for (int i = 2; i < this.map.getResolution(); i++) {
+//                    this.map4_pathToUnexploredCell.push(Megatron.Action.E);
+//                }
+//                ret = Megatron.Action.E;
+//            } else {
+//                for (int i = 2; i < this.map.getResolution(); i++) {
+//                    this.map4_pathToUnexploredCell.push(Megatron.Action.W);
+//                }
+//                ret = Megatron.Action.W;
+//            }
+//        }
+        
+        return ret;
+    }
+    
+    /**
+     * Try to cross the map
+     * 
+     * @return Next action
+     * @author Alexander Straub
+     */
+    protected Megatron.Action mapv4_crossMap() {
+        if (this.map4_stop) {
+            return null;
+        }
+        
+        // Get target border if not set
+        if (this.map4_target == null) {
+            int x, y;
+            
+            if (this.getPosition().getX() == 0) {
+                x = this.map.getResolution() - 1;
+            } else {
+                x = 0;
+            }
+            
+            if (this.getPosition().getY() == 0) {
+                y = this.map.getResolution() - 1;
+            } else {
+                y = 0;
+            }
+            
+            this.map4_target = new Coord(x, y);
+        }
+        
+        Node closestNode = null;
+        
+        // Check if target node is in the graph
+        if (this.map.getAccessibleMap().containsKey(this.map4_target)) {
+            this.map4_stop = true;
+            
+            closestNode = this.map.getAccessibleMap().get(this.map4_target);
+        } else {
+            // Get neighbour closest to the target            
+            if (closestNode == null || this.getPosition().NW().distanceTo(this.map4_target) < closestNode.getCoord().distanceTo(this.map4_target)) {
+                closestNode = this.map.getAccessibleMap().get(this.getPosition().NW());
+            }
+            if (closestNode == null || this.getPosition().N().distanceTo(this.map4_target) < closestNode.getCoord().distanceTo(this.map4_target)) {
+                closestNode = this.map.getAccessibleMap().get(this.getPosition().N());
+            }
+            if (closestNode == null || this.getPosition().NE().distanceTo(this.map4_target) < closestNode.getCoord().distanceTo(this.map4_target)) {
+                closestNode = this.map.getAccessibleMap().get(this.getPosition().NE());
+            }
+            if (closestNode == null || this.getPosition().E().distanceTo(this.map4_target) < closestNode.getCoord().distanceTo(this.map4_target)) {
+                closestNode = this.map.getAccessibleMap().get(this.getPosition().E());
+            }
+            if (closestNode == null || this.getPosition().SE().distanceTo(this.map4_target) < closestNode.getCoord().distanceTo(this.map4_target)) {
+                closestNode = this.map.getAccessibleMap().get(this.getPosition().SE());
+            }
+            if (closestNode == null || this.getPosition().S().distanceTo(this.map4_target) < closestNode.getCoord().distanceTo(this.map4_target)) {
+                closestNode = this.map.getAccessibleMap().get(this.getPosition().S());
+            }
+            if (closestNode == null || this.getPosition().SW().distanceTo(this.map4_target) < closestNode.getCoord().distanceTo(this.map4_target)) {
+                closestNode = this.map.getAccessibleMap().get(this.getPosition().SW());
+            }
+            if (closestNode == null || this.getPosition().W().distanceTo(this.map4_target) < closestNode.getCoord().distanceTo(this.map4_target)) {
+                closestNode = this.map.getAccessibleMap().get(this.getPosition().W());
+            }
+            
+            if (closestNode == null || closestNode.getCoord().distanceTo(this.map4_target) >= this.getPosition().distanceTo(this.map4_target)) {
+                closestNode = null;
+                
+                // Find unexplored cell closest to the corner to get to
+                Node currentNode;
+
+                for (Iterator<Node> it = this.map.getAccessibleMap().values().iterator();
+                        it.hasNext();) {
+
+                    currentNode = it.next();
+                    if (currentNode.getRadar() == 0 && !currentNode.isExplored()
+                            && (closestNode == null || this.map4_target.distanceTo(currentNode.getCoord()) < this.map4_target.distanceTo(closestNode.getCoord()))) {
+
+                        closestNode = currentNode;
+                    }
+                }
+            }
+        }
+        
+        if (closestNode == null) {
+            System.err.println("ERROR: mapv4 called, but map already explored completely");
+            return null;
+        }
+
+        // Find way to the previously found closest node (or the target)
+        this.map4_pathToUnexploredCell = dijkstra(this.map.getMap().get(this.getPosition()), closestNode);
+        
+        return this.map4_pathToUnexploredCell.pop();
+    }
 }

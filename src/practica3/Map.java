@@ -15,6 +15,7 @@ public class Map {
     private final HashMap<Coord, Node> map;
     private final HashMap<Coord, Node> accessible;
     private static Node target = null;
+    private final int resolution;
 
     /**
      * Constructor
@@ -37,6 +38,8 @@ public class Map {
             addNode(new Coord(-1, i), 2);
             addNode(new Coord(resolution, i), 2);
         }
+        
+        this.resolution = resolution;
     }
 
     /**
@@ -155,6 +158,16 @@ public class Map {
      */
     public static boolean isTargetSet() {
         return target != null;
+    }
+    
+    /**
+     * Returns the resolution of the map
+     * 
+     * @return Resolution of the map
+     * @author Alexander Straub
+     */
+    public int getResolution() {
+        return this.resolution;
     }
 
 }

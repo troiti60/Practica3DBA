@@ -107,5 +107,44 @@ public final class Flytron extends Decepticon {
             actions.add(Megatron.Action.NW);
         }
     }
+    
+    /**
+     * Try to cross the map
+     * 
+     * @return Next action
+     * @author Alexander Straub
+     */
+    @Override
+    protected final Megatron.Action mapv4_crossMap() {
+        // Only execute once
+        if (this.map4_stop) {
+            return null;
+        }
+        
+        this.map4_stop = true;
+        
+        // Get direction
+        Megatron.Action direction;
+        
+        if (this.getPosition().getY() == 0) {
+            if (this.getLastAction() == Megatron.Action.E) {
+                direction = Megatron.Action.SW;
+            } else {
+                direction = Megatron.Action.SE;
+            }
+        } else {
+            if (this.getLastAction() == Megatron.Action.E) {
+                direction = Megatron.Action.NW;
+            } else {
+                direction = Megatron.Action.NE;
+            }
+        }
+        
+        // Fly over the map
+        for (int i = 1; i < this.map.getResolution() - 1; i++) {
+            this.map4_pathToUnexploredCell.push(direction);
+        }
+        return direction;
+    }
 
 }
