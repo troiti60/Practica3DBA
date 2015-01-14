@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package practica3.Draw;
 
 import java.awt.Color;
@@ -11,47 +6,65 @@ import java.util.Iterator;
 import practica3.Coord;
 import practica3.Decepticon;
 import practica3.Map;
-import practica3.Nodo;
+import practica3.Node;
 
 /**
+ * Drawing area
  *
- * @author JotaC
+ * @author José Carlos Alfaro
  */
 public class JPMap extends javax.swing.JPanel {
 
     Map map;
-    Coord dronPos;
-    Coord dronLastPos;
+    Coord dronePos;
+    Coord lastDronePos;
 
+    /**
+     * Constructor
+     *
+     * @author José Carlos Alfaro
+     */
     public JPMap() {
         initComponents();
         map = new Map();
-        dronPos = null;
-        dronLastPos = null;
-
+        dronePos = null;
+        lastDronePos = null;
     }
 
-    public void updateDraw(Map m, Decepticon dron) {
-        map = m;
-        dronPos = dron.getPosition();
-        dronLastPos = dron.getLastPosition();
+    /**
+     * Updates the local references
+     *
+     * @param map Map
+     * @param drone Drone
+     * @author José Carlos Alfaro
+     */
+    public void updateDraw(Map map, Decepticon drone) {
+        this.map = map;
+        this.dronePos = drone.getPosition();
+        this.lastDronePos = drone.getLastPosition();
         this.repaint();
     }
 
+    /**
+     * Paint method
+     *
+     * @param g Graphic
+     * @author José Carlos Alfaro
+     */
     @Override
     public void paint(Graphics g) {
         super.paint(g);
-        
-        if (!map.getMap().isEmpty()) {
 
-            Iterator it = map.getMap().entrySet().iterator();
+        // Draw map
+        if (!this.map.getMap().isEmpty()) {
+            Iterator it = this.map.getMap().entrySet().iterator();
             Coord c;
-            Nodo n;
+            Node n;
 
             while (it.hasNext()) {
                 java.util.Map.Entry e = (java.util.Map.Entry) it.next();
                 c = new Coord((Coord) e.getKey());
-                n = new Nodo((Nodo) e.getValue());
+                n = new Node((Node) e.getValue());
                 if (n.getRadar() == 0) {
                     g.setColor(Color.WHITE);
                 }
@@ -63,13 +76,15 @@ public class JPMap extends javax.swing.JPanel {
                 }
                 if (n.getRadar() == 3) {
                     g.setColor(Color.MAGENTA);
-                }              
-                g.fillRect((c.getX()*5)+7, (c.getY()*5)+7, 5, 5);                
-            }       
-            if(dronPos!= null){
-                g.setColor(Color.BLUE);
-                g.fillRect((dronPos.getX()*5)+7, (dronPos.getY()*5)+7, 5, 5);
+                }
+                g.fillRect((c.getX() * 5) + 7, (c.getY() * 5) + 7, 5, 5);
             }
+        }
+        
+        // Draw drone position
+        if (this.dronePos != null) {
+            g.setColor(Color.BLUE);
+            g.fillRect((this.dronePos.getX() * 5) + 7, (this.dronePos.getY() * 5) + 7, 5, 5);
         }
     }
 

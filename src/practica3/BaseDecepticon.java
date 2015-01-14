@@ -1,9 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package practica3;
 
 import es.upv.dsic.gti_ia.core.AgentID;
@@ -13,41 +7,47 @@ import java.util.logging.Logger;
 
 /**
  * Class in charge of the launch
- * 
- * @author Fco Javier Ortega Rodríguez
+ *
+ * @author Javier Ortega Rodríguez
  */
 public class BaseDecepticon {
-    
+
     /**
+     * Main entrance point for this project
+     *
      * @param args the command line arguments
+     * @author Javier Ortega Rodríguez
      */
     public static void main(String[] args) {
-        
-        System.out.println("BaseDecepticon: Iniciando...");
-        
-        DataAccess data = DataAccess.crearInstancia();
-        
+        System.out.println("BaseDecepticon: Initiating...");
+
+        // Create data structure
+        DataAccess data = DataAccess.createInstance();
+
         // Conection with server
         AgentsConnection.connect(data.getHost(), data.getPort(),
                 data.getVirtualHost(), data.getUsername(),
                 data.getPassword(), data.getSSL());
-        
-        System.out.println("BaseDecepticon: Creada conexión con el servidor");
-        
-        AgentID idMega = new AgentID( DataAccess.getNameMegatron() );
-        Megatron mega = null;
-        
+
+        System.out.println("BaseDecepticon: Connection to server established");
+
+        // Create and start Megatron
+        AgentID idMega = new AgentID(DataAccess.getNameMegatron());
+        Megatron mega;
+
         try {
-            System.out.println("BaseDecepticon: Instanciando Megatron");
+            System.out.println("BaseDecepticon: Instantiating Megatron");
             mega = new Megatron(idMega);
         } catch (Exception ex) {
             Logger.getLogger(BaseDecepticon.class.getName()).log(Level.SEVERE, null, ex);
-            System.err.println("\n####################\nError al instanciar Megatron\n####################\n");
+            System.err.println("\nBaseDecepticon: Error instantiating Megatron");
+            System.err.println("\t" + ex.getMessage());
+            return;
         }
-        
-        System.out.println("BaseDecepticon: Lanzando Megatron");
+
+        System.out.println("BaseDecepticon: Starting Megatron");
         mega.start();
-        System.out.println("BaseDecepticon: Fin");
+        System.out.println("BaseDecepticon: Megatron started");
     }
-    
+
 }

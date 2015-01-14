@@ -1,56 +1,65 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package practica3;
 
 import java.util.HashMap;
 
 /**
- *
- * @author 
+ * Class to store the nodes of the map
+ * 
+ * @author Antonio Troitiño del Río
  */
 public class Map {
-    private HashMap<Coord,Nodo> map;
-    private HashMap<Coord,Nodo> accessible;
-    private static Nodo target=null;
-    
-    public Map(){
-        this.map = new HashMap<Coord, Nodo>(10000);
-        this.accessible = new HashMap<Coord, Nodo>(10000);
-    }
+
     /**
-     * Associates the specified value with the specified key in this map
-     * If the map previously contained a mapping for the key, the new 
-     * value is ignored.
-     * @param key Position of the node in the map. Used as key in the HashMap 
+     * Maps and target
+     */
+    private final HashMap<Coord, Node> map;
+    private final HashMap<Coord, Node> accessible;
+    private static Node target = null;
+
+    /**
+     * Constructor
+     * 
+     * @author Antonio Troitiño del Río
+     */
+    public Map() {
+        this.map = new HashMap<>(10000);
+        this.accessible = new HashMap<>(10000);
+    }
+
+    /**
+     * Associates the specified value with the specified key in this map If the
+     * map previously contained a mapping for the key, the new value is ignored.
+     *
+     * @param key Position of the node in the map. Used as key in the HashMap
      * @param value Radar value for that position
      * @author Antonio Troitiño del Río, Alexander Straub
      */
-    public void addNode(Coord key,int value){
-        Nodo newNode=new Nodo(key,value);
-        
-        if(!map.containsKey(key)){
-            if(value==3&&target==null) target=newNode;
+    public void addNode(Coord key, int value) {
+        Node newNode = new Node(key, value);
+
+        if (!map.containsKey(key)) {
+            if (value == 3 && target == null) {
+                target = newNode;
+            }
             map.put(key, newNode);
             checkAdjacent(newNode);
         }
-        
+
         // Add if it is not a wall, also to a map for accessible cells
+        // (advantage for search algorithms using only a graph of accessible cells)
         if (!this.accessible.containsKey(key) && (value == 0 || value == 3)) {
             this.accessible.put(key, newNode);
         }
     }
-     /**
+
+    /**
      * Updates the list of adjacent nodes of the given node
      *
      * @param node Node to be updated
      * @author Antonio Troitiño, Alexander Straub
      */
-    public void checkAdjacent(Nodo node){
-         Nodo aux;
+    public void checkAdjacent(Node node) {
+        Node aux;
 
         if (this.map.containsKey(node.getCoord().NW())) {
             aux = this.map.get(node.getCoord().NW());
@@ -93,33 +102,46 @@ public class Map {
             aux.add(node);
         }
     }
+
     /**
      * Returns the collection of nodes known to date
-     * @return map containing all of the nodes
+     *
+     * @return Map containing all of the nodes
      * @author Antonio Trotiño de Río
      */
-    public HashMap<Coord,Nodo> getMap(){return map;}
-    
+    public HashMap<Coord, Node> getMap() {
+        return map;
+    }
+
     /**
      * Returns the map with only accessible cells
-     * 
+     *
      * @return Map containing accessible cells
      * @author Alexander Straub
      */
-    public HashMap<Coord,Nodo> getAccessibleMap() { return this.accessible; }
-    
+    public HashMap<Coord, Node> getAccessibleMap() {
+        return this.accessible;
+    }
+
     /**
-     * Returns the first node added to the map with a 
-     * radar value of 3
-     * @return first target sighted,null if target has not been set yet
+     * Returns the first node added to the map with a radar value of 3
+     *
+     * @return First target sighted, null if target has not been set yet
      * @author Antonio Troitiño del Río
      */
-    public static Nodo getTarget(){return target;}
+    public static Node getTarget() {
+        return target;
+    }
+
     /**
-     * Boolean static method used to know if variable target has been already set
-     * @return false if target equals null, true otherwise
+     * Boolean static method used to know if variable target has been already
+     * set
+     *
+     * @return False if target equals null, true otherwise
      * @author Antonio Troitiño del Río
      */
-    public static boolean isTargetSet(){if(target==null)return false; else return true;}
-    
+    public static boolean isTargetSet() {
+        return target != null;
+    }
+
 }

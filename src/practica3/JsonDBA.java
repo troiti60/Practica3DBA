@@ -9,7 +9,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 
 /**
- * Clase para parsear y crear strings de JSON
+ * Class for parsing and creating Json strings
  *
  * @author José Carlos Alfaro
  */
@@ -18,89 +18,94 @@ public class JsonDBA {
     private final Gson gson;
     private final JsonParser parser;
 
+    /**
+     * Constructor
+     */
     public JsonDBA() {
         this.gson = new Gson();
         this.parser = new JsonParser();
     }
 
-    //**************************************************************************************************//
-    //*******************   FUNCIONES DE CREACION DE JSON (SERIALIZACION) ******************************//
-    //**************************************************************************************************//
     /**
-     * Funcion que serializa una coleccion de datos a formato JSON
+     * Serialize a collection to Json format
      *
-     * @param coleccion
-     * @return Devuelve un String con el texto en formato JSON
+     * @param collection Collection containing name value pairs
+     * @return Return string in Json format
+     * @author José Carlos Alfaro
      */
-    public String crearJson(LinkedHashMap coleccion) {
-        return gson.toJson(coleccion);
+    public String createJson(LinkedHashMap collection) {
+        return this.gson.toJson(collection);
     }
+
     /**
-     * Serializa un mensaje a formato json.
-     * @param key: clave json
-     * @param value: contenido asociado a la clave
-     * @return devuelve un string clave y valor en formato json
+     * Serialize a name value pair as Json string
+     *
+     * @param key Key
+     * @param value Value for this key
+     * @return Return a name value pair as Json string
+     * @author José Carlos Alfaro
      */
-    public String crearJson(String key, String value){
+    public String createJson(String key, String value) {
         LinkedHashMap hm = new LinkedHashMap();
         hm.put(key, value);
-        return gson.toJson(hm);
+        return this.gson.toJson(hm);
     }
 
-    //**************************************************************************************************//
-    //**********************   FUNCIONES DE RECEPCION DE JSON (DESERIALIZACION) ************************//
-    //**************************************************************************************************//
     /**
-     * Se coge el elemento de la cadena json que pasamos por parametro
+     * Extract the value to a corresponding key from a Json element
      *
-     * @param cadena Contiene un elemento json Clave: Valor
-     * @param clave Key por la que se accedera
-     * @return
+     * @param jsonElement Contains a name value pair
+     * @param key Key to access
+     * @return Corresponding value to the key
+     * @author José Carlos Alfaro
      */
-    public JsonElement getElement(JsonElement cadena, String clave) {
-
-        String mensaje = cadena.toString();
+    public JsonElement getElement(JsonElement jsonElement, String key) {
+        String message = jsonElement.toString();
         JsonElement element = null;
-        
-        if(mensaje.contains(clave))
-        {       
-            element = parser.parse(mensaje);
-            return element.getAsJsonObject().get(clave);
+
+        if (message.contains(key)) {
+            element = this.parser.parse(message);
+            return element.getAsJsonObject().get(key);
+        } else {
+            System.out.print("The key " + key + " can not be found in the message");
         }
-        else
-            System.out.print("La clave "+clave+ " no está en el mensaje");
-        
+
         return element;
-        
-    }
-    
-    public Object getElement(String msg, String element){
- 
-        return gson.fromJson(msg, LinkedHashMap.class).get(element);
     }
 
     /**
-     * Parsea el string de respuesta del servidor a JsonElement 
-     * @param result
-     * @return JsonElement con el mensaje 
+     * Extract an element from a Json string
+     * 
+     * @param message Message as Json string
+     * @param element Element to extract
+     * @return Value of the element
+     * @author José Carlos Alfaro
      */
-    public JsonElement recibirRespuesta(String result) {
-        return parser.parse(result);
+    public Object getElement(String message, String element) {
+        return this.gson.fromJson(message, LinkedHashMap.class).get(element);
     }
 
-    //**************************************************************************************************//
-    //*******************************   FUNCIONES AUXILIARES *******************************************//
-    //**************************************************************************************************//
-    
     /**
-     * Transforma un elemento JsonELement con una colección de float en un Array de float.
-     * @param cadena: contiene la cadena de float
-     * @return Array de float
+     * Parse an answer string from the server to a Json element
+     *
+     * @param message Answer from the server to parse
+     * @return JsonElement containing the message
+     * @author José Carlos Alfaro
      */
-    public ArrayList<Float> jsonElementToArrayFloat(JsonElement cadena) {
-        //JsonParser parser = new JsonParser();
+    public JsonElement receiveAnswer(String message) {
+        return this.parser.parse(message);
+    }
+
+    /**
+     * Transform a Json element with a float collection into a float array
+     *
+     * @param string Contains the float collection
+     * @return Float array
+     * @author José Carlos Alfaro
+     */
+    public ArrayList<Float> jsonElementToArrayFloat(JsonElement string) {
         ArrayList<Float> arr_float = new ArrayList<>();
-        JsonElement element = parser.parse(cadena.toString());
+        JsonElement element = this.parser.parse(string.toString());
         JsonArray jsArray = element.getAsJsonArray();
 
         for (JsonElement jse : jsArray) {
@@ -108,16 +113,17 @@ public class JsonDBA {
         }
         return arr_float;
     }
-    
+
     /**
-     * Transforma un elemento JsonELement con una colección de enteros en un Array de enteros.
-     * @param cadena: contiene la cadena de enteros
-     * @return Array de enteros
+     * Transform a Json element with an integer collection into an integer array
+     *
+     * @param string Contains the integer collection
+     * @return Integer array
+     * @author José Carlos Alfaro
      */
-    public ArrayList<Integer> jsonElementToArrayInt(Object cadena) {
-        //JsonParser parser = new JsonParser();
+    public ArrayList<Integer> jsonElementToArrayInt(Object string) {
         ArrayList<Integer> arr_int = new ArrayList<>();
-        JsonElement element = parser.parse(cadena.toString());
+        JsonElement element = this.parser.parse(string.toString());
         JsonArray jsArray = element.getAsJsonArray();
 
         for (JsonElement jse : jsArray) {
@@ -125,33 +131,34 @@ public class JsonDBA {
         }
         return arr_int;
     }
+
     /**
-     * Get Integer element from Json string message.
-     * @author JC
-     * @param msg   Whole message
-     * @param element   Element's key
+     * Get Integer element from Json string message
+     *
+     * @param msg Whole message
+     * @param element Element's key
      * @return Integer element
+     * @author José Carlos Alfaro
      */
     public int getElementInteger(String msg, String element) {
-        Gson gson = new Gson();
-        
-        return (int) Double.parseDouble(gson.fromJson(msg, LinkedHashMap.class).get(element).toString());
+        return (int) Double.parseDouble(this.gson.fromJson(msg, LinkedHashMap.class).get(element).toString());
     }
+
     /**
-     * Deserializa una cadena Json que se encuentra dentro de otra cadena Json
-     * @param msg: String en formato Json
-     * @return HashMap con todos los elementos que contenia la cadena Json
+     * Deserialize Json string within another Json string
+     *
+     * @param msg String in Json format
+     * @return HashMap with the elements from the Json string
+     * @author José Carlos Alfaro
      */
-    public LinkedHashMap jsonInJson(String msg){
-        
-        HashMap hm = new HashMap();
-        LinkedHashMap aux= new LinkedHashMap();
-        
-        hm = (HashMap) gson.fromJson(msg, HashMap.class);
-        JsonElement toJsonTree = gson.toJsonTree(hm.get("result"));
-        aux = gson.fromJson(toJsonTree, LinkedHashMap.class);
-        
+    public LinkedHashMap jsonInJson(String msg) {
+        HashMap hm;
+        LinkedHashMap aux;
+
+        hm = (HashMap) this.gson.fromJson(msg, HashMap.class);
+        JsonElement toJsonTree = this.gson.toJsonTree(hm.get("result"));
+        aux = this.gson.fromJson(toJsonTree, LinkedHashMap.class);
+
         return aux;
-        
     }
 }

@@ -10,6 +10,9 @@ import java.util.ArrayList;
  */
 public final class Falcdron extends Decepticon {
 
+    private final int visualRange;
+    private final int consumation;
+
     /**
      * Constructor
      *
@@ -21,23 +24,47 @@ public final class Falcdron extends Decepticon {
      * @author Alexander Straub
      */
     public Falcdron(AgentID aid, AgentID megatron, String key, Map map) throws Exception {
-        super(aid, megatron, 2, 11, key, map);
+        super(aid, megatron, 2, key, map);
         this.name = "Falcdron " + this.getName();
+        this.visualRange = 11;
+        this.consumation = 4;
 
         System.out.println(this.name + ": Instantiated");
     }
 
     /**
+     * Returns the visual range of the Decepticon
+     *
+     * @return Visual range
+     * @author Alexander Straub
+     */
+    @Override
+    public final int getVisualRange() {
+        return this.visualRange;
+    }
+
+    /**
+     * Returns the battery consumation per step
+     *
+     * @return Battery consumation
+     * @author Alexander Straub
+     */
+    @Override
+    public final int getConsumation() {
+        return this.consumation;
+    }
+
+    /**
      * Return the border cells in the right order, together with the respective
      * actions.
-     * 
+     *
      * @param position Current position of the drone
      * @param borderCells Array to fill with border cells
      * @param actions Array to fill with actions for the border cells
      * @author Alexander Straub
      */
     @Override
-    protected final void mapv3_getBorderCells(Coord position, ArrayList<Nodo> borderCells, ArrayList<Megatron.Action> actions) {
+    protected final void mapv3_getBorderCells(Coord position, ArrayList<Node> borderCells, ArrayList<Megatron.Action> actions) {
         borderCells.ensureCapacity(40);
         actions.ensureCapacity(40);
 
