@@ -55,7 +55,7 @@ public class Megatron extends SingleAgent {
     private Action lastAction = null;
     
     // Image of the map for visualization
-    private MapImage mapImage = null;
+    //private MapImage mapImage = null;
 
     /**
      * Enum with possible movement actions
@@ -137,9 +137,9 @@ public class Megatron extends SingleAgent {
         draw.setResizable(true);
         draw.setVisible(true);
 
-        int resolution = 100;
-        if (this.dataAccess.getWorld().equals("newyork")) resolution = 500;
-        this.mapImage = new MapImage(resolution);
+        //int resolution = 100;
+        //if (this.dataAccess.getWorld().equals("newyork")) resolution = 500;
+        //this.mapImage = new MapImage(resolution);
     }
 
     /**
@@ -156,23 +156,24 @@ public class Megatron extends SingleAgent {
         if (perception.isEmpty() || dron >= drones.size()) {
             System.err.println("ERROR: Megatron received an empty perception!");
         } else {
+            Coord c = new Coord(pos.getX(), pos.getY());
             drones.get(dron).setPosition(pos);
-            this.mapImage.setDronePosition(dron, pos);
+            myMap.getMap().get(c).setVisitado(dron);
+            //this.mapImage.setDronePosition(dron, pos);
             int cont = Math.round((float) Math.sqrt(perception.size()));
             cont = (cont - 1) / 2;
             int count = 0;
             for (int i = 0 - cont; i <= cont; i++) {
                 for (int j = 0 - cont; j <= cont; j++) {
                     myMap.addNode(new Coord(pos.getX() + j, pos.getY() + i), perception.get(count));
-                    this.mapImage.setCell(perception.get(count), new Coord(pos.getX() + j, pos.getY() + i));
+                    //this.mapImage.setCell(perception.get(count), new Coord(pos.getX() + j, pos.getY() + i));
                     count++;
                 }
             }
-        }
-        
-        draw.getJpanel().updateDraw(myMap, drones.get(dron));
-        draw.setLabelCoordinate(pos.getX(), pos.getY());     
-        draw.setBatteryDroneValue(drones.get(dron).getFuel());
+        }       
+        draw.getJpanel().updateDraw(myMap, drones.get(dron),dron,dataAccess.getWorld());
+        draw.setLabelCoordinate(pos.getX(), pos.getY(),dron);     
+        draw.setBatteryDroneValue(drones.get(dron).getFuel(),dron);
         draw.setTotalBatteryValue(energyOfWorld);
         
         System.out.println("Megatron: Mapa actualizado");
@@ -557,9 +558,9 @@ public class Megatron extends SingleAgent {
                     System.out.println("Megatron: Muriendo");
                     live = false;
                     
-                    try {
+                    /*try {
                         this.mapImage.saveToFile();
-                    } catch (Exception e) {}
+                    } catch (Exception e) {}*/
 
                     break;
             }

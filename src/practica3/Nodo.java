@@ -37,7 +37,7 @@ public class Nodo implements Comparable<Nodo> {
     private int explorado;
     
     // Indica si el nodo ya era visitado
-    private boolean visitado = false;
+    private int visitado = -1;
 
     // Variables usadas en la búsqueda
     private Nodo camino = null;
@@ -97,8 +97,8 @@ public class Nodo implements Comparable<Nodo> {
      *
      * @author Alexander Straub
      */
-    public void setVisitado() {
-        this.visitado = true;
+    public void setVisitado(int numDron) {
+        this.visitado = numDron;
     }
 
     /**
@@ -107,7 +107,7 @@ public class Nodo implements Comparable<Nodo> {
      * @return True si ya era visitado
      * @author Alexander Straub
      */
-    public boolean isVisitado() {
+    public int isVisitado() {
         return this.visitado;
     }
 

@@ -22,6 +22,8 @@ import practica3.Nodo;
 public class JPMap extends javax.swing.JPanel {
 
     Map map;
+    String world;
+    int numDron;
     Coord dronPos;
     Coord dronLastPos;
 
@@ -30,11 +32,13 @@ public class JPMap extends javax.swing.JPanel {
         map = new Map();
         dronPos = null;
         dronLastPos = null;
-
+        
     }
 
-    public void updateDraw(Map m, DataDecepticon dron) {
+    public void updateDraw(Map m, DataDecepticon dron, int nDron,String world) {
         map = m;
+        this.world = world;
+        numDron = nDron;
         dronPos = dron.getCurrent();
         dronLastPos = dron.getLast();
         this.repaint();
@@ -54,23 +58,44 @@ public class JPMap extends javax.swing.JPanel {
                 java.util.Map.Entry e = (java.util.Map.Entry) it.next();
                 c = new Coord((Coord) e.getKey());
                 n = new Nodo((Nodo) e.getValue());
-                if (n.getRadar() == 0) {
+                if (n.getRadar() == 0 && n.isVisitado()== -1) {
                     g.setColor(Color.WHITE);
-                }
-                if (n.getRadar() == 1) {
-                    g.setColor(Color.GREEN);
-                }
-                if (n.getRadar() == 2) {
+                }else if ((n.getRadar() == 1 || n.getRadar() == 2 )  && n.isVisitado()== -1) {
                     g.setColor(Color.BLACK);
-                }
-                if (n.getRadar() == 3) {
+                }else if (n.getRadar() == 3 && n.isVisitado()== -1) {
                     g.setColor(Color.MAGENTA);
-                }              
+                }else if(n.isVisitado()==0 && numDron == 0){
+                    g.setColor(Color.CYAN);
+                }else if(n.isVisitado()==1 && numDron == 1){
+                    g.setColor(Color.PINK);
+                }else if(n.isVisitado()==2 && numDron == 2){
+                    g.setColor(Color.GREEN);
+                }else if(n.isVisitado()==3 && numDron == 3){
+                    g.setColor(Color.YELLOW);
+                }
+                
                 g.fillRect((c.getX()*5)+7, (c.getY()*5)+7, 5, 5);                
             }       
             if(dronPos!= null){
-                g.setColor(Color.BLUE);
-                g.fillRect((dronPos.getX()*5)+7, (dronPos.getY()*5)+7, 5, 5);
+                switch(numDron){
+                    case 0:
+                        g.setColor(Color.BLUE);
+                        g.fillRect((dronPos.getX()*5)+7, (dronPos.getY()*5)+7, 5, 5);
+                        break;
+                    case 1:
+                        g.setColor(Color.RED);
+                        g.fillRect((dronPos.getX()*5)+7, (dronPos.getY()*5)+7, 5, 5);
+                        break;
+                    case 2:
+                        g.setColor(Color.GREEN);
+                        g.fillRect((dronPos.getX()*5)+7, (dronPos.getY()*5)+7, 5, 5);
+                        break;
+                    case 3:
+                        g.setColor(Color.YELLOW);
+                        g.fillRect((dronPos.getX()*5)+7, (dronPos.getY()*5)+7, 5, 5);
+                        break;
+                }
+                
             }
         }
     }
