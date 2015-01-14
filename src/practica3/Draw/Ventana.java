@@ -33,47 +33,59 @@ public class Ventana extends javax.swing.JFrame {
      */
     public Ventana() {
         initComponents();
+        System.out.println("Creando el panel para el mapa");
         jpanel = new JPMap();
+        System.out.println("Creando las barras de bateria");
         batteryDrone0 = new JProgressBar();
         batteryDrone1 = new JProgressBar();
         batteryDrone2 = new JProgressBar();
         batteryDrone3 = new JProgressBar();
         batteryTotal  = new JProgressBar();
-        coordXDr0        = new JLabel();
-        coordYDr0        = new JLabel();
-        labelXDr0        = new JLabel();
-        labelYDr0        = new JLabel();
-        coordPanelDr0    = new JPanel();
+        System.out.println("Creando visualizacion de las coodenadas");
+        coordXDr0 = new JLabel(); coordYDr0 = new JLabel(); labelXDr0 = new JLabel(); labelYDr0 = new JLabel();
+        coordXDr1 = new JLabel(); coordYDr1 = new JLabel(); labelXDr1 = new JLabel(); labelYDr1 = new JLabel();
+        coordXDr2 = new JLabel(); coordYDr2 = new JLabel(); labelXDr2 = new JLabel(); labelYDr2 = new JLabel();
+        coordXDr3 = new JLabel(); coordYDr3 = new JLabel(); labelXDr3 = new JLabel(); labelYDr3 = new JLabel();
+        coordPanelDr0 = new JPanel(); coordPanelDr1 = new JPanel(); coordPanelDr2 = new JPanel(); coordPanelDr3 = new JPanel();
+
+        System.out.println("Posicionando los objetos en la ventana");
         
         // ********DRONE 1***********
+        System.out.println("Posicionando barra de bateria dron 0");
         batteryDrone0.setStringPainted(true);
         Border border = BorderFactory.createTitledBorder("Spectro Drone Battery");
         batteryDrone0.setBorder(border);
         batteryDrone0.setBounds(540, 10, 200, 100);
         
+        System.out.println("Posicionando borde coordenadas dron 1 ");
         Border borderCordPanel = BorderFactory.createTitledBorder("Current Position");
         coordPanelDr0.setBorder(borderCordPanel);
-        coordPanelDr0.setBounds(650, 10, 150, 50); 
+        coordPanelDr0.setBounds(750, 10, 200, 50); 
+        
         
         //********DRONE 2***********
+        System.out.println("Posicionando barra de bateria dron 2");
         batteryDrone1.setStringPainted(true);
         Border borderDr1 = BorderFactory.createTitledBorder("Viewfinder Drone Battery");
         batteryDrone1.setBorder(borderDr1);
         batteryDrone1.setBounds(540, 110, 200, 100);
         
+        System.out.println("Posicionando borde de coordenadas dron 2 ");
         Border borderCordPanelDr1 = BorderFactory.createTitledBorder("Current Position");
-        coordPanelDr0.setBorder(borderCordPanelDr1);
-        coordPanelDr0.setBounds(650, 110, 150, 50);
+        coordPanelDr1.setBorder(borderCordPanelDr1);
+        coordPanelDr1.setBounds(750, 110, 200, 50);
         
         //********DRONE 3***********
+        System.out.println("Posicionando barra de bateria dron 3");
         batteryDrone2.setStringPainted(true);
         Border borderDr2 = BorderFactory.createTitledBorder("Nightbird Drone Battery");
         batteryDrone2.setBorder(borderDr2);
         batteryDrone2.setBounds(540, 210, 200, 100);
         
+        System.out.println("Posicionando barra de coordenadas dron 3");
         Border borderCordPanelDr2 = BorderFactory.createTitledBorder("Current Position");
         coordPanelDr2.setBorder(borderCordPanelDr2);
-        coordPanelDr2.setBounds(650, 210, 150, 50);
+        coordPanelDr2.setBounds(750, 210, 200, 50);
         
         //********DRONE 4***********
         batteryDrone3.setStringPainted(true);
@@ -82,10 +94,10 @@ public class Ventana extends javax.swing.JFrame {
         batteryDrone3.setBounds(540, 310, 200, 100);
         
         Border borderCordPanelDr3 = BorderFactory.createTitledBorder("Current Position");
-        coordPanelDr0.setBorder(borderCordPanelDr3);
-        coordPanelDr0.setBounds(650, 310, 150, 50);
+        coordPanelDr3.setBorder(borderCordPanelDr3);
+        coordPanelDr3.setBounds(750, 310, 200, 50);
         
-        
+        System.out.println("Posicionando barra de bateria total");
         //********WORLD's TOTAL BATTERY***********
         batteryTotal.setStringPainted(true);
         Border borderBatTot = BorderFactory.createTitledBorder("World's Total Battery");
@@ -93,24 +105,28 @@ public class Ventana extends javax.swing.JFrame {
         batteryTotal.setBounds(540, 410, 200, 100);
                
         //********ADD START TEXT***********
-        labelXDr0.setText("X: "); labelXDr0.setText("X: "); labelXDr0.setText("X: "); labelXDr0.setText("X: ");
-        coordXDr1.setText("0");   coordXDr1.setText("0");   coordXDr1.setText("0");   coordXDr1.setText("0");
-        labelYDr2.setText("Y: "); labelYDr2.setText("Y: "); labelYDr2.setText("Y: "); labelYDr2.setText("Y: ");
-        coordYDr3.setText("0");   coordYDr3.setText("0");   coordYDr3.setText("0");   coordYDr3.setText("0");
+        labelXDr0.setText("X: "); labelXDr1.setText("X: "); labelXDr2.setText("X: "); labelXDr3.setText("X: ");
+        coordXDr0.setText("0");   coordXDr1.setText("0");   coordXDr2.setText("0");   coordXDr3.setText("0");
+        labelYDr0.setText("Y: "); labelYDr1.setText("Y: "); labelYDr2.setText("Y: "); labelYDr3.setText("Y: ");
+        coordYDr0.setText("0");   coordYDr1.setText("0");   coordYDr2.setText("0");   coordYDr3.setText("0");
         
+        System.out.println("Añadiendo coordenadas al panel de coordenadas");
+        //********ADD COORD TO THE WINDOWS***********
+        coordPanelDr0.add(labelXDr0); coordPanelDr1.add(labelXDr1); coordPanelDr2.add(labelXDr2);   coordPanelDr3.add(labelXDr3);
+        coordPanelDr0.add(coordXDr0); coordPanelDr1.add(coordXDr1); coordPanelDr2.add(coordXDr2);   coordPanelDr3.add(coordXDr3);
+        coordPanelDr0.add(labelYDr0); coordPanelDr1.add(labelYDr1); coordPanelDr2.add(labelYDr2);   coordPanelDr3.add(labelYDr3);
+        coordPanelDr0.add(coordYDr0); coordPanelDr1.add(coordYDr1); coordPanelDr2.add(coordYDr2);   coordPanelDr3.add(coordYDr3);
         
-        //********ADD COORD TO THE PANEL***********
-        coordPanelDr0.add(labelXDr0); coordPanelDr0.add(labelXDr0); coordPanelDr0.add(labelXDr0);   coordPanelDr0.add(labelXDr0);
-        coordPanelDr1.add(coordXDr1); coordPanelDr1.add(coordXDr1); coordPanelDr1.add(coordXDr1);   coordPanelDr1.add(coordXDr1);
-        coordPanelDr2.add(labelYDr2); coordPanelDr2.add(labelYDr2); coordPanelDr2.add(labelYDr2);   coordPanelDr2.add(labelYDr2);
-        coordPanelDr3.add(coordYDr3); coordPanelDr3.add(coordYDr3); coordPanelDr3.add(coordYDr3);   coordPanelDr3.add(coordYDr3);
-        
+        System.out.println("Añadiendo todos los elementos a la ventana");
         //********ADD ALL TO THE WINDOW***********
         this.add(jpanel);
         this.add(batteryDrone0); this.add(batteryDrone1); this.add(batteryDrone2); this.add(batteryDrone3);
-        this.add(batteryTotal);
         this.add(coordPanelDr0); this.add(coordPanelDr1); this.add(coordPanelDr2); this.add(coordPanelDr3);
+        this.add(batteryTotal);      
+        
         this.setTitle("Practica DBA");  
+        System.out.println("Finalizado constructor de la ventana");
+        
     }
     
     public JPMap getJpanel(){
@@ -189,13 +205,13 @@ public class Ventana extends javax.swing.JFrame {
     private void initComponents() {
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setPreferredSize(new java.awt.Dimension(850, 570));
+        setPreferredSize(new java.awt.Dimension(1000, 570));
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 850, Short.MAX_VALUE)
+            .addGap(0, 1000, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)

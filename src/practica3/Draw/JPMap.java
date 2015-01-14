@@ -26,14 +26,17 @@ public class JPMap extends javax.swing.JPanel {
     Coord dronLastPos;
 
     public JPMap() {
+        System.out.println("Iniciando constructor JPMAP");
         initComponents();
         map = new Map();
         dronPos = null;
         dronLastPos = null;
+        System.out.println("Finalizando constructor JPMAP");
         
     }
 
     public void updateDraw(Map m, Decepticon dron, int nDron,String world) {
+        
         map = m;
         this.world = world;
         numDron = nDron;
@@ -45,22 +48,24 @@ public class JPMap extends javax.swing.JPanel {
     @Override
     public void paint(Graphics g) {
         super.paint(g);
+        System.out.println("Pintando en el panel con JPMAP");
         
         if (!map.getMap().isEmpty()) {
 
             Iterator it = map.getMap().entrySet().iterator();
             Coord c;
             Nodo n;
-
+             
             while (it.hasNext()) {
                 java.util.Map.Entry e = (java.util.Map.Entry) it.next();
                 c = new Coord((Coord) e.getKey());
                 n = new Nodo((Nodo) e.getValue());
+                System.out.println("Numero de dron: "+numDron+" Nodo visitado: "+n.isVisitado());
                 if (n.getRadar() == 0 && n.isVisitado()== -1) {
                     g.setColor(Color.WHITE);
-                }else if ((n.getRadar() == 1 || n.getRadar() == 2 )  && n.isVisitado()== -1) {
+                }else if ((n.getRadar() == 1 || n.getRadar() == 2 )) {
                     g.setColor(Color.BLACK);
-                }else if (n.getRadar() == 3 && n.isVisitado()== -1) {
+                }else if (n.getRadar() == 3) {
                     g.setColor(Color.MAGENTA);
                 }else if(n.isVisitado()==0 && numDron == 0){
                     g.setColor(Color.CYAN);
@@ -96,6 +101,7 @@ public class JPMap extends javax.swing.JPanel {
                 
             }
         }
+        System.out.println("Fin del metodo paint() de JPMap");
     }
 
     @SuppressWarnings("unchecked")

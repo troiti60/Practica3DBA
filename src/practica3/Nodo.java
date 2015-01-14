@@ -36,7 +36,7 @@ public class Nodo implements Comparable<Nodo> {
     // Si vale 8, se toma el nodo como explorado
     private int explorado;
     
-    // Indica si el nodo ya era visitado
+    // Indica si el nodo ya era visitado. -1 significa que no ha sido visitado por el dron.
     private int visitado = -1;
 
     // Variables usadas en la búsqueda

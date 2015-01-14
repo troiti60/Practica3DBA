@@ -122,9 +122,11 @@ public class Megatron extends SingleAgent {
     protected void init() {
         this.myMap = new Map();
         this.dataAccess = DataAccess.crearInstancia();
+        System.out.println("Va a crear la ventana");
         draw = new Ventana();     
         draw.setResizable(true);
         draw.setVisible(true);
+        System.out.println("VHa terminado  de crear la ventana");
 
         //int resolution = 100;
         //if (this.dataAccess.getWorld().equals("newyork")) resolution = 500;
@@ -142,12 +144,15 @@ public class Megatron extends SingleAgent {
      * @author Antonio Troitiño del Río
      */
     private void updateMap(Coord pos, ArrayList<Integer> perception, int dron) {
+        
         if (perception.isEmpty() || dron >= drones.size()) {
             System.err.println("ERROR: Megatron received an empty perception!");
         } else {
+            System.err.println("Creando cordenadas");
             Coord c = new Coord(pos.getX(), pos.getY());
             drones.get(dron).setPosition(pos);
-            myMap.getMap().get(c).setVisitado(dron);
+    
+            System.err.println("Actualizando mapa");
             //this.mapImage.setDronePosition(dron, pos);
             int cont = Math.round((float) Math.sqrt(perception.size()));
             cont = (cont - 1) / 2;
@@ -159,12 +164,14 @@ public class Megatron extends SingleAgent {
                     count++;
                 }
             }
-        }       
+                      
+        myMap.getMap().get(c).setVisitado(dron);
+        System.err.println("Nodo visitado por el dron: "+myMap.getMap().get(c).isVisitado());
         draw.getJpanel().updateDraw(myMap, drones.get(dron),dron,dataAccess.getWorld());
         draw.setLabelCoordinate(pos.getX(), pos.getY(),dron);     
-        draw.setBatteryDroneValue(drones.get(dron).getFuel(),dron);
+        draw.setBatteryDroneValue(dron,drones.get(dron).getFuel());
         draw.setTotalBatteryValue(energyOfWorld);
-        
+        }
         System.out.println("Megatron: Mapa actualizado");
     }
 
