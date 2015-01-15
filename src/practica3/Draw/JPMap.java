@@ -55,6 +55,10 @@ public class JPMap extends javax.swing.JPanel {
         numDron = nDron;              
         this.repaint();
     }
+        @Override
+    public void paintComponent(Graphics g){
+        
+    }
     @Override
     public void paint(Graphics g) {
         super.paint(g);
