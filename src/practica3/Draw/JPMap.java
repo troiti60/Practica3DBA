@@ -57,10 +57,6 @@ public class JPMap extends javax.swing.JPanel {
     }
         @Override
     public void paintComponent(Graphics g){
-        
-    }
-    @Override
-    public void paint(Graphics g) {
         super.paint(g);
         System.out.println("Pintando en el panel con JPMAP");
         
