@@ -144,14 +144,16 @@ public class Megatron extends SingleAgent {
      * @author Antonio Troitiño del Río
      */
     private void updateMap(Coord pos, ArrayList<Integer> perception, int dron) {
+        draw.getJpanel().setWorld(dataAccess.getWorld());
         
         if (perception.isEmpty() || dron >= drones.size()) {
             System.err.println("ERROR: Megatron received an empty perception!");
         } else {
-            System.err.println("Creando cordenadas");
+            System.err.println("Creando coordenadas");
             Coord c = new Coord(pos.getX(), pos.getY());
             drones.get(dron).setPosition(pos);
-    
+            draw.getJpanel().setDronPosition(pos);
+            draw.getJpanel().setLastDronPosition(drones.get(dron).getLastPosition());
             System.err.println("Actualizando mapa");
             //this.mapImage.setDronePosition(dron, pos);
             int cont = Math.round((float) Math.sqrt(perception.size()));
@@ -160,14 +162,11 @@ public class Megatron extends SingleAgent {
             for (int i = 0 - cont; i <= cont; i++) {
                 for (int j = 0 - cont; j <= cont; j++) {
                     myMap.addNode(new Coord(pos.getX() + j, pos.getY() + i), perception.get(count));
+                    draw.getJpanel().updateDraw(new Coord(pos.getX() + j, pos.getY() + i),dron,perception.get(count));
                     //this.mapImage.setCell(perception.get(count), new Coord(pos.getX() + j, pos.getY() + i));
                     count++;
                 }
-            }
-                      
-        myMap.getMap().get(c).setVisitado(dron);
-        System.err.println("Nodo visitado por el dron: "+myMap.getMap().get(c).isVisitado());
-        draw.getJpanel().updateDraw(myMap, drones.get(dron),dron,dataAccess.getWorld());
+            }                                    
         draw.setLabelCoordinate(pos.getX(), pos.getY(),dron);     
         draw.setBatteryDroneValue(dron,drones.get(dron).getFuel());
         draw.setTotalBatteryValue(energyOfWorld);

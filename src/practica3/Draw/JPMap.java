@@ -21,27 +21,35 @@ public class JPMap extends javax.swing.JPanel {
 
     Map map;
     String world;
-    int numDron;
+    int numDron,perception;
     Coord dronPos;
-    Coord dronLastPos;
+    Coord nodeMapCoord;
+    Coord lastDronPos;
 
     public JPMap() {
         System.out.println("Iniciando constructor JPMAP");
         initComponents();
         map = new Map();
         dronPos = null;
-        dronLastPos = null;
+        lastDronPos = null;
+        nodeMapCoord = null;
         System.out.println("Finalizando constructor JPMAP");
         
     }
-
-    public void updateDraw(Map m, Decepticon dron, int nDron,String world) {
-        
-        map = m;
+    public void setDronPosition(Coord pos){
+        dronPos = pos;
+    }
+    public void setLastDronPosition(Coord pos){
+        lastDronPos = pos;
+    }
+    
+    public void setWorld(String world){
         this.world = world;
-        numDron = nDron;
-        dronPos = dron.getPosition();
-        dronLastPos = dron.getLastPosition();
+    }
+    public void updateDraw(Coord coord, int nDron, int perception) {
+        this.perception = perception;
+        nodeMapCoord = coord;       
+        numDron = nDron;              
         this.repaint();
     }
 
@@ -49,58 +57,51 @@ public class JPMap extends javax.swing.JPanel {
     public void paint(Graphics g) {
         super.paint(g);
         System.out.println("Pintando en el panel con JPMAP");
-        
-        if (!map.getMap().isEmpty()) {
+ 
+            if (perception == 0) {
+                g.setColor(Color.WHITE);
+            }else if ((perception == 1 || perception == 2 )) {
+                g.setColor(Color.BLACK);
+            }else if (perception == 3) {
+                g.setColor(Color.MAGENTA);
+            }
+            g.fillRect((nodeMapCoord.getX()*5)+7, (nodeMapCoord.getY()*5)+7, 5, 5); 
 
-            Iterator it = map.getMap().entrySet().iterator();
-            Coord c;
-            Nodo n;
-             
-            while (it.hasNext()) {
-                java.util.Map.Entry e = (java.util.Map.Entry) it.next();
-                c = new Coord((Coord) e.getKey());
-                n = new Nodo((Nodo) e.getValue());
-                System.out.println("Numero de dron: "+numDron+" Nodo visitado: "+n.isVisitado());
-                if (n.getRadar() == 0 && n.isVisitado()== -1) {
-                    g.setColor(Color.WHITE);
-                }else if ((n.getRadar() == 1 || n.getRadar() == 2 )) {
-                    g.setColor(Color.BLACK);
-                }else if (n.getRadar() == 3) {
-                    g.setColor(Color.MAGENTA);
-                }else if(n.isVisitado()==0 && numDron == 0){
+            if(lastDronPos != null){
+                switch(numDron){
+                   case 0:
                     g.setColor(Color.CYAN);
-                }else if(n.isVisitado()==1 && numDron == 1){
+                    break;
+                   case 1:
                     g.setColor(Color.PINK);
-                }else if(n.isVisitado()==2 && numDron == 2){
+                    break;
+                   case 2:
                     g.setColor(Color.GREEN);
-                }else if(n.isVisitado()==3 && numDron == 3){
-                    g.setColor(Color.YELLOW);
+                    break;
+                   case 3:
+                    g.setColor(Color.YELLOW);    
+                    break;
                 }
-                
-                g.fillRect((c.getX()*5)+7, (c.getY()*5)+7, 5, 5);                
-            }       
+                g.fillRect((lastDronPos.getX()*5)+7, (lastDronPos.getY()*5)+7, 5, 5);
+            }                 
             if(dronPos!= null){
                 switch(numDron){
                     case 0:
-                        g.setColor(Color.BLUE);
-                        g.fillRect((dronPos.getX()*5)+7, (dronPos.getY()*5)+7, 5, 5);
+                        g.setColor(Color.BLUE);                      
                         break;
                     case 1:
-                        g.setColor(Color.RED);
-                        g.fillRect((dronPos.getX()*5)+7, (dronPos.getY()*5)+7, 5, 5);
+                        g.setColor(Color.RED);                       
                         break;
                     case 2:
-                        g.setColor(Color.GREEN);
-                        g.fillRect((dronPos.getX()*5)+7, (dronPos.getY()*5)+7, 5, 5);
+                        g.setColor(Color.GREEN);                       
                         break;
                     case 3:
-                        g.setColor(Color.YELLOW);
-                        g.fillRect((dronPos.getX()*5)+7, (dronPos.getY()*5)+7, 5, 5);
+                        g.setColor(Color.YELLOW);                       
                         break;
                 }
-                
+                g.fillRect((dronPos.getX()*5)+7, (dronPos.getY()*5)+7, 5, 5);
             }
-        }
+        
         System.out.println("Fin del metodo paint() de JPMap");
     }
 
