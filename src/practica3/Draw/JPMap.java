@@ -7,6 +7,7 @@ package practica3.Draw;
 
 import java.awt.Color;
 import java.awt.Graphics;
+import java.awt.image.BufferedImage;
 import java.util.Iterator;
 import practica3.Coord;
 import practica3.Decepticon;
@@ -25,6 +26,7 @@ public class JPMap extends javax.swing.JPanel {
     Coord dronPos;
     Coord nodeMapCoord;
     Coord lastDronPos;
+    BufferedImage Image;
 
     public JPMap() {
         System.out.println("Iniciando constructor JPMAP");
@@ -33,6 +35,7 @@ public class JPMap extends javax.swing.JPanel {
         dronPos = null;
         lastDronPos = null;
         nodeMapCoord = null;
+        Image = new BufferedImage(500, 500, BufferedImage.TYPE_INT_RGB);
         System.out.println("Finalizando constructor JPMAP");
         
     }
@@ -52,12 +55,13 @@ public class JPMap extends javax.swing.JPanel {
         numDron = nDron;              
         this.repaint();
     }
-
     @Override
     public void paint(Graphics g) {
         super.paint(g);
         System.out.println("Pintando en el panel con JPMAP");
- 
+        
+        if(nodeMapCoord != null){
+            
             if (perception == 0) {
                 g.setColor(Color.WHITE);
             }else if ((perception == 1 || perception == 2 )) {
@@ -66,7 +70,7 @@ public class JPMap extends javax.swing.JPanel {
                 g.setColor(Color.MAGENTA);
             }
             g.fillRect((nodeMapCoord.getX()*5)+7, (nodeMapCoord.getY()*5)+7, 5, 5); 
-
+            //g.drawImage(Image, (nodeMapCoord.getX()*5)+7, (nodeMapCoord.getY()*5)+7, this);
             if(lastDronPos != null){
                 switch(numDron){
                    case 0:
@@ -83,6 +87,7 @@ public class JPMap extends javax.swing.JPanel {
                     break;
                 }
                 g.fillRect((lastDronPos.getX()*5)+7, (lastDronPos.getY()*5)+7, 5, 5);
+                //g.drawImage(Image, (nodeMapCoord.getX()*5)+7, (nodeMapCoord.getY()*5)+7, this);
             }                 
             if(dronPos!= null){
                 switch(numDron){
@@ -100,7 +105,9 @@ public class JPMap extends javax.swing.JPanel {
                         break;
                 }
                 g.fillRect((dronPos.getX()*5)+7, (dronPos.getY()*5)+7, 5, 5);
+                //g.drawImage(Image, (dronPos.getX()*5)+7, (dronPos.getY()*5)+7, this);
             }
+        }
         
         System.out.println("Fin del metodo paint() de JPMap");
     }

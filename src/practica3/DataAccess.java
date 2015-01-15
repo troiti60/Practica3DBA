@@ -30,8 +30,8 @@ public class DataAccess {
     /**
      * Name Decepticons
      */
-    private static final String nameMegatron = "Megatron";
-    private static final String nameDron1 = "Spectro";
+    private static final String nameMegatron = "Megatron1";
+    private static final String nameDron1 = "Spectro1";
     private static final String nameDron2 = "Viewfinder";
     private static final String nameDron3 = "Nightbird";
     private static final String nameDron4 = "Squawktalk";
