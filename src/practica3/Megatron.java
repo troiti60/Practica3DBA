@@ -143,7 +143,7 @@ public class Megatron extends SingleAgent {
      * 0 and 3
      * @author Antonio Troitiño del Río
      */
-    private void updateMap(Coord pos, ArrayList<Integer> perception, int dron) {
+    private synchronized void updateMap(Coord pos, ArrayList<Integer> perception, int dron) {
         draw.getJpanel().setWorld(dataAccess.getWorld());
         
         if (perception.isEmpty() || dron >= drones.size()) {
@@ -167,13 +167,15 @@ public class Megatron extends SingleAgent {
                 }
             }  
             myMap.getMap().get(c).setVisitado(dron);
-            draw.getJpanel().updateDraw(myMap,dron);
+            System.out.println("[MEGATRON] El nodo"+"["+pos.getX()+","+pos.getY()+"]"+"ha sido visitado por dron: "+myMap.getMap().get(c).isVisitado());
+            draw.getJpanel().updateDraw(myMap,dron,drones.get(dron).getLastPosition());
             draw.setLabelCoordinate(pos.getX(), pos.getY(),dron);     
             draw.setBatteryDroneValue(dron,drones.get(dron).getFuel());
             draw.setTotalBatteryValue(energyOfWorld);
         }
         System.out.println("Megatron: Mapa actualizado");
     }
+    
 
     /**
      * Method to update data related to Decepticon
