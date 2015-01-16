@@ -66,8 +66,8 @@ public class DataAccess {
         this.username = "Capricornio";
         this.passwd = "Gaugin";
         this.ssl = false;
-        this.world  = "beach";
-        //this.world  = "pyrenees";
+        //this.world  = "beach";
+        this.world  = "pyrenees";
         //this.world  = "alps";
         //this.world  = "andes";
         //this.world  = "valleys";
