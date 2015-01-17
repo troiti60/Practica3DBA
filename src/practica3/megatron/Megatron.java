@@ -305,12 +305,28 @@ public class Megatron extends SingleAgent {
                     System.out.println("Megatron------ Estado: Create");
 
                     try {
-                        Decepticon drone = new Birdron(new AgentID(this.dataAccess.getNameDrone1()),
+                        Decepticon drone = new Falcdron(new AgentID(this.dataAccess.getNameDrone1()),
                                 this.getAid(), dataAccess.getKey());
 
-                        this.drones.add(new DataBirdron(this.myMap));
-
+                        this.drones.add(new DataFalcdron(this.myMap));
+                        
                         System.out.println("Megatron: Lanzando decepticion 1...");
+                        drone.start();
+                        
+                        drone = new Birdron(new AgentID(this.dataAccess.getNameDrone2()),
+                                this.getAid(), dataAccess.getKey());
+
+                        this.drones.add(new DataFalcdron(this.myMap));
+                        
+                        System.out.println("Megatron: Lanzando decepticion 2...");
+                        drone.start();
+                        
+                        drone = new Flytron(new AgentID(this.dataAccess.getNameDrone3()),
+                                this.getAid(), dataAccess.getKey());
+
+                        this.drones.add(new DataFalcdron(this.myMap));
+
+                        System.out.println("Megatron: Lanzando decepticion 3...");
                         drone.start();
 
                         System.out.println("Megatron: Cambiando a estado Feel");
@@ -508,7 +524,11 @@ public class Megatron extends SingleAgent {
                                         + nodoGoal.toString());
                                 sigAction = this.drones.get(droneNumber).aStar(this.myMap.getMap().get(this.drones.get(droneNumber).getPosition()), nodoGoal).firstElement();
                             } else {
-                                sigAction = this.drones.get(droneNumber).mapv3();
+                                if (droneNumber == 2) {
+                                    sigAction = this.drones.get(droneNumber).mapv4();
+                                } else {
+                                    sigAction = this.drones.get(droneNumber).mapv3();
+                                }
                             }
 
                             System.out.println("Megatron: Dron " + droneNumber + " accion " + sigAction);

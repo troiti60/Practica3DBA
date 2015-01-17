@@ -1006,21 +1006,22 @@ public abstract class DataDecepticon {
      * 
      * @param findWay True: Don't look at border cells but only for a close cell
      * @return Next action for the specified drone
+     * @throws java.lang.Exception
      * @author Alexander Straub
      */
-    private Megatron.Action mapv3(boolean findWay) throws Exception {
+    protected Megatron.Action mapv3(boolean findWay) throws Exception {
         Coord position = this.currentPosition;
         
         // If it's the first time executing, step away from the border
         if (this.currentPosition.equals(this.startPosition)) {
             if (this.startPosition.getY() == 0) {
-                for (int i = 0; i < getVisualRange() / 2 - 1; i++) {
+                for (int i = 0; i < getVisualRange() / 2 - 2; i++) {
                     this.map3_pathToUnexploredCell.add(Megatron.Action.S);
                 }
                 this.map3_lastAction = Megatron.Action.S;
                 return Megatron.Action.S;
             } else {
-                for (int i = 0; i < getVisualRange() / 2 - 1; i++) {
+                for (int i = 0; i < getVisualRange() / 2 - 2; i++) {
                     this.map3_pathToUnexploredCell.add(Megatron.Action.N);
                 }
                 this.map3_lastAction = Megatron.Action.N;
@@ -1040,7 +1041,7 @@ public abstract class DataDecepticon {
                 for (int i = 0; i < 4; i++) {
                     if (borderCells.get(i) != null && borderCells.get(i).getRadar() != 1 && borderCells.get(i).getRadar() != 2 && !borderCells.get(i).isExplored()) {
                         if (this.map3_lastAction != actions.get(i)) {
-                            for (int j = 0; j < getVisualRange() - 1; j++) {
+                            for (int j = 0; j < getVisualRange() - 2; j++) {
                                 this.map3_pathToUnexploredCell.add(actions.get(i));
                             }
                         }
@@ -1049,7 +1050,7 @@ public abstract class DataDecepticon {
                     }
                 }
 
-                // Diagonal directions only once
+                // Other directions only once
                 for (int i = 4; i < borderCells.size(); i++) {
                     if (borderCells.get(i) != null && borderCells.get(i).getRadar() != 1 && borderCells.get(i).getRadar() != 2 && !borderCells.get(i).isExplored()) {
                         this.map3_lastAction = actions.get(i);
