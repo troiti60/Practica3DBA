@@ -9,7 +9,6 @@ import java.util.LinkedHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import practica3.Draw.Ventana;
-import practica3.Draw.Window;
 
 /**
  * Class that controls the rest of Decepticons
@@ -25,7 +24,7 @@ public class Megatron extends SingleAgent {
     private JsonDBA json;
     private DataAccess dataAccess;
     private Node nodoGoal;
-    private Window draw;
+    private Ventana draw;
 
     private State state;
     private String msg;
@@ -124,14 +123,14 @@ public class Megatron extends SingleAgent {
         }
         
         this.myMap = new Map(resolution);       
-        this.dataAccess = DataAccess.crearInstancia();
+        
         System.out.println("Va a crear la ventana");
         draw = new Ventana();     
         draw.setResizable(true);
         draw.setVisible(true);
         System.out.println("VHa terminado  de crear la ventana");
 
-        this.mapImage = new MapImage(resolution);
+        //this.mapImage = new MapImage(resolution);
     }
 
     /**
@@ -167,8 +166,7 @@ public class Megatron extends SingleAgent {
                     count++;
                 }
             }  
-            myMap.getMap().get(c).setVisitado(dron);
-            System.out.println("[MEGATRON] El nodo"+"["+pos.getX()+","+pos.getY()+"]"+"ha sido visitado por dron: "+myMap.getMap().get(c).isVisitado());
+            
             draw.getJpanel().updateDraw(myMap,dron,drones.get(dron).getLastPosition());
             draw.setLabelCoordinate(pos.getX(), pos.getY(),dron);     
             draw.setBatteryDroneValue(dron,drones.get(dron).getFuel());
@@ -569,8 +567,9 @@ public class Megatron extends SingleAgent {
                     
                     /*try {
                         this.mapImage.saveToFile();
-
-                    break;
+                        } catch (Exception e) {
+                    }
+                    break;*/
             }
         }
 
@@ -619,5 +618,4 @@ public class Megatron extends SingleAgent {
         return res;
     }
 }
-                    } catch (Exception e) {
-                    }
+                    

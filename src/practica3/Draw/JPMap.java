@@ -21,7 +21,7 @@ public class JPMap extends javax.swing.JPanel {
     String world;
     int numDron;
     Coord dronPos;
-    ArrayList<Nodo> visited;
+    ArrayList<Node> visited;
     
 
     /**
@@ -33,7 +33,7 @@ public class JPMap extends javax.swing.JPanel {
         System.out.println("Iniciando constructor JPMAP");
         initComponents();
         visited = new ArrayList<>();
-        map = new Map();
+        map = new Map(100);
         dronPos = null;        
         System.out.println("Finalizando constructor JPMAP");
         
@@ -49,8 +49,8 @@ public class JPMap extends javax.swing.JPanel {
         
         if(lastPos!=null){ 
             
-            Nodo n = new Nodo((new Coord(lastPos.getX(),lastPos.getY())),0);
-            n.setVisitado(nDron);
+            Node n = new Node((new Coord(lastPos.getX(),lastPos.getY())),0);
+            n.setVisited(nDron);
             visited.add(n);      
         }    
         this.map = map;    
@@ -67,31 +67,31 @@ public class JPMap extends javax.swing.JPanel {
            
             Iterator it = this.map.getMap().entrySet().iterator();
             Coord c;
-            Nodo n;
+            Node n;
             System.out.println("[JPANEL] El nodo con coordenadas"
                                 +"["+map.getMap().get(dronPos).getX()+","
                                 +map.getMap().get(dronPos).getY()+"]"+
                                 "ha sido visitado por dron: "
-                                +map.getMap().get(dronPos).isVisitado());
+                                +map.getMap().get(dronPos).isVisited());
             while (it.hasNext()) {
                 java.util.Map.Entry e = (java.util.Map.Entry) it.next();       
-                n = new Nodo((Nodo) e.getValue());
+                n = new Node((Node) e.getValue());
                 c = n.getCoord();                
-                if(n.isVisitado() == -1){
-                    if (n.getRadar() == 0) {
-                    g.setColor(Color.WHITE);
-                    }else if ((n.getRadar() == 1 || n.getRadar() == 2 )) {
-                        g.setColor(Color.BLACK);
-                    }else if (n.getRadar() == 3) {
-                        g.setColor(Color.MAGENTA);
-                    }
-                    g.fillRect((n.getX()*5)+7, (n.getY()*5)+7, 5, 5); 
-                    //g.drawImage(Image, (nodeMapCoord.getX()*5)+7, (nodeMapCoord.getY()*5)+7, this);
-                }  
+               
+                if (n.getRadar() == 0) {
+                g.setColor(Color.WHITE);
+                }else if ((n.getRadar() == 1 || n.getRadar() == 2 )) {
+                    g.setColor(Color.BLACK);
+                }else if (n.getRadar() == 3) {
+                    g.setColor(Color.MAGENTA);
+                }
+                g.fillRect((n.getX()*5)+7, (n.getY()*5)+7, 5, 5); 
+                //g.drawImage(Image, (nodeMapCoord.getX()*5)+7, (nodeMapCoord.getY()*5)+7, this);
+                
             }
             for(int i=0;i<visited.size();i++){
 
-                    switch(visited.get(i).isVisitado()){
+                    switch(visited.get(i).isVisited()){
                        case 0:
                         g.setColor(Color.CYAN);
                         System.out.println("[Pintando camino del dron 0]");
