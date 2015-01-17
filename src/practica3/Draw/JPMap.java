@@ -2,6 +2,8 @@ package practica3.Draw;
 
 import java.awt.Color;
 import java.awt.Graphics;
+import java.awt.image.BufferedImage;
+import java.util.ArrayList;
 import java.util.Iterator;
 import practica3.megatron.Coord;
 import practica3.megatron.DataDecepticon;
@@ -16,8 +18,11 @@ import practica3.megatron.Node;
 public class JPMap extends javax.swing.JPanel {
 
     Map map;
-    Coord dronePos;
-    Coord lastDronePos;
+    String world;
+    int numDron;
+    Coord dronPos;
+    ArrayList<Node> visited;
+    
 
     /**
      * Constructor
@@ -25,66 +30,98 @@ public class JPMap extends javax.swing.JPanel {
      * @author José Carlos Alfaro
      */
     public JPMap() {
+        System.out.println("Iniciando constructor JPMAP");
         initComponents();
+        visited = new ArrayList<>();
         map = new Map(100);
-        dronePos = null;
-        lastDronePos = null;
+        dronPos = null;        
+        System.out.println("Finalizando constructor JPMAP");
+        
     }
-
-    /**
-     * Updates the local references
-     *
-     * @param map Map
-     * @param drone Drone
-     * @author José Carlos Alfaro
-     */
-    public void updateDraw(Map map, DataDecepticon drone) {
-        this.map = map;
-        this.dronePos = drone.getPosition();
-        this.lastDronePos = drone.getLastPosition();
+    public void setDronPosition(Coord pos){
+        dronPos = pos;
+    }
+    
+    public void setWorld(String world){
+        this.world = world;
+    }
+    public void updateDraw(Map map, int nDron,Coord lastPos){
+        
+        if(lastPos!=null){ 
+            
+            Node n = new Node((new Coord(lastPos.getX(),lastPos.getY())),0);
+            n.setVisited(nDron);
+            visited.add(n);      
+        }    
+        this.map = map;    
+        numDron = nDron;              
         this.repaint();
     }
-
-    /**
-     * Paint method
-     *
-     * @param g Graphic
-     * @author José Carlos Alfaro
-     */
+    
     @Override
     public void paint(Graphics g) {
         super.paint(g);
 
         // Draw map
         if (!this.map.getMap().isEmpty()) {
+           
             Iterator it = this.map.getMap().entrySet().iterator();
             Coord c;
             Node n;
-
             while (it.hasNext()) {
-                java.util.Map.Entry e = (java.util.Map.Entry) it.next();
-                c = new Coord((Coord) e.getKey());
+                java.util.Map.Entry e = (java.util.Map.Entry) it.next();       
                 n = new Node((Node) e.getValue());
+                c = n.getCoord();                
+               
                 if (n.getRadar() == 0) {
-                    g.setColor(Color.WHITE);
-                }
-                if (n.getRadar() == 1) {
-                    g.setColor(Color.GREEN);
-                }
-                if (n.getRadar() == 2) {
+                g.setColor(Color.WHITE);
+                }else if ((n.getRadar() == 1 || n.getRadar() == 2 )) {
                     g.setColor(Color.BLACK);
-                }
-                if (n.getRadar() == 3) {
+                }else if (n.getRadar() == 3) {
                     g.setColor(Color.MAGENTA);
                 }
-                g.fillRect((c.getX() * 5) + 7, (c.getY() * 5) + 7, 5, 5);
+                g.fillRect((n.getX()*5)+7, (n.getY()*5)+7, 5, 5); 
+                //g.drawImage(Image, (nodeMapCoord.getX()*5)+7, (nodeMapCoord.getY()*5)+7, this);
+                
             }
-        }
-        
-        // Draw drone position
-        if (this.dronePos != null) {
-            g.setColor(Color.BLUE);
-            g.fillRect((this.dronePos.getX() * 5) + 7, (this.dronePos.getY() * 5) + 7, 5, 5);
+            for(int i=0;i<visited.size();i++){
+
+                    switch(visited.get(i).isVisited()){
+                       case 0:
+                        g.setColor(Color.CYAN);                       
+                        break;
+                       case 1:
+                        g.setColor(Color.PINK);
+                        break;
+                       case 2:
+                        g.setColor(Color.GREEN);
+                        break;
+                       case 3:
+                        g.setColor(Color.YELLOW);    
+                        break;
+                    }
+                    g.fillRect((visited.get(i).getX()*5)+7, (visited.get(i).getY()*5)+7, 5, 5);
+                    //g.drawImage(Image, (nodeMapCoord.getX()*5)+7, (nodeMapCoord.getY()*5)+7, this);
+            }
+            if(dronPos!= null){
+                switch(numDron){
+                    case 0:
+                        g.setColor(Color.BLUE);                      
+                        break;
+                    case 1:
+                        g.setColor(Color.RED);                       
+                        break;
+                    case 2:
+                        g.setColor(Color.GREEN);                       
+                        break;
+                    case 3:
+                        g.setColor(Color.YELLOW);                       
+                        break;
+                }
+                g.fillRect((dronPos.getX()*5)+7, (dronPos.getY()*5)+7, 5, 5);
+                //g.drawImage(Image, (dronPos.getX()*5)+7, (dronPos.getY()*5)+7, this);
+            }
+            
         }
     }
 

@@ -29,7 +29,7 @@ public class Node implements Comparable<Node> {
     private int explored;
 
     // Indicates whether the node has already been visited
-    private boolean visited = false;
+    private int visited = -1;
 
     // Variables used by the dijkstra algorithm
     private Node path = null;
@@ -89,8 +89,8 @@ public class Node implements Comparable<Node> {
      *
      * @author Alexander Straub
      */
-    public void setVisited() {
-        this.visited = true;
+    public void setVisited(int i) {
+        this.visited = i;
     }
 
     /**
@@ -99,7 +99,7 @@ public class Node implements Comparable<Node> {
      * @return True if already visited
      * @author Alexander Straub
      */
-    public boolean isVisited() {
+    public int isVisited() {
         return this.visited;
     }
 
