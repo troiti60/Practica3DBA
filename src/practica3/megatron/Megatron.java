@@ -1,5 +1,6 @@
-package practica3;
+package practica3.megatron;
 
+import practica3.drones.*;
 import es.upv.dsic.gti_ia.core.ACLMessage;
 import es.upv.dsic.gti_ia.core.AgentID;
 import es.upv.dsic.gti_ia.core.SingleAgent;
@@ -8,6 +9,9 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import practica3.DataAccess;
+import practica3.JsonDBA;
+import practica3.Draw.MapImage;
 import practica3.Draw.Ventana;
 
 /**
@@ -17,26 +21,23 @@ import practica3.Draw.Ventana;
  */
 public class Megatron extends SingleAgent {
 
-    private final ArrayList<Decepticon> drones;
+    private final ArrayList<DataDecepticon> drones;
     private Map myMap;
     private int energyOfWorld;
-    private ACLMessage inbox, outbox;
-    private JsonDBA json;
+    private final JsonDBA json;
     private DataAccess dataAccess;
     private Node nodoGoal;
     private Ventana draw;
-
     private State state;
-    private String msg;
     private boolean live;
     private Action sigAction;
-    private int numeroDron;
+    private int droneNumber;
 
     private int pasos = 0;
     private boolean zoneGoalFound = false;
 
     // Image of the map for visualization
-    //private MapImage mapImage = null;
+    private MapImage mapImage = null;
 
     /**
      * Enum with possible movement actions
@@ -111,26 +112,24 @@ public class Megatron extends SingleAgent {
     public Megatron(AgentID aid) throws Exception {
         super(aid);
         drones = new ArrayList<>(4);
+        this.json = new JsonDBA();
     }
 
     @Override
     protected void init() {
         this.dataAccess = DataAccess.createInstance();
-        
+
         int resolution = 100;
         if (this.dataAccess.getWorld().equals("newyork")) {
             resolution = 500;
         }
-        
-        this.myMap = new Map(resolution);       
-        
-        System.out.println("Va a crear la ventana");
-        draw = new Ventana();     
+
+        this.myMap = new Map(resolution);
+        draw = new Ventana();
         draw.setResizable(true);
         draw.setVisible(true);
-        System.out.println("VHa terminado  de crear la ventana");
 
-        //this.mapImage = new MapImage(resolution);
+        this.mapImage = new MapImage(resolution);
     }
 
     /**
@@ -143,38 +142,31 @@ public class Megatron extends SingleAgent {
      * 0 and 3
      * @author Antonio Troitiño del Río
      */
-    private synchronized void updateMap(Coord pos, ArrayList<Integer> perception, int dron) {
-        draw.getJpanel().setWorld(dataAccess.getWorld());
-        
+    private void updateMap(Coord pos, ArrayList<Integer> perception, int dron) {
         if (perception.isEmpty() || dron >= drones.size()) {
             System.err.println("ERROR: Megatron received an empty perception!");
         } else {
-            System.err.println("Creando coordenadas");
-            Coord c = new Coord(pos.getX(), pos.getY());
             drones.get(dron).setPosition(pos);
-            draw.getJpanel().setDronPosition(pos);
-           
-            System.err.println("Actualizando mapa");
-            //this.mapImage.setDronePosition(dron, pos);
+            this.mapImage.setDronePosition(dron, pos);
             int cont = Math.round((float) Math.sqrt(perception.size()));
             cont = (cont - 1) / 2;
             int count = 0;
             for (int i = 0 - cont; i <= cont; i++) {
                 for (int j = 0 - cont; j <= cont; j++) {
-                    myMap.addNode(new Coord(pos.getX() + j, pos.getY() + i), perception.get(count));                   
-                    //this.mapImage.setCell(perception.get(count), new Coord(pos.getX() + j, pos.getY() + i));
+                    myMap.addNode(new Coord(pos.getX() + j, pos.getY() + i), perception.get(count));
+                    this.mapImage.setCell(perception.get(count), new Coord(pos.getX() + j, pos.getY() + i));
                     count++;
                 }
-            }  
-            
-            draw.getJpanel().updateDraw(myMap,dron,drones.get(dron).getLastPosition());
-            draw.setLabelCoordinate(pos.getX(), pos.getY(),dron);     
-            draw.setBatteryDroneValue(dron,drones.get(dron).getFuel());
-            draw.setTotalBatteryValue(energyOfWorld);
+            }
         }
+        draw.getJpanel().setDronPosition(pos);
+        draw.getJpanel().updateDraw(myMap,dron,drones.get(dron).getLastPosition());
+        draw.setLabelCoordinate(pos.getX(), pos.getY(),dron);
+        draw.setBatteryDroneValue(dron,drones.get(dron).getFuel());
+        draw.setTotalBatteryValue(energyOfWorld);
+
         System.out.println("Megatron: Mapa actualizado");
     }
-    
 
     /**
      * Method to update data related to Decepticon
@@ -197,9 +189,7 @@ public class Megatron extends SingleAgent {
      *
      */
     public void Suscribe() {
-
-        json = new JsonDBA();
-        outbox = new ACLMessage();
+        ACLMessage outbox = new ACLMessage();
         outbox.setPerformative(ACLMessage.SUBSCRIBE);
         outbox.setReceiver(new AgentID("Canis"));
         outbox.setSender(getAid());
@@ -215,8 +205,7 @@ public class Megatron extends SingleAgent {
      * @author JC
      */
     public void Cancel() {
-
-        outbox = new ACLMessage();
+        ACLMessage outbox = new ACLMessage();
         outbox.setPerformative(ACLMessage.CANCEL);
         outbox.setReceiver(new AgentID("Canis"));
         outbox.setSender(getAid());
@@ -232,14 +221,12 @@ public class Megatron extends SingleAgent {
      * @param action Kind of movement.
      */
     public void Move(String nameDron, Action action) {
-        JsonDBA json = new JsonDBA();
-        ACLMessage outbox;
         LinkedHashMap<String, String> hm = new LinkedHashMap<>();
         hm.put("command", action.toString());
         hm.put("key", dataAccess.getKey());
         String msg = json.createJson(hm);
 
-        outbox = new ACLMessage();
+        ACLMessage outbox = new ACLMessage();
         outbox.setSender(getAid());
         outbox.setPerformative(ACLMessage.REQUEST);
         outbox.setReceiver(new AgentID(nameDron));
@@ -254,14 +241,12 @@ public class Megatron extends SingleAgent {
      * @param nameDron Agent's name will recibe the message
      */
     public void Refuel(String nameDron) {
-        JsonDBA json = new JsonDBA();
-        ACLMessage outbox;
         LinkedHashMap<String, String> hm = new LinkedHashMap<>();
         hm.put("command", "refuel");
         hm.put("key", dataAccess.getKey());
         String msg = json.createJson(hm);
 
-        outbox = new ACLMessage();
+        ACLMessage outbox = new ACLMessage();
         outbox.setSender(getAid());
         outbox.setPerformative(ACLMessage.REQUEST);
         outbox.setReceiver(new AgentID(nameDron));
@@ -272,11 +257,12 @@ public class Megatron extends SingleAgent {
 
     @Override
     public void execute() {
+        ACLMessage inbox = null;
+        String msg = null;
         state = State.Subscribe;
-        msg = null;
         live = true;
         sigAction = null;
-        numeroDron = -1;
+        droneNumber = -1;
         System.out.println("Megatron: Iniciado");
 
         while (live) {
@@ -297,16 +283,18 @@ public class Megatron extends SingleAgent {
                         state = State.Cancel;
                     }
 
-                    if (inbox.getPerformativeInt() == ACLMessage.INFORM) {
-                        JsonDBA json = new JsonDBA();
+                    if (inbox != null && inbox.getPerformativeInt() == ACLMessage.INFORM) {
                         String result = (String) json.getElement(msg, "result");
                         dataAccess.setKey(result);
                         System.out.println("Megatron: Clave recibida " + dataAccess.getKey());
                         System.out.println("Megatron: Cambiando a estado Create");
                         state = State.Create;
-
                     } else {
-                        System.err.println("Megatron ERROR: " + inbox.getPerformative());
+                        System.err.print("Megatron ERROR");
+                        if (inbox != null) {
+                            System.err.print(": " + inbox.getPerformative());
+                        }
+                        System.err.print("\n");
                         state = State.Cancel;
                     }
                     break;
@@ -314,9 +302,18 @@ public class Megatron extends SingleAgent {
                 // Lanzar x drones de mapeo
                 case Create:
                     System.out.println("Megatron------ Estado: Create");
+
                     try {
-                        this.drones.add(new Birdron(new AgentID(DataAccess.getNameDron1()),
-                                this.getAid(), dataAccess.getKey(), this.myMap));
+                        Decepticon drone = new Birdron(new AgentID(this.dataAccess.getNameDrone1()),
+                                this.getAid(), dataAccess.getKey());
+
+                        this.drones.add(new DataBirdron(this.myMap));
+
+                        System.out.println("Megatron: Lanzando decepticion 1...");
+                        drone.start();
+
+                        System.out.println("Megatron: Cambiando a estado Feel");
+                        state = State.Feel;
 
                     } catch (Exception ex) {
                         Logger.getLogger(Megatron.class.getName()).log(Level.SEVERE, null, ex);
@@ -324,26 +321,35 @@ public class Megatron extends SingleAgent {
                         System.err.println("Megatron: Cambiando a estado Cancel");
                         state = State.Cancel;
                     }
-
-                    System.out.println("Megatron: Lanzando decepticion 1...");
-                    this.drones.get(0).start();
-
-                    System.out.println("Megatron: Cambiando a estado Feel");
-                    state = State.Feel;
 
                     break;
 
                 case LaunchRest:
                     System.out.println("Megatron------ Estado: LaunchRest");
                     try {
-                        this.drones.add(new Birdron(new AgentID(DataAccess.getNameDron2()),
-                                this.getAid(), dataAccess.getKey(), this.myMap));
+                        Decepticon drone;
 
-                        this.drones.add(new Birdron(new AgentID(DataAccess.getNameDron3()),
-                                this.getAid(), dataAccess.getKey(), this.myMap));
+                        System.out.println("Megatron: Lanzando decepticion 2...");
+                        drone = new Birdron(new AgentID(this.dataAccess.getNameDrone2()),
+                                this.getAid(), dataAccess.getKey());
+                        drone.start();
 
-                        this.drones.add(new Birdron(new AgentID(DataAccess.getNameDron4()),
-                                this.getAid(), dataAccess.getKey(), this.myMap));
+                        System.out.println("Megatron: Lanzando decepticion 3...");
+                        drone = new Birdron(new AgentID(this.dataAccess.getNameDrone3()),
+                                this.getAid(), dataAccess.getKey());
+                        drone.start();
+
+                        System.out.println("Megatron: Lanzando decepticion 4...");
+                        drone = new Birdron(new AgentID(this.dataAccess.getNameDrone4()),
+                                this.getAid(), dataAccess.getKey());
+                        drone.start();
+
+                        this.drones.add(new DataBirdron(this.myMap));
+                        this.drones.add(new DataBirdron(this.myMap));
+                        this.drones.add(new DataBirdron(this.myMap));
+
+                        System.out.println("Megatron: Cambiando a estado Feel");
+                        state = State.Feel;
 
                     } catch (Exception ex) {
                         Logger.getLogger(Megatron.class.getName()).log(Level.SEVERE, null, ex);
@@ -352,23 +358,11 @@ public class Megatron extends SingleAgent {
                         state = State.Cancel;
                     }
 
-                    System.out.println("Megatron: Lanzando decepticion 2...");
-                    this.drones.get(1).start();
-
-                    System.out.println("Megatron: Lanzando decepticion 3...");
-                    this.drones.get(2).start();
-
-                    System.out.println("Megatron: Lanzando decepticion 4...");
-                    this.drones.get(3).start();
-
-                    System.out.println("Megatron: Cambiando a estado Feel");
-                    state = State.Feel;
-
                     break;
                 // Esperar x percepciones
                 case Feel:
                     System.out.println("Megatron------ Estado: Feel");
-                    numeroDron = -1;
+                    droneNumber = -1;
 
                     try {
                         System.out.println("Megatron: Esperando mensaje");
@@ -380,15 +374,25 @@ public class Megatron extends SingleAgent {
                         System.err.println("Megatron: Error al recibir el mensaje");
                         System.err.println("Megatron: Cambiando a estado Cancel");
                         state = State.Cancel;
+                        break;
                     }
 
                     //if(!inbox.getSender().getLocalName().equals("Canis")){
                     System.out.println("Megatron: Recibido de un Decepticon");
 
+                    if (inbox.getSender().getLocalName().equals(this.dataAccess.getNameDrone1())) {
+                        droneNumber = 0;
+                    } else if (inbox.getSender().getLocalName().equals(this.dataAccess.getNameDrone2())) {
+                        droneNumber = 1;
+                    } else if (inbox.getSender().getLocalName().equals(this.dataAccess.getNameDrone3())) {
+                        droneNumber = 2;
+                    } else if (inbox.getSender().getLocalName().equals(this.dataAccess.getNameDrone4())) {
+                        droneNumber = 3;
+                    }
+
                     if (inbox.getPerformativeInt() == ACLMessage.INFORM) {
                         System.out.println("Megatron: Informe");
 
-                        json = new JsonDBA();
                         String result = json.getElement(inbox.getContent(), "result").toString();
                         int battery = json.getElementInteger(result, "battery");
                         System.out.println("Mostrando Bateria: " + battery);
@@ -402,26 +406,16 @@ public class Megatron extends SingleAgent {
                         boolean goal = (boolean) json.getElement(result, "goal");
                         boolean goalFound = (boolean) sensor.contains(3);
 
-                        if (inbox.getSender().getLocalName().equals(this.drones.get(0).getName())) {
-                            numeroDron = 0;
-                        } else if (inbox.getSender().getLocalName().equals(this.drones.get(1).getName())) {
-                            numeroDron = 1;
-                        } else if (inbox.getSender().getLocalName().equals(this.drones.get(2).getName())) {
-                            numeroDron = 2;
-                        } else if (inbox.getSender().getLocalName().equals(this.drones.get(3).getName())) {
-                            numeroDron = 3;
-                        }
-
                         System.out.println("\tSensor      " + sensor.toString());
 
-                        updateMap(nuevaCordenada, sensor, numeroDron);
-                        updateDataDecepticon(numeroDron, nuevaCordenada, battery);
+                        updateMap(nuevaCordenada, sensor, droneNumber);
+                        updateDataDecepticon(droneNumber, nuevaCordenada, battery);
                         energyOfWorld = energy;
 
                         if (goal) {
                             System.out.println("\tGoal     Si");
 
-                            this.drones.get(numeroDron).setMyGoal(nuevaCordenada);
+                            this.drones.get(droneNumber).setMyGoal(nuevaCordenada);
 
                             state = State.Heuristic;
                         } else if (goalFound) {
@@ -430,7 +424,7 @@ public class Megatron extends SingleAgent {
                                 // Llamar al método para aparcar
 
                                 int resolution;
-                                switch (this.drones.get(numeroDron).getRole()) {
+                                switch (this.drones.get(droneNumber).getRole()) {
                                     case 0:
                                         resolution = 3;
                                         break;
@@ -458,7 +452,7 @@ public class Megatron extends SingleAgent {
                                         && coordGoal.getX() < mapWidth && coordGoal.getY() < mapWidth) {
 
                                     zoneGoalFound = true;
-                                    System.err.println("Paso " + pasos + "\n\n###################\nD:" + numeroDron + " ha encontrado el objetivo\n###########\n");
+                                    System.err.println("Paso " + pasos + "\n\n###################\nD:" + droneNumber + " ha encontrado el objetivo\n###########\n");
                                     System.out.println("Megatron: Cambiando a estado LaunchRest");
                                     state = State.LaunchRest;
 
@@ -479,13 +473,14 @@ public class Megatron extends SingleAgent {
                         }
 
                         if (goal) {
-                            System.err.println("Paso " + pasos + "\n\n###################\nD:" + numeroDron + " En objetivo\n###########\n");
+                            System.err.println("Paso " + pasos + "\n\n###################\nD:" + droneNumber + " En objetivo\n###########\n");
 
                             // si todos los vivos han llegado
                             //System.out.println("Megatron: Primer decepticon llegó, cancelando...");
                             //state = State.Cancel;
                         }
                     } else {
+                        this.drones.get(droneNumber).setDead();
                         System.err.println("Megatron: Cambiando a estado Cancel");
                         state = State.Cancel;
                     }
@@ -497,9 +492,9 @@ public class Megatron extends SingleAgent {
                 case Heuristic:
                     System.out.println("Megatron------ Estado: Heuristic");
                     try {
-                        if (fuelH(numeroDron, nodoGoal)) { // Heuristica refuel
+                        if (fuelH(droneNumber, nodoGoal)) { // Heuristica refuel
                             System.err.println("Megatron: Necesita repostar");
-                            Refuel(this.drones.get(numeroDron).getName());
+                            Refuel(this.dataAccess.getNameDrone()[droneNumber]);
                             System.err.println("Megatron: Cambiando a estado Feel");
                             state = State.Feel;
                         } else {
@@ -507,15 +502,15 @@ public class Megatron extends SingleAgent {
                                 // Nodo goal ha de ser drones.get(numero).getGoal
                                 // su ndo asignado para aterrizar
                                 System.err.println("Megatron: Usando la búsqueda desde: ("
-                                        + this.drones.get(numeroDron).getPosition().getX() + ","
-                                        + this.drones.get(numeroDron).getPosition().getY() + ") hasta ("
+                                        + this.drones.get(droneNumber).getPosition().getX() + ","
+                                        + this.drones.get(droneNumber).getPosition().getY() + ") hasta ("
                                         + nodoGoal.toString());
-                                sigAction = this.drones.get(numeroDron).aStar(this.myMap.getMap().get(this.drones.get(numeroDron).getPosition()), nodoGoal).firstElement();
+                                sigAction = this.drones.get(droneNumber).aStar(this.myMap.getMap().get(this.drones.get(droneNumber).getPosition()), nodoGoal).firstElement();
                             } else {
-                                sigAction = this.drones.get(numeroDron).mapv3();
+                                sigAction = this.drones.get(droneNumber).mapv3();
                             }
 
-                            System.out.println("Megatron: Dron " + numeroDron + " accion " + sigAction);
+                            System.out.println("Megatron: Dron " + droneNumber + " accion " + sigAction);
 
                             System.out.println("Megatron: Cambiando a estado Action");
                             state = State.Action; // o cancel si ya han llegado todos
@@ -532,8 +527,8 @@ public class Megatron extends SingleAgent {
                 case Action:
                     System.out.println("Megatron------ Estado: Action");
 
-                    System.out.println("Megatron: Realizando la acción " + sigAction + " en " + this.drones.get(numeroDron).getName());
-                    Move(this.drones.get(numeroDron).getName(), sigAction);
+                    System.out.println("Megatron: Realizando la acción " + sigAction + " en " + this.dataAccess.getNameDrone()[droneNumber]);
+                    Move(this.dataAccess.getNameDrone()[droneNumber], sigAction);
 
                     System.out.println("Megatron: Cambiando a estado Feel");
                     state = State.Feel;
@@ -545,16 +540,14 @@ public class Megatron extends SingleAgent {
                     System.out.println("Megatron------ Estado: Cancel");
 
                     System.out.println("\n#######\nInforme\n#######");
-                    for (int i = 0; i < drones.size(); i++) {
-                        System.out.print("\n\t" + this.drones.get(i).getName() + "\t");
-
-                        if (this.drones.get(i).isAlive()) {
+                    for (DataDecepticon drone : drones) {
+                        System.out.print("\n\t" + this.dataAccess.getNameDrone()[droneNumber] + "\t");
+                        if (drone.isAlive()) {
                             System.out.print("Vivo");
                         } else {
                             System.out.print("Muerto");
                         }
-
-                        if (this.drones.get(i).isInGoal()) {
+                        if (drone.isInGoal()) {
                             System.out.print("\ten meta");
                         } else {
                             System.out.print("\tfuera de la meta");
@@ -564,12 +557,13 @@ public class Megatron extends SingleAgent {
                     Cancel();
                     System.out.println("Megatron: Muriendo");
                     live = false;
-                    
-                    /*try {
+
+                    try {
                         this.mapImage.saveToFile();
-                        } catch (Exception e) {
+                    } catch (Exception e) {
                     }
-                    break;*/
+
+                    break;
             }
         }
 
@@ -618,4 +612,3 @@ public class Megatron extends SingleAgent {
         return res;
     }
 }
-                    

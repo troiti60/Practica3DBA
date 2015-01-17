@@ -1,4 +1,4 @@
-package practica3;
+package practica3.megatron;
 
 import static java.lang.Math.sqrt;
 import java.util.ArrayList;
@@ -89,14 +89,14 @@ public class Node implements Comparable<Node> {
      *
      * @author Alexander Straub
      */
-    public void setVisited(int dron) {
-        this.visited = dron;
+    public void setVisited(int i) {
+        this.visited = i;
     }
 
     /**
      * Return visit state
      *
-     * @return dron's number of node visited
+     * @return True if already visited
      * @author Alexander Straub
      */
     public int isVisited() {

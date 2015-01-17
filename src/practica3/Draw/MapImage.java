@@ -1,5 +1,6 @@
-package practica3;
+package practica3.Draw;
 
+import practica3.megatron.Coord;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -8,6 +9,7 @@ import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import practica3.DataAccess;
 
 /**
  * Class to visualize the map and the movement of its drones

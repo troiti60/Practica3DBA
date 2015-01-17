@@ -1,8 +1,8 @@
-package practica3;
+package practica3.megatron;
 
 import static java.lang.Math.pow;
 import static java.lang.Math.sqrt;
-import practica3.Megatron.Action;
+import practica3.megatron.Megatron.Action;
 
 /**
  * Represents coordinates in 2D

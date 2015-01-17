@@ -5,10 +5,10 @@ import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Iterator;
-import practica3.Coord;
-import practica3.Decepticon;
-import practica3.Map;
-import practica3.Node;
+import practica3.megatron.Coord;
+import practica3.megatron.DataDecepticon;
+import practica3.megatron.Map;
+import practica3.megatron.Node;
 
 /**
  * Drawing area
@@ -68,11 +68,11 @@ public class JPMap extends javax.swing.JPanel {
             Iterator it = this.map.getMap().entrySet().iterator();
             Coord c;
             Node n;
-            System.out.println("[JPANEL] El nodo con coordenadas"
+            /*System.out.println("[JPANEL] El nodo con coordenadas"
                                 +"["+map.getMap().get(dronPos).getX()+","
                                 +map.getMap().get(dronPos).getY()+"]"+
                                 "ha sido visitado por dron: "
-                                +map.getMap().get(dronPos).isVisited());
+                                +map.getMap().get(dronPos).isVisited());*/
             while (it.hasNext()) {
                 java.util.Map.Entry e = (java.util.Map.Entry) it.next();       
                 n = new Node((Node) e.getValue());
