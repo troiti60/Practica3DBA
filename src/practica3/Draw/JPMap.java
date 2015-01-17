@@ -3,10 +3,10 @@ package practica3.Draw;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.util.Iterator;
-import practica3.Coord;
-import practica3.Decepticon;
-import practica3.Map;
-import practica3.Node;
+import practica3.megatron.Coord;
+import practica3.megatron.DataDecepticon;
+import practica3.megatron.Map;
+import practica3.megatron.Node;
 
 /**
  * Drawing area
@@ -38,7 +38,7 @@ public class JPMap extends javax.swing.JPanel {
      * @param drone Drone
      * @author José Carlos Alfaro
      */
-    public void updateDraw(Map map, Decepticon drone) {
+    public void updateDraw(Map map, DataDecepticon drone) {
         this.map = map;
         this.dronePos = drone.getPosition();
         this.lastDronePos = drone.getLastPosition();

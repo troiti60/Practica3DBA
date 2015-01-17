@@ -1,4 +1,4 @@
-package practica3;
+package practica3.megatron;
 
 import static java.lang.Math.sqrt;
 import java.util.ArrayList;

@@ -1,5 +1,6 @@
 package practica3;
 
+import practica3.megatron.Megatron;
 import es.upv.dsic.gti_ia.core.AgentID;
 import es.upv.dsic.gti_ia.core.AgentsConnection;
 import java.util.logging.Level;
@@ -32,7 +33,7 @@ public class BaseDecepticon {
         System.out.println("BaseDecepticon: Connection to server established");
 
         // Create and start Megatron
-        AgentID idMega = new AgentID(DataAccess.getNameMegatron());
+        AgentID idMega = new AgentID(data.getNameMegatron());
         Megatron mega;
 
         try {

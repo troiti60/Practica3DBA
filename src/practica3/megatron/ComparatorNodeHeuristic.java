@@ -1,4 +1,4 @@
-package practica3;
+package practica3.megatron;
 
 import java.util.Comparator;
 
@@ -7,7 +7,7 @@ import java.util.Comparator;
  * 
  * @author Daniel Sánchez Alcaide
  */
-public class ComparadorHeuristicaNodo implements Comparator<Node> {
+public class ComparatorNodeHeuristic implements Comparator<Node> {
 
     private final Node goal;
 
@@ -17,7 +17,7 @@ public class ComparadorHeuristicaNodo implements Comparator<Node> {
      * @param goal Goal for comparison
      * @author Alexander Straub
      */
-    public ComparadorHeuristicaNodo(Node goal) {
+    public ComparatorNodeHeuristic(Node goal) {
         this.goal = goal;
     }
 

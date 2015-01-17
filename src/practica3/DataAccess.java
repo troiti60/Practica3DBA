@@ -25,11 +25,11 @@ public class DataAccess {
     /**
      * Name Decepticons
      */
-    private static final String nameMegatron = "Megatron";
-    private static final String nameDrone1 = "Spectro";
-    private static final String nameDrone2 = "Viewfinder";
-    private static final String nameDrone3 = "Nightbird";
-    private static final String nameDrone4 = "Squawktalk";
+    private final String nameMegatron = "Megatron";
+    private final String nameDrone1 = "Spectro";
+    private final String nameDrone2 = "Viewfinder";
+    private final String nameDrone3 = "Nightbird";
+    private final String nameDrone4 = "Squawktalk";
 
     /**
      * Key
@@ -61,11 +61,11 @@ public class DataAccess {
         this.username = "Capricornio";
         this.passwd = "Gaugin";
         this.ssl = false;
-        //this.world  = "beach";
+        this.world  = "beach";
         //this.world  = "pyrenees";
         //this.world  = "alps";
         //this.world  = "andes";
-        this.world  = "valleys";
+        //this.world  = "valleys";
         //this.world  = "faun";
         //this.world  = "everest";
         //this.world  = "newyork";
@@ -158,8 +158,8 @@ public class DataAccess {
      * @return Name of Megatron
      * @author Javier Ortega Rodríguez, Antonio Troitiño
      */
-    public static String getNameMegatron() {
-        return DataAccess.nameMegatron;
+    public String getNameMegatron() {
+        return this.nameMegatron;
     }
 
     /**
@@ -168,8 +168,8 @@ public class DataAccess {
      * @return Name of first drone
      * @author Javier Ortega Rodríguez, Antonio Troitiño
      */
-    public static String getNameDron1() {
-        return DataAccess.nameDrone1;
+    public String getNameDrone1() {
+        return this.nameDrone1;
     }
     
     /**
@@ -178,8 +178,8 @@ public class DataAccess {
      * @return Name of second drone
      * @author Javier Ortega Rodríguez, Antonio Troitiño
      */
-    public static String getNameDron2() {
-        return DataAccess.nameDrone2;
+    public String getNameDrone2() {
+        return this.nameDrone2;
     }
     
     /**
@@ -188,8 +188,8 @@ public class DataAccess {
      * @return Name of third drone
      * @author Javier Ortega Rodríguez, Antonio Troitiño
      */
-    public static String getNameDron3() {
-        return DataAccess.nameDrone3;
+    public String getNameDrone3() {
+        return this.nameDrone3;
     }
     
     /**
@@ -198,8 +198,19 @@ public class DataAccess {
      * @return Name of fourth drone
      * @author Javier Ortega Rodríguez, Antonio Troitiño
      */
-    public static String getNameDron4() {
-        return DataAccess.nameDrone4;
+    public String getNameDrone4() {
+        return this.nameDrone4;
+    }
+    
+    /**
+     * Getter name of the drones
+     *
+     * @return List of drone names
+     * @author Alexander Straub
+     */
+    public String[] getNameDrone() {
+        return new String[] {this.nameDrone1, this.nameDrone2, 
+            this.nameDrone3, this.nameDrone4};
     }
     
     /**
