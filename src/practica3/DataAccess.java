@@ -1,18 +1,13 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package practica3;
 
 /**
- *
- * @author rod
+ * Data class to store login information
+ * 
+ * @author Javier Ortega Rodríguez
  */
 public class DataAccess {
     /**
-     * Instancia singleton
+     * Singleton instance
      */
     private static DataAccess instance = null;
     
@@ -30,14 +25,14 @@ public class DataAccess {
     /**
      * Name Decepticons
      */
-    private static final String nameMegatron = "Megatron1";
-    private static final String nameDron1 = "Spectro1";
-    private static final String nameDron2 = "Viewfinder";
-    private static final String nameDron3 = "Nightbird";
-    private static final String nameDron4 = "Squawktalk";
+    private static final String nameMegatron = "Megatron";
+    private static final String nameDrone1 = "Spectro";
+    private static final String nameDrone2 = "Viewfinder";
+    private static final String nameDrone3 = "Nightbird";
+    private static final String nameDrone4 = "Squawktalk";
 
     /**
-     * key
+     * Key
      */
     private String key;
 
@@ -45,9 +40,9 @@ public class DataAccess {
      * Create a singleton instance. If it already exists, return the reference
      *
      * @return Reference to single object
-     * @author Fco Javier Ortega Rodríguez
+     * @author Javier Ortega Rodríguez
      */
-    public static DataAccess crearInstancia() {
+    public static DataAccess createInstance() {
         if (DataAccess.instance == null) {
             DataAccess.instance = new DataAccess();
         }
@@ -70,7 +65,7 @@ public class DataAccess {
         this.world  = "pyrenees";
         //this.world  = "alps";
         //this.world  = "andes";
-        //this.world  = "valleys";
+        this.world  = "valleys";
         //this.world  = "faun";
         //this.world  = "everest";
         //this.world  = "newyork";
@@ -78,9 +73,9 @@ public class DataAccess {
     }
 
     /**
-     * Getter name host
+     * Getter hostname
      *
-     * @return name host
+     * @return Hostname
      * @author Javier Ortega Rodríguez
      */
     public String getHost() {
@@ -90,7 +85,7 @@ public class DataAccess {
     /**
      * Getter port
      *
-     * @return number port
+     * @return Port
      * @author Javier Ortega Rodríguez
      */
     public int getPort() {
@@ -100,7 +95,7 @@ public class DataAccess {
     /**
      * Getter virtual host
      *
-     * @return name virtual host
+     * @return Virtual host name
      * @author Javier Ortega Rodríguez
      */
     public String getVirtualHost() {
@@ -110,7 +105,7 @@ public class DataAccess {
     /**
      * Getter user name
      *
-     * @return name user
+     * @return Username
      * @author Javier Ortega Rodríguez
      */
     public String getUsername() {
@@ -120,7 +115,7 @@ public class DataAccess {
     /**
      * Getter password
      *
-     * @return password
+     * @return Password
      * @author Javier Ortega Rodríguez
      */
     public String getPassword() {
@@ -128,9 +123,9 @@ public class DataAccess {
     }
 
     /**
-     * Getter encryption
+     * Getter SSL encryption
      *
-     * @return value encryption
+     * @return SSL encryption
      * @author Javier Ortega Rodríguez
      */
     public Boolean getSSL() {
@@ -138,9 +133,9 @@ public class DataAccess {
     }
 
     /**
-     * Setter of key
+     * Setter for key
      *
-     * @param key key session
+     * @param key Session key
      * @author Javier Ortega Rodríguez
      */
     public void setKey(String key) {
@@ -150,7 +145,7 @@ public class DataAccess {
     /**
      * Getter key
      *
-     * @return key
+     * @return Session key
      * @author Javier Ortega Rodríguez
      */
     public String getKey() {
@@ -158,9 +153,9 @@ public class DataAccess {
     }
 
     /**
-     * Getter name megatron
+     * Getter name of Megatron
      *
-     * @return name megatron
+     * @return Name of Megatron
      * @author Javier Ortega Rodríguez, Antonio Troitiño
      */
     public static String getNameMegatron() {
@@ -168,48 +163,50 @@ public class DataAccess {
     }
 
     /**
-     * Getter name dron1
+     * Getter name of first drone
      *
-     * @return name dron1
+     * @return Name of first drone
      * @author Javier Ortega Rodríguez, Antonio Troitiño
      */
     public static String getNameDron1() {
-        return DataAccess.nameDron1;
+        return DataAccess.nameDrone1;
     }
     
     /**
-     * Getter name dron2
+     * Getter name of second drone
      *
-     * @return name dron2
+     * @return Name of second drone
      * @author Javier Ortega Rodríguez, Antonio Troitiño
      */
     public static String getNameDron2() {
-        return DataAccess.nameDron2;
+        return DataAccess.nameDrone2;
     }
     
     /**
-     * Getter name dron3
+     * Getter name of third drone
      *
-     * @return name dron3
+     * @return Name of third drone
      * @author Javier Ortega Rodríguez, Antonio Troitiño
      */
     public static String getNameDron3() {
-        return DataAccess.nameDron3;
+        return DataAccess.nameDrone3;
     }
     
     /**
-     * Getter name dron4
+     * Getter name of fourth drone
      *
-     * @return name dron4
+     * @return Name of fourth drone
      * @author Javier Ortega Rodríguez, Antonio Troitiño
      */
     public static String getNameDron4() {
-        return DataAccess.nameDron4;
+        return DataAccess.nameDrone4;
     }
     
     /**
      * Getter of the world
-     * @author JC
+     * 
+     * @return Name of the world
+     * @author José Carlos Alfaro
      */
     public String getWorld(){
         return this.world;

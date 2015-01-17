@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package practica3.Draw;
 
 import java.awt.Color;
@@ -13,11 +8,12 @@ import java.util.Iterator;
 import practica3.Coord;
 import practica3.Decepticon;
 import practica3.Map;
-import practica3.Nodo;
+import practica3.Node;
 
 /**
+ * Drawing area
  *
- * @author JotaC
+ * @author José Carlos Alfaro
  */
 public class JPMap extends javax.swing.JPanel {
 
@@ -28,6 +24,11 @@ public class JPMap extends javax.swing.JPanel {
     ArrayList<Nodo> visited;
     
 
+    /**
+     * Constructor
+     *
+     * @author José Carlos Alfaro
+     */
     public JPMap() {
         System.out.println("Iniciando constructor JPMAP");
         initComponents();

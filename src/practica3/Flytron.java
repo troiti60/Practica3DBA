@@ -10,6 +10,9 @@ import java.util.ArrayList;
  */
 public final class Flytron extends Decepticon {
 
+    private final int visualRange;
+    private final int consumation;
+
     /**
      * Constructor
      *
@@ -21,23 +24,47 @@ public final class Flytron extends Decepticon {
      * @author Alexander Straub
      */
     public Flytron(AgentID aid, AgentID megatron, String key, Map map) throws Exception {
-        super(aid, megatron, 0, 3, key, map);
+        super(aid, megatron, 0, key, map);
         this.name = "Flytron " + this.getName();
+        this.visualRange = 3;
+        this.consumation = 2;
 
         System.out.println(this.name + ": Instantiated");
     }
 
     /**
+     * Returns the visual range of the Decepticon
+     *
+     * @return Visual range
+     * @author Alexander Straub
+     */
+    @Override
+    public final int getVisualRange() {
+        return this.visualRange;
+    }
+
+    /**
+     * Returns the battery consumation per step
+     *
+     * @return Battery consumation
+     * @author Alexander Straub
+     */
+    @Override
+    public final int getConsumation() {
+        return this.consumation;
+    }
+
+    /**
      * Return the border cells in the right order, together with the respective
      * actions.
-     * 
+     *
      * @param position Current position of the drone
      * @param borderCells Array to fill with border cells
      * @param actions Array to fill with actions for the border cells
      * @author Alexander Straub
      */
     @Override
-    protected final void mapv3_getBorderCells(Coord position, ArrayList<Nodo> borderCells, ArrayList<Megatron.Action> actions) {
+    protected final void mapv3_getBorderCells(Coord position, ArrayList<Node> borderCells, ArrayList<Megatron.Action> actions) {
         borderCells.ensureCapacity(8);
         actions.ensureCapacity(8);
 
@@ -79,6 +106,45 @@ public final class Flytron extends Decepticon {
             borderCells.add(this.map.getMap().get(position.NW()));
             actions.add(Megatron.Action.NW);
         }
+    }
+    
+    /**
+     * Try to cross the map
+     * 
+     * @return Next action
+     * @author Alexander Straub
+     */
+    @Override
+    protected final Megatron.Action mapv4_crossMap() {
+        // Only execute once
+        if (this.map4_stop) {
+            return null;
+        }
+        
+        this.map4_stop = true;
+        
+        // Get direction
+        Megatron.Action direction;
+        
+        if (this.getPosition().getY() == 0) {
+            if (this.getLastAction() == Megatron.Action.E) {
+                direction = Megatron.Action.SW;
+            } else {
+                direction = Megatron.Action.SE;
+            }
+        } else {
+            if (this.getLastAction() == Megatron.Action.E) {
+                direction = Megatron.Action.NW;
+            } else {
+                direction = Megatron.Action.NE;
+            }
+        }
+        
+        // Fly over the map
+        for (int i = 1; i < this.map.getResolution() - 1; i++) {
+            this.map4_pathToUnexploredCell.push(direction);
+        }
+        return direction;
     }
 
 }

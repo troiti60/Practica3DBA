@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package practica3;
 
 import es.upv.dsic.gti_ia.core.ACLMessage;
@@ -14,11 +9,12 @@ import java.util.LinkedHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import practica3.Draw.Ventana;
+import practica3.Draw.Window;
 
 /**
  * Class that controls the rest of Decepticons
  *
- * @author Fco Javier Ortega Rodriguez
+ * @author Javier Ortega Rodriguez
  */
 public class Megatron extends SingleAgent {
 
@@ -28,9 +24,9 @@ public class Megatron extends SingleAgent {
     private ACLMessage inbox, outbox;
     private JsonDBA json;
     private DataAccess dataAccess;
-    private Nodo nodoGoal;
-    private Ventana draw;
-    
+    private Node nodoGoal;
+    private Window draw;
+
     private State state;
     private String msg;
     private boolean live;
@@ -39,7 +35,7 @@ public class Megatron extends SingleAgent {
 
     private int pasos = 0;
     private boolean zoneGoalFound = false;
-    
+
     // Image of the map for visualization
     //private MapImage mapImage = null;
 
@@ -108,9 +104,9 @@ public class Megatron extends SingleAgent {
 
     /**
      * Constructor
-     * 
+     *
      * @param aid Agent ID
-     * @throws Exception 
+     * @throws Exception
      * @author Alexander Straub
      */
     public Megatron(AgentID aid) throws Exception {
@@ -120,7 +116,14 @@ public class Megatron extends SingleAgent {
 
     @Override
     protected void init() {
-        this.myMap = new Map();
+        this.dataAccess = DataAccess.createInstance();
+        
+        int resolution = 100;
+        if (this.dataAccess.getWorld().equals("newyork")) {
+            resolution = 500;
+        }
+        
+        this.myMap = new Map(resolution);       
         this.dataAccess = DataAccess.crearInstancia();
         System.out.println("Va a crear la ventana");
         draw = new Ventana();     
@@ -128,9 +131,7 @@ public class Megatron extends SingleAgent {
         draw.setVisible(true);
         System.out.println("VHa terminado  de crear la ventana");
 
-        //int resolution = 100;
-        //if (this.dataAccess.getWorld().equals("newyork")) resolution = 500;
-        //this.mapImage = new MapImage(resolution);
+        this.mapImage = new MapImage(resolution);
     }
 
     /**
@@ -204,7 +205,7 @@ public class Megatron extends SingleAgent {
         outbox.setPerformative(ACLMessage.SUBSCRIBE);
         outbox.setReceiver(new AgentID("Canis"));
         outbox.setSender(getAid());
-        outbox.setContent(json.crearJson("world", dataAccess.getWorld()));
+        outbox.setContent(json.createJson("world", dataAccess.getWorld()));
         System.out.println("\tContenido subscribe: " + outbox.getContent());
         this.send(outbox);
 
@@ -238,7 +239,7 @@ public class Megatron extends SingleAgent {
         LinkedHashMap<String, String> hm = new LinkedHashMap<>();
         hm.put("command", action.toString());
         hm.put("key", dataAccess.getKey());
-        String msg = json.crearJson(hm);
+        String msg = json.createJson(hm);
 
         outbox = new ACLMessage();
         outbox.setSender(getAid());
@@ -260,7 +261,7 @@ public class Megatron extends SingleAgent {
         LinkedHashMap<String, String> hm = new LinkedHashMap<>();
         hm.put("command", "refuel");
         hm.put("key", dataAccess.getKey());
-        String msg = json.crearJson(hm);
+        String msg = json.createJson(hm);
 
         outbox = new ACLMessage();
         outbox.setSender(getAid());
@@ -316,7 +317,7 @@ public class Megatron extends SingleAgent {
                 case Create:
                     System.out.println("Megatron------ Estado: Create");
                     try {
-                        this.drones.add(new Birdron(new AgentID(DataAccess.getNameDron1()), 
+                        this.drones.add(new Birdron(new AgentID(DataAccess.getNameDron1()),
                                 this.getAid(), dataAccess.getKey(), this.myMap));
 
                     } catch (Exception ex) {
@@ -342,7 +343,7 @@ public class Megatron extends SingleAgent {
 
                         this.drones.add(new Birdron(new AgentID(DataAccess.getNameDron3()),
                                 this.getAid(), dataAccess.getKey(), this.myMap));
-                        
+
                         this.drones.add(new Birdron(new AgentID(DataAccess.getNameDron4()),
                                 this.getAid(), dataAccess.getKey(), this.myMap));
 
@@ -401,8 +402,8 @@ public class Megatron extends SingleAgent {
                         int energy = json.getElementInteger(result, "energy");
                         System.out.println("Mostrando energia restante: " + energy);
                         boolean goal = (boolean) json.getElement(result, "goal");
-                        boolean goalFound = (boolean)sensor.contains(3);
-                        
+                        boolean goalFound = (boolean) sensor.contains(3);
+
                         if (inbox.getSender().getLocalName().equals(this.drones.get(0).getName())) {
                             numeroDron = 0;
                         } else if (inbox.getSender().getLocalName().equals(this.drones.get(1).getName())) {
@@ -423,38 +424,48 @@ public class Megatron extends SingleAgent {
                             System.out.println("\tGoal     Si");
 
                             this.drones.get(numeroDron).setMyGoal(nuevaCordenada);
-                            
+
                             state = State.Heuristic;
                         } else if (goalFound) {
                             if (!zoneGoalFound) {
                                 // Es el primer dron que llega, asignar metas al resto
                                 // Llamar al método para aparcar
-                                
+
                                 int resolution;
                                 switch (this.drones.get(numeroDron).getRole()) {
-                                    case 0: resolution = 3; break;
-                                    case 1: resolution = 5; break;
-                                    default: resolution = 11; break;
+                                    case 0:
+                                        resolution = 3;
+                                        break;
+                                    case 1:
+                                        resolution = 5;
+                                        break;
+                                    default:
+                                        resolution = 11;
+                                        break;
                                 }
-                                
+
                                 int mapWidth = 100;
-                                if (this.dataAccess.getWorld().equals("newyork")) mapWidth = 500;
-                                
+                                if (this.dataAccess.getWorld().equals("newyork")) {
+                                    mapWidth = 500;
+                                }
+
                                 int index = sensor.indexOf(3);
-                                int i = index % resolution; i -= resolution / 2;
-                                int j = index / resolution; j -= resolution / 2;
-                                
+                                int i = index % resolution;
+                                i -= resolution / 2;
+                                int j = index / resolution;
+                                j -= resolution / 2;
+
                                 Coord coordGoal = nuevaCordenada.add(i, j);
-                                if (coordGoal.getX() >= 0 && coordGoal.getY() >= 0 && 
-                                        coordGoal.getX() < mapWidth && coordGoal.getY() < mapWidth) {
-                                    
+                                if (coordGoal.getX() >= 0 && coordGoal.getY() >= 0
+                                        && coordGoal.getX() < mapWidth && coordGoal.getY() < mapWidth) {
+
                                     zoneGoalFound = true;
                                     System.err.println("Paso " + pasos + "\n\n###################\nD:" + numeroDron + " ha encontrado el objetivo\n###########\n");
                                     System.out.println("Megatron: Cambiando a estado LaunchRest");
                                     state = State.LaunchRest;
-                                    
-                                    nodoGoal = new Nodo(coordGoal, 3);
-                                    
+
+                                    nodoGoal = new Node(coordGoal, 3);
+
                                     // DEBUG: only until goal has been found
                                     state = State.Cancel;
                                 } else {
@@ -472,7 +483,7 @@ public class Megatron extends SingleAgent {
                         if (goal) {
                             System.err.println("Paso " + pasos + "\n\n###################\nD:" + numeroDron + " En objetivo\n###########\n");
 
-                                // si todos los vivos han llegado
+                            // si todos los vivos han llegado
                             //System.out.println("Megatron: Primer decepticon llegó, cancelando...");
                             //state = State.Cancel;
                         }
@@ -558,7 +569,6 @@ public class Megatron extends SingleAgent {
                     
                     /*try {
                         this.mapImage.saveToFile();
-                    } catch (Exception e) {}*/
 
                     break;
             }
@@ -566,8 +576,6 @@ public class Megatron extends SingleAgent {
 
         System.out.println("Megatron: Muerto");
     }
-
-    
 
     /**
      * Fuel heuristic
@@ -578,7 +586,7 @@ public class Megatron extends SingleAgent {
      * @return true if steps to reach goal equals pasos, false otherwise
      * @author Daniel Sánchez Alcaide
      */
-    private boolean fuelH(int drone, Nodo goal) throws Exception {
+    private boolean fuelH(int drone, Node goal) throws Exception {
         boolean res = false;
         int consumo = 1;
         switch (drones.get(drone).getRole()) {
@@ -598,8 +606,8 @@ public class Megatron extends SingleAgent {
         if (!zoneGoalFound && drones.get(drone).getFuel() <= consumo) {
             res = true;
         } else {
-            HashMap<Coord, Nodo> map = myMap.getMap();
-            Nodo current = new Nodo(drones.get(drone).getPosition().getX(),
+            HashMap<Coord, Node> map = myMap.getMap();
+            Node current = new Node(drones.get(drone).getPosition().getX(),
                     drones.get(drone).getPosition().getY(),
                     map.get(drones.get(drone).getPosition()).getRadar());
             if (drones.get(drone).aStar(current, goal).capacity() * consumo == 100) {
@@ -611,3 +619,5 @@ public class Megatron extends SingleAgent {
         return res;
     }
 }
+                    } catch (Exception e) {
+                    }

@@ -120,11 +120,11 @@ public class MapImage {
      * @author Alexander Straub
      */
     public void saveToFile() throws IOException {
-        File outputfile = new File(DataAccess.crearInstancia().getWorld() + "_0.bmp");
+        File outputfile = new File(DataAccess.createInstance().getWorld() + "_0.bmp");
         
         int fileNumber = 1;
         while (outputfile.exists()) {
-            outputfile = new File(DataAccess.crearInstancia().getWorld() + "_" + fileNumber + ".bmp");
+            outputfile = new File(DataAccess.createInstance().getWorld() + "_" + fileNumber + ".bmp");
             fileNumber++;
         }
         

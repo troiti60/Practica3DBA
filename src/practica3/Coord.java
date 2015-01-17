@@ -1,73 +1,26 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package practica3;
 
 import static java.lang.Math.pow;
 import static java.lang.Math.sqrt;
-import java.util.Vector;
 import practica3.Megatron.Action;
 
 /**
- * Representa coordenadas en 2D
+ * Represents coordinates in 2D
  *
  * @author Alexander Straub, Antonio Troitiño
  */
 public class Coord {
 
     /**
-     * Coordenadas
+     * Coordinates
      */
     private int x, y;
 
     /**
-     * Getter devolviendo la coordenada X
-     *
-     * @return Coordenada X
-     * @author Alexander Straub
-     */
-    public int getX() {
-        return this.x;
-    }
-
-    /**
-     * Setter parar guardar un nuevo valor de X
-     *
-     * @param newX Nuevo valor de X
-     * @author Alexander Straub
-     */
-    public void setX(int newX) {
-        this.x = newX;
-    }
-
-    /**
-     * Getter devolviendo la coordenada Y
-     *
-     * @return Coordenada Y
-     * @author Alexander Straub
-     */
-    public int getY() {
-        return this.y;
-    }
-
-    /**
-     * Setter parar guardar un nuevo valor de Y
-     *
-     * @param newY Nuevo valor de Y
-     * @author Alexander Straub
-     */
-    public void setY(int newY) {
-        this.y = newY;
-    }
-
-    /**
      * Constructor
      *
-     * @param x Coordenada X
-     * @param y Coordenada Y
+     * @param x x coordinate
+     * @param y y coordinate
      * @author Alexander Straub
      */
     public Coord(int x, int y) {
@@ -78,18 +31,58 @@ public class Coord {
     /**
      * Copy constructor
      *
-     * @param copy Crear nuevas coordenadas de copiando
+     * @param copy Create new coordinates as carbon copy
      * @author Alexander Straub
      */
     public Coord(Coord copy) {
         this.x = copy.getX();
         this.y = copy.getY();
     }
+    
+    /**
+     * Getter for the x coordinate
+     *
+     * @return x coordinate
+     * @author Alexander Straub
+     */
+    public int getX() {
+        return this.x;
+    }
 
     /**
-     * Devolver la coordenada en el norte
+     * Setter to store new x coordinate
      *
-     * @return Coordenada en el norte
+     * @param newX New x coordinate
+     * @author Alexander Straub
+     */
+    public void setX(int newX) {
+        this.x = newX;
+    }
+
+    /**
+     * Getter for the y coordinate
+     *
+     * @return y coordinate
+     * @author Alexander Straub
+     */
+    public int getY() {
+        return this.y;
+    }
+
+    /**
+     * Setter to store new y coordinate
+     *
+     * @param newY New y coordinate
+     * @author Alexander Straub
+     */
+    public void setY(int newY) {
+        this.y = newY;
+    }
+
+    /**
+     * Return coordinate to the north
+     *
+     * @return Coordinate to the north
      * @author Alexander Straub
      */
     public Coord N() {
@@ -97,9 +90,9 @@ public class Coord {
     }
 
     /**
-     * Devolver la coordenada en el este
+     * Return coordinate to the east
      *
-     * @return Coordenada en el este
+     * @return Coordinate to the east
      * @author Alexander Straub
      */
     public Coord E() {
@@ -107,9 +100,9 @@ public class Coord {
     }
 
     /**
-     * Devolver la coordenada en el sur
+     * Return coordinate to the south
      *
-     * @return Coordenada en el sur
+     * @return Coordinate to the south
      * @author Alexander Straub
      */
     public Coord S() {
@@ -117,9 +110,9 @@ public class Coord {
     }
 
     /**
-     * Devolver la coordenada en el oeste
+     * Return coordinate to the west
      *
-     * @return Coordenada en el oeste
+     * @return Coordinate to the west
      * @author Alexander Straub
      */
     public Coord W() {
@@ -127,9 +120,9 @@ public class Coord {
     }
 
     /**
-     * Devolver la coordenada en el noreste
+     * Return coordinate to the northeast
      *
-     * @return Coordenada en el noreste
+     * @return Coordinate to the northeast
      * @author Alexander Straub
      */
     public Coord NE() {
@@ -137,9 +130,9 @@ public class Coord {
     }
 
     /**
-     * Devolver la coordenada en el sureste
+     * Return coordinate to the southeast
      *
-     * @return Coordenada en el sureste
+     * @return Coordinate to the southeast
      * @author Alexander Straub
      */
     public Coord SE() {
@@ -147,9 +140,9 @@ public class Coord {
     }
 
     /**
-     * Devolver la coordenada en el suroeste
+     * Return coordinate to the southwest
      *
-     * @return Coordenada en el suroeste
+     * @return Coordinate to the southwest
      * @author Alexander Straub
      */
     public Coord SW() {
@@ -157,15 +150,22 @@ public class Coord {
     }
 
     /**
-     * Devolver la coordenada en el noroeste
+     * Return coordinate to the northwest
      *
-     * @return Coordenada en el noroeste
+     * @return Coordinate to the northwest
      * @author Alexander Straub
      */
     public Coord NW() {
         return new Coord(x - 1, y - 1);
     }
     
+    /**
+     * Return the neighbour indicated by an action
+     * 
+     * @param action Direction from current coordinate
+     * @return Neighbour cell coordinates indicated by action
+     * @author Alexander Straub
+     */
     public Coord neighbour(Action action) {
         if (action == Action.N) return N();
         if (action == Action.NW) return NW();
@@ -212,43 +212,42 @@ public class Coord {
     }
 
     /**
-     * Calcular la distancia entre las coordenadas
+     * Calculate distance between two nodes
      *
-     * @param otro Coordenadas con que comparar
-     * @return Distancia entre las coordenadas
+     * @param other Coordinate to compare with
+     * @return Distance between two nodes
      * @author Alexander Straub
      */
-    public double distanciaA(Coord otro) {
-        return sqrt(pow(this.x - otro.getX(), 2.0) + pow(this.y - otro.getY(), 2.0));
+    public double distanceTo(Coord other) {
+        return sqrt(pow(this.x - other.getX(), 2.0) + pow(this.y - other.getY(), 2.0));
     }
 
     /**
-     * Comparar este objeto con otro, devolviendo true si las coordenadas
-     * coinciden
+     * Compare two nodes returning true if they are equal
      *
-     * @param otro Objeto con que comparar
-     * @return True si las coordenadas coinciden
+     * @param other Coordinate to compare with
+     * @return True if the coordinates are equal
      * @author Alexander Straub
      */
     @Override
-    public boolean equals(Object otro) {
-        if (otro == null) {
+    public boolean equals(Object other) {
+        if (other == null) {
             return false;
         }
-        if (otro == this) {
+        if (other == this) {
             return true;
         }
-        if (!(otro instanceof Coord)) {
+        if (!(other instanceof Coord)) {
             return false;
         }
 
-        Coord segundo = (Coord) otro;
-        return (this.x == segundo.getX()
-                && this.y == segundo.getY());
+        Coord second = (Coord) other;
+        return (this.x == second.getX()
+                && this.y == second.getY());
     }
 
     /**
-     * Crear un hash code
+     * Create simple hash code
      *
      * @return Hash code
      * @author Antonio Troitiño
@@ -256,40 +255,6 @@ public class Coord {
     @Override
     public int hashCode() {
         return (this.x + (this.y * 1000));
-    }
-
-    /**
-     * Sustracción de dos coordenadas
-     *
-     * @param otro Otros coordenadas
-     * @return Vector
-     * @author Alexander Straub
-     */
-    public Vector sub(Coord otro) {
-        int deltaX = this.x - otro.getX();
-        int deltaY = this.y - otro.getY();
-        double norm = Math.sqrt((double) (deltaX * deltaX + deltaY * deltaY));
-        double scale = 0.5 / norm;
-
-        Vector vec = new Vector(2);
-        vec.add((double) deltaX * scale);
-        vec.add((double) deltaY * scale);
-
-        return vec;
-    }
-
-    /**
-     * Adición con un vector
-     *
-     * @param vec Vector
-     * @return Suma
-     * @author Alexander Straub
-     */
-    public Coord add(Vector vec) {
-        int newX = (int) Math.round((double) this.x + (double) vec.get(0));
-        int newY = (int) Math.round((double) this.y + (double) vec.get(1));
-
-        return new Coord(newX, newY);
     }
 
 }
