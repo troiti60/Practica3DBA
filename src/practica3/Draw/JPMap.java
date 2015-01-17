@@ -68,11 +68,6 @@ public class JPMap extends javax.swing.JPanel {
             Iterator it = this.map.getMap().entrySet().iterator();
             Coord c;
             Node n;
-            /*System.out.println("[JPANEL] El nodo con coordenadas"
-                                +"["+map.getMap().get(dronPos).getX()+","
-                                +map.getMap().get(dronPos).getY()+"]"+
-                                "ha sido visitado por dron: "
-                                +map.getMap().get(dronPos).isVisited());*/
             while (it.hasNext()) {
                 java.util.Map.Entry e = (java.util.Map.Entry) it.next();       
                 n = new Node((Node) e.getValue());
@@ -93,8 +88,7 @@ public class JPMap extends javax.swing.JPanel {
 
                     switch(visited.get(i).isVisited()){
                        case 0:
-                        g.setColor(Color.CYAN);
-                        System.out.println("[Pintando camino del dron 0]");
+                        g.setColor(Color.CYAN);                       
                         break;
                        case 1:
                         g.setColor(Color.PINK);
@@ -129,7 +123,6 @@ public class JPMap extends javax.swing.JPanel {
             }
             
         }
-        System.out.println("Fin del metodo paint() de JPMap");
     }
 
     @SuppressWarnings("unchecked")
