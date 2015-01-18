@@ -389,6 +389,25 @@ public class Megatron extends SingleAgent {
                 case Feel:
                     System.out.println("Megatron------ Estado: Feel");
                     droneNumber = -1;
+                    
+                    // If drones are on standby but all other drones are
+                    // incapacitated, reactivate one of them
+                    boolean reactivate = true;
+                    for (int i = 0; i < 4 && reactivate; i++) {
+                        reactivate &= this.drones.get(i).isOnStandby()
+                                || !this.drones.get(i).isAlive();
+                    }
+
+                    for (int i = 0; i < 4 && reactivate; i++) {
+                        if (this.drones.get(i).isOnStandby()) {
+                            this.drones.get(i).reactivate();
+                            reactivate = false;
+                            this.state = State.Heuristic;
+                            this.droneNumber = i;
+                        }
+                    }
+                    
+                    if (this.state == State.Heuristic) break;
 
                     try {
                         System.out.println("Megatron: Esperando mensaje");
@@ -538,21 +557,6 @@ public class Megatron extends SingleAgent {
                                         + nodoGoal.toString());
                                 sigAction = this.drones.get(droneNumber).aStar(this.myMap.getMap().get(this.drones.get(droneNumber).getPosition()), nodoGoal).firstElement();
                             } else {
-                                // If the drone is on standby but all other drones are incapacitated, reactivate it
-                                if (this.drones.get(this.droneNumber).isOnStandby()) {
-                                    boolean reactivate = true;
-                                    for (int i = 0; i < 4 && reactivate; i++) {
-                                        if (i != this.droneNumber) {
-                                            reactivate &= this.drones.get(i).isOnStandby() 
-                                                    || !this.drones.get(i).isAlive();
-                                        }
-                                    }
-                                    
-                                    if (reactivate) {
-                                        this.drones.get(this.droneNumber).reactivate();
-                                    }
-                                }
-                                
                                 if (this.drones.get(droneNumber).getRole() == 0) {
                                     sigAction = this.drones.get(droneNumber).mapv4();
                                 } else {

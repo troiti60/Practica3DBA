@@ -34,6 +34,7 @@ public abstract class DataDecepticon {
     private boolean inGoal;
     private Coord myGoal;
     private boolean standby;
+    private int reactivateCounter;
 
     /**
      * Constructor
@@ -55,6 +56,7 @@ public abstract class DataDecepticon {
         this.inGoal = false;
         this.myGoal = null;
         this.standby = false;
+        this.reactivateCounter = 0;
     }
 
     /**
@@ -235,6 +237,7 @@ public abstract class DataDecepticon {
      */
     public final void reactivate() {
         this.standby = false;
+        this.reactivateCounter++;
     }
     
     /**
@@ -287,6 +290,7 @@ public abstract class DataDecepticon {
     protected boolean map4_start = true;
     protected boolean map4_stop = false;
     protected Coord map4_target = null;
+    protected int map4_stepNum = 0;
     protected Stack<Megatron.Action> map4_pathToUnexploredCell = new Stack<>();
 
     /**
@@ -378,6 +382,48 @@ public abstract class DataDecepticon {
     }
 
     /**
+     * Search for the best way to go from one node to one not completely explored
+     *
+     * @param start Node where to start
+     * @return Stack of actions
+     * @author Alexander Straub
+     */
+    public final Stack<Megatron.Action> dijkstra(Node start) {
+        // Sanity check for the parameter
+        if (start == null) {
+            return null;
+        }
+
+        // Get the map
+        HashMap<Coord, Node> localMap = this.map.getAccessibleMap();
+        start = localMap.get(start.getCoord());
+
+        // Assign distances and set paths
+        expandNodes(start);
+
+        // Search for a node not fully explored with least distance
+        List<Node> nodes = new ArrayList<>(localMap.values());
+        Node target = null, temp;
+        
+        for (Iterator<Node> i = nodes.iterator(); i.hasNext();) {
+            temp = i.next();
+            
+            if ((temp.getDistance() != Double.MAX_VALUE && !temp.isExplored()) 
+                    && (target == null || target.getDistance() > temp.getDistance())) {
+                target = temp;
+            }
+        }
+        
+        // If no such node exists, we already explored the whole map
+        if (target == null) {
+            return null;
+        }
+
+        // Return found path
+        return retracePath(start, target);
+    }
+    
+    /**
      * Search for the best way to go from one node to another
      *
      * @param start Node where to start
@@ -395,6 +441,28 @@ public abstract class DataDecepticon {
         HashMap<Coord, Node> localMap = this.map.getAccessibleMap();
         start = localMap.get(start.getCoord());
         target = localMap.get(target.getCoord());
+        
+        // Assign distances and set paths
+        expandNodes(start);
+
+        // Check if a path is even possible (may not be connected to this graph)
+        if (target.getDistance() == Double.MAX_VALUE) {
+            return null;
+        }
+
+        // Return found path
+        return retracePath(start, target);
+    }
+    
+    /**
+     * Expand nodes for dijkstra, assigning distances and paths
+     * 
+     * @param start Node to start from
+     * @author Alexander Straub
+     */
+    private void expandNodes(Node start) {
+        // Get the map
+        HashMap<Coord, Node> localMap = this.map.getAccessibleMap();
 
         // Initialize
         List<Node> nodes = new ArrayList<>(localMap.values());
@@ -424,12 +492,17 @@ public abstract class DataDecepticon {
                 }
             }
         }
-
-        // Check if a path is even possible
-        if (target.getDistance() == Double.MAX_VALUE) {
-            return null;
-        }
-
+    }
+    
+    /**
+     * Retrace the path beginning at the target going back to start
+     * 
+     * @param start Start node
+     * @param target Target node
+     * @return Stack of actions
+     * @author Alexander Straub
+     */
+    private Stack<Megatron.Action> retracePath(Node start, Node target) {
         // Starting with the target node, trace back to the start
         Stack<Megatron.Action> actions = new Stack<>();
 
@@ -462,7 +535,7 @@ public abstract class DataDecepticon {
 
             target = target.getPath();
         }
-
+        
         return actions;
     }
 
@@ -473,6 +546,8 @@ public abstract class DataDecepticon {
      * @author Antonio Troitiño del Río
      */
     public Megatron.Action mapv0() {
+        if (isOnStandby()) return null;
+        
         Megatron.Action toDo;
         HashMap<Coord, Node> localMap = this.map.getMap();
 
@@ -565,6 +640,8 @@ public abstract class DataDecepticon {
      * @author Alexander Straub
      */
     public Megatron.Action mapv1(int mode, Coord regionMin, Coord regionMax) throws Exception {
+        if (isOnStandby()) return null;
+        
         if (this.map1_pathToUnexploredCell.isEmpty()) {
             // Get search window size in one direction
             int offset = 5;
@@ -765,6 +842,8 @@ public abstract class DataDecepticon {
      * @author Jesús Cobo Sánchez
      */
     public Megatron.Action mapv2() throws Exception {
+        if (isOnStandby()) return null;
+        
         Megatron.Action actions = null;
         HashMap<Coord, Node> localMap = this.map.getMap();
         Node current;
@@ -1004,6 +1083,8 @@ public abstract class DataDecepticon {
      * @author Alexander Straub
      */
     public final Megatron.Action mapv3() throws Exception {
+        if (isOnStandby()) return null;
+        
         Megatron.Action ret = mapv3(false);
 
         // If mapv3 returns an illegal action, try again
@@ -1107,30 +1188,11 @@ public abstract class DataDecepticon {
 
             // If everything around the drone already has been explored,
             // look for the closest node with unexplored neighbours
-            Node closestNode = null;
-            Node currentNode;
-
-            for (Iterator<Node> it = this.map.getAccessibleMap().values().iterator();
-                    it.hasNext();) {
-
-                currentNode = it.next();
-                if (currentNode.getRadar() == 0 && !currentNode.isExplored()
-                        && (closestNode == null || position.distanceTo(currentNode.getCoord()) < position.distanceTo(closestNode.getCoord()))) {
-
-                    closestNode = currentNode;
-                }
-            }
-
-            if (closestNode == null) {
-                System.err.println("ERROR: mapv3 called, but map already explored completely");
-                return null;
-            }
-
-            // Find way to the previously found closest node
-            this.map3_pathToUnexploredCell = dijkstra(this.map.getMap().get(position), closestNode);
+            this.map3_pathToUnexploredCell = dijkstra(this.map.getMap().get(position));
             
             // If the way is too long, set drone to standby
-            if (this.map3_pathToUnexploredCell.size() > 100) {
+            if (this.map3_pathToUnexploredCell != null && this.map3_pathToUnexploredCell.size() > 50 
+                    && this.reactivateCounter == 0) {
                 setStandby();
             }
             
@@ -1167,6 +1229,12 @@ public abstract class DataDecepticon {
      * @author Alexander Straub
      */
     public final Megatron.Action mapv4() {
+        if (this.map4_stepNum++ == 98) {
+            setStandby();
+        }
+        
+        if (isOnStandby()) return null;
+        
         // If it's the first time executing, go to the nearest corner
         if (this.map4_start) {
             this.map4_start = false;
@@ -1194,22 +1262,25 @@ public abstract class DataDecepticon {
         // Try to cross the map
         Megatron.Action ret = mapv4_crossMap();
         
-//        // Go to the other corner and cross again
-//        if (ret == null) {
-//            this.map4_stop = false;
-//            
-//            if (this.getPosition().getX() == 0) {
-//                for (int i = 2; i < this.map.getResolution(); i++) {
-//                    this.map4_pathToUnexploredCell.push(Megatron.Action.E);
-//                }
-//                ret = Megatron.Action.E;
-//            } else {
-//                for (int i = 2; i < this.map.getResolution(); i++) {
-//                    this.map4_pathToUnexploredCell.push(Megatron.Action.W);
-//                }
-//                ret = Megatron.Action.W;
-//            }
-//        }
+        // Go to the other corner and cross again
+        if (ret == null) {
+            if (this.reactivateCounter == 1) {
+                setStandby();
+            }
+            this.map4_stop = false;
+            
+            if (this.getPosition().getX() == 0) {
+                for (int i = 2; i < this.map.getResolution(); i++) {
+                    this.map4_pathToUnexploredCell.push(Megatron.Action.E);
+                }
+                ret = Megatron.Action.E;
+            } else {
+                for (int i = 2; i < this.map.getResolution(); i++) {
+                    this.map4_pathToUnexploredCell.push(Megatron.Action.W);
+                }
+                ret = Megatron.Action.W;
+            }
+        }
         
         return ret;
     }
