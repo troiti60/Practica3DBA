@@ -312,29 +312,31 @@ public class Megatron extends SingleAgent {
                     System.out.println("Megatron------ Estado: Create");
 
                     try {
-                        Decepticon drone = new Falcdron(new AgentID(this.dataAccess.getNameDrone1()),
-                                this.getAid(), dataAccess.getKey());
-
-                        this.drones.add(new DataFalcdron(this.myMap));
+                        Decepticon drone;
                         
                         System.out.println("Megatron: Lanzando decepticion 1...");
-                        drone.start();
-                        
-                        drone = new Birdron(new AgentID(this.dataAccess.getNameDrone2()),
+                        drone = new Falcdron(new AgentID(this.dataAccess.getNameDrone1()),
                                 this.getAid(), dataAccess.getKey());
-
+                        drone.start();
                         this.drones.add(new DataFalcdron(this.myMap));
                         
                         System.out.println("Megatron: Lanzando decepticion 2...");
+                        drone = new Birdron(new AgentID(this.dataAccess.getNameDrone2()),
+                                this.getAid(), dataAccess.getKey());
                         drone.start();
+                        this.drones.add(new DataBirdron(this.myMap));
                         
+                        System.out.println("Megatron: Lanzando decepticion 3...");
                         drone = new Flytron(new AgentID(this.dataAccess.getNameDrone3()),
                                 this.getAid(), dataAccess.getKey());
-
-                        this.drones.add(new DataFalcdron(this.myMap));
-
-                        System.out.println("Megatron: Lanzando decepticion 3...");
                         drone.start();
+                        this.drones.add(new DataFlytron(this.myMap));
+
+                        System.out.println("Megatron: Lanzando decepticion 4...");
+                        drone = new Birdron(new AgentID(this.dataAccess.getNameDrone4()),
+                                this.getAid(), dataAccess.getKey());
+                        drone.start();
+                        this.drones.add(new DataBirdron(this.myMap));
 
                         System.out.println("Megatron: Cambiando a estado Feel");
                         state = State.Feel;
@@ -505,8 +507,13 @@ public class Megatron extends SingleAgent {
                         }
                     } else {
                         this.drones.get(droneNumber).setDead();
-                        System.err.println("Megatron: Cambiando a estado Cancel");
-                        state = State.Cancel;
+                        if (!this.drones.get(0).isAlive() && !this.drones.get(1).isAlive() &&
+                                !this.drones.get(2).isAlive() && !this.drones.get(3).isAlive()) {
+                            System.err.println("Megatron: Cambiando a estado Cancel");
+                            state = State.Cancel;
+                        } else {
+                            state = State.Feel;
+                        }
                     }
                     //}
 
@@ -531,7 +538,22 @@ public class Megatron extends SingleAgent {
                                         + nodoGoal.toString());
                                 sigAction = this.drones.get(droneNumber).aStar(this.myMap.getMap().get(this.drones.get(droneNumber).getPosition()), nodoGoal).firstElement();
                             } else {
-                                if (droneNumber == 2) {
+                                // If the drone is on standby but all other drones are incapacitated, reactivate it
+                                if (this.drones.get(this.droneNumber).isOnStandby()) {
+                                    boolean reactivate = true;
+                                    for (int i = 0; i < 4 && reactivate; i++) {
+                                        if (i != this.droneNumber) {
+                                            reactivate &= this.drones.get(i).isOnStandby() 
+                                                    || !this.drones.get(i).isAlive();
+                                        }
+                                    }
+                                    
+                                    if (reactivate) {
+                                        this.drones.get(this.droneNumber).reactivate();
+                                    }
+                                }
+                                
+                                if (this.drones.get(droneNumber).getRole() == 0) {
                                     sigAction = this.drones.get(droneNumber).mapv4();
                                 } else {
                                     sigAction = this.drones.get(droneNumber).mapv3();
@@ -555,8 +577,12 @@ public class Megatron extends SingleAgent {
                 case Action:
                     System.out.println("Megatron------ Estado: Action");
 
-                    System.out.println("Megatron: Realizando la acción " + sigAction + " en " + this.dataAccess.getNameDrone()[droneNumber]);
-                    Move(this.dataAccess.getNameDrone()[droneNumber], sigAction);
+                    if (sigAction == null) {
+                        System.out.println("Megatron: Realizando ninguna acción " + this.dataAccess.getNameDrone()[droneNumber]);
+                    } else {
+                        System.out.println("Megatron: Realizando la acción " + sigAction + " en " + this.dataAccess.getNameDrone()[droneNumber]);
+                        Move(this.dataAccess.getNameDrone()[droneNumber], sigAction);
+                    }
 
                     System.out.println("Megatron: Cambiando a estado Feel");
                     state = State.Feel;
@@ -568,14 +594,14 @@ public class Megatron extends SingleAgent {
                     System.out.println("Megatron------ Estado: Cancel");
 
                     System.out.println("\n#######\nInforme\n#######");
-                    for (DataDecepticon drone : drones) {
-                        System.out.print("\n\t" + this.dataAccess.getNameDrone()[droneNumber] + "\t");
-                        if (drone.isAlive()) {
+                    for (int i = 0; i < 4; i++) {
+                        System.out.print("\n\t" + this.dataAccess.getNameDrone()[i] + "\t");
+                        if (this.drones.get(i).isAlive()) {
                             System.out.print("Vivo");
                         } else {
                             System.out.print("Muerto");
                         }
-                        if (drone.isInGoal()) {
+                        if (this.drones.get(i).isInGoal()) {
                             System.out.print("\ten meta");
                         } else {
                             System.out.print("\tfuera de la meta");

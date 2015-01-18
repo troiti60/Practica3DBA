@@ -33,6 +33,7 @@ public abstract class DataDecepticon {
     private Megatron.Action lastAction;
     private boolean inGoal;
     private Coord myGoal;
+    private boolean standby;
 
     /**
      * Constructor
@@ -53,6 +54,7 @@ public abstract class DataDecepticon {
         this.lastAction = null;
         this.inGoal = false;
         this.myGoal = null;
+        this.standby = false;
     }
 
     /**
@@ -216,6 +218,34 @@ public abstract class DataDecepticon {
     public final boolean isInGoal() {
         return this.inGoal;
     }
+    
+    /**
+     * Sets the drone to standby
+     * 
+     * @author Alexander Straub
+     */
+    protected final void setStandby() {
+        this.standby = true;
+    }
+    
+    /**
+     * Reactivates the drone
+     * 
+     * @author Alexander Straub
+     */
+    public final void reactivate() {
+        this.standby = false;
+    }
+    
+    /**
+     * Returns the state of standby
+     * 
+     * @return True if on standby
+     * @author Alexander Straub
+     */
+    public final boolean isOnStandby() {
+        return this.standby;
+    }
 
     /**
      * Returns the visual range of the Decepticon
@@ -235,7 +265,7 @@ public abstract class DataDecepticon {
 
     ////////////////////////////////////////////////////////////////////////////
     /////////////////////////// Functions for search ///////////////////////////
-    ////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////    
     // For mapv0
     protected Stack<Megatron.Action> map0_pathToUnexploredCell = new Stack<>();
 
@@ -956,11 +986,11 @@ public abstract class DataDecepticon {
     /**
      * Exploration of the following form: (example 5x5)
      *
-     * 14 13  3 12 11
-     * 15  x  x  x 10
-     *  0  x  D  x  2
-     *  4  x  x  x  9
-     *  5  6  1  7  8
+     *  3 14 13 12  2
+     * 15  x  x  x 11
+     *  4  x  D  x 10
+     *  5  x  x  x  9
+     *  0  6  7  8  1
      *
      * Beginning with the cell 0 the method tries to find a cell at the border
      * of the visual range of the drone that has not yet been explored
@@ -991,11 +1021,11 @@ public abstract class DataDecepticon {
     /**
      * Exploration of the following form: (example 5x5)
      *
-     * 14 13  3 12 11
-     * 15  x  x  x 10
-     *  0  x  D  x  2
-     *  4  x  x  x  9
-     *  5  6  1  7  8
+     *  3 14 13 12  2
+     * 15  x  x  x 11
+     *  4  x  D  x 10
+     *  5  x  x  x  9
+     *  0  6  7  8  1
      *
      * Beginning with the cell 0 the method tries to find a cell at the border
      * of the visual range of the drone that has not yet been explored
@@ -1028,6 +1058,21 @@ public abstract class DataDecepticon {
                 return Megatron.Action.N;
             }
         }
+        
+        // Prevent going too far in an undesirable direction
+        if (!this.map3_pathToUnexploredCell.isEmpty()) {
+            Coord target = getPosition();
+            
+            for (int i = 0; i < getVisualRange() / 2; i++) {
+                target = target.neighbour(this.map3_pathToUnexploredCell.peek());
+            }
+            
+            if (this.map.getMap().get(target).getRadar() == 1
+                    || this.map.getMap().get(target).getRadar() == 2
+                    || this.map.getMap().get(target).isExplored()) {
+                this.map3_pathToUnexploredCell.clear();
+            }
+        }
 
         if (this.map3_pathToUnexploredCell.isEmpty()) {
             // Get the border cells of the visual range of the specified drone
@@ -1040,8 +1085,9 @@ public abstract class DataDecepticon {
                 // Main directions x times for optimal exploration
                 for (int i = 0; i < 4; i++) {
                     if (borderCells.get(i) != null && borderCells.get(i).getRadar() != 1 && borderCells.get(i).getRadar() != 2 && !borderCells.get(i).isExplored()) {
+                        // Only do more steps after a change of direction
                         if (this.map3_lastAction != actions.get(i)) {
-                            for (int j = 0; j < getVisualRange() - 2; j++) {
+                            for (int j = 0; j < getVisualRange() / 2; j++) {
                                 this.map3_pathToUnexploredCell.add(actions.get(i));
                             }
                         }
@@ -1082,6 +1128,21 @@ public abstract class DataDecepticon {
 
             // Find way to the previously found closest node
             this.map3_pathToUnexploredCell = dijkstra(this.map.getMap().get(position), closestNode);
+            
+            // If the way is too long, set drone to standby
+            if (this.map3_pathToUnexploredCell.size() > 100) {
+                setStandby();
+            }
+            
+            // Pick only the next action
+            if (this.map3_pathToUnexploredCell != null && !this.map3_pathToUnexploredCell.isEmpty()) {
+                Megatron.Action ret = this.map3_pathToUnexploredCell.pop();
+                this.map3_pathToUnexploredCell.clear();
+                this.map3_pathToUnexploredCell.push(ret);
+            } else {
+                this.map3_pathToUnexploredCell = new Stack<>();
+                this.map3_pathToUnexploredCell.push(null);
+            }
         }
 
         // Return next action to follow the path to the closest unexplored node

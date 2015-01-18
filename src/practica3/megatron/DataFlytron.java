@@ -1,7 +1,6 @@
 package practica3.megatron;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 
 /**
  * Flytron class (mosca)
