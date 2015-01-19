@@ -306,10 +306,10 @@ public class Megatron extends SingleAgent {
                         Decepticon drone;
                         
                         System.out.println("Megatron: Lanzando decepticion 1...");
-                        drone = new Falcdron(new AgentID(this.dataAccess.getNameDrone1()),
+                        drone = new Birdron(new AgentID(this.dataAccess.getNameDrone1()),
                                 this.getAid(), dataAccess.getKey());
                         drone.start();
-                        this.drones.add(new DataFalcdron(this.myMap));
+                        this.drones.add(new DataBirdron(this.myMap));
                         
                         System.out.println("Megatron: Lanzando decepticion 2...");
                         drone = new Birdron(new AgentID(this.dataAccess.getNameDrone2()),
@@ -324,10 +324,10 @@ public class Megatron extends SingleAgent {
                         this.drones.add(new DataFlytron(this.myMap));
 
                         System.out.println("Megatron: Lanzando decepticion 4...");
-                        drone = new Birdron(new AgentID(this.dataAccess.getNameDrone4()),
+                        drone = new Falcdron(new AgentID(this.dataAccess.getNameDrone4()),
                                 this.getAid(), dataAccess.getKey());
                         drone.start();
-                        this.drones.add(new DataBirdron(this.myMap));
+                        this.drones.add(new DataFalcdron(this.myMap));
 
                         System.out.println("Megatron: Cambiando a estado Feel");
                         state = State.Feel;

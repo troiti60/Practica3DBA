@@ -83,6 +83,16 @@ public class Node implements Comparable<Node> {
     public boolean isExplored() {
         return this.radar != 1 && this.explored == 8;
     }
+    
+    /**
+     * Returns the number of neighbouring nodes already in the list
+     *
+     * @return Number of neighbours
+     * @author Alexander Straub
+     */
+    public int getExplored() {
+        return this.explored;
+    }
 
     /**
      * Mark as visited node by a specific drone

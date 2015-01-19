@@ -405,12 +405,25 @@ public abstract class DataDecepticon {
         List<Node> nodes = new ArrayList<>(localMap.values());
         Node target = null, temp;
         
+        // First, search for nodes with number of neighbours <7
         for (Iterator<Node> i = nodes.iterator(); i.hasNext();) {
             temp = i.next();
             
-            if ((temp.getDistance() != Double.MAX_VALUE && !temp.isExplored()) 
+            if ((temp.getDistance() != Double.MAX_VALUE && temp.getExplored() < 7) 
                     && (target == null || target.getDistance() > temp.getDistance())) {
                 target = temp;
+            }
+        }
+        
+        // If no such node was found, go for all not completely explored
+        if (target == null) {
+            for (Iterator<Node> i = nodes.iterator(); i.hasNext();) {
+                temp = i.next();
+
+                if ((temp.getDistance() != Double.MAX_VALUE && !temp.isExplored()) 
+                        && (target == null || target.getDistance() > temp.getDistance())) {
+                    target = temp;
+                }
             }
         }
         
