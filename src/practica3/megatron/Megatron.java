@@ -548,6 +548,14 @@ public class Megatron extends SingleAgent {
                             if (zoneGoalFound) {
                                 // Nodo goal ha de ser drones.get(numero).getGoal
                                 // su ndo asignado para aterrizar
+                                int droneInGoal=-1;
+                                for(int i=0; i<4; i++){
+                                    if(drones.get(i).isInGoal()){
+                                        droneInGoal=i;
+                                        
+                                    }
+                                }
+                                parking(droneInGoal);
                                 System.err.println("Megatron: Usando la búsqueda desde: ("
                                         + this.drones.get(droneNumber).getPosition().getX() + ","
                                         + this.drones.get(droneNumber).getPosition().getY() + ") hasta ("
@@ -697,6 +705,20 @@ public class Megatron extends SingleAgent {
         coordGoal2=coord2;
         coordGoal3=coord3;
         coordGoal4=coord4;
+        
+        int cont2=0;
+        for(int i=0; i<4; i++){
+            if(i!=drone && cont==0){
+                drones.get(i).setMyGoal(coordGoal2);
+                cont++;
+            }else if(i!=drone && cont==1){
+                drones.get(i).setMyGoal(coordGoal3);
+                cont++;
+            }else if(i!=drone && cont==2){
+                drones.get(i).setMyGoal(coordGoal4);
+                cont++;
+            }
+        }
         
     }
 }
