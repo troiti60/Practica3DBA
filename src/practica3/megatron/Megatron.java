@@ -12,7 +12,7 @@ import java.util.logging.Logger;
 import practica3.DataAccess;
 import practica3.JsonDBA;
 import practica3.Draw.MapImage;
-import practica3.Draw.Ventana;
+import practica3.Draw.Window;
 
 /**
  * Class that controls the rest of Decepticons
@@ -27,7 +27,7 @@ public class Megatron extends SingleAgent {
     private final JsonDBA json;
     private DataAccess dataAccess;
     private Node nodoGoal;
-    private Ventana draw;
+    private Window draw;
     private State state;
     private boolean live;
     private Action sigAction;
@@ -130,7 +130,7 @@ public class Megatron extends SingleAgent {
             resolution = 500;
         }
         this.myMap = new Map(resolution);
-        draw = new Ventana();
+        draw = new Window();
         draw.setResizable(true);
         draw.setVisible(true);
 

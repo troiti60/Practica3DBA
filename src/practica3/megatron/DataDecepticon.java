@@ -276,11 +276,11 @@ public abstract class DataDecepticon {
     protected Stack<Megatron.Action> map1_pathToUnexploredCell = new Stack<>();
 
     // For mapv2
-    private boolean map2_comprobation = false;//false ->part1 || true ->part2
-    private int map2_contador = 0;//coord x
-    private boolean map2_direccion = true;//true down || false up
-    private boolean map2_iod = false;//false <- || true ->
-    private boolean map2_bordeando = false;
+    private boolean map2_comprobation = false;
+    private int map2_counter = 0;
+    private boolean map2_direction = true;
+    private boolean map2_iod = false;
+    private boolean map2_passBy = false;
 
     // For mapv3
     protected Stack<Megatron.Action> map3_pathToUnexploredCell = new Stack<>();
@@ -853,6 +853,7 @@ public abstract class DataDecepticon {
      * @return next action to be done by specified drone
      * @throws java.lang.Exception
      * @author Jesús Cobo Sánchez
+     * @deprecated
      */
     public Megatron.Action mapv2() throws Exception {
         if (isOnStandby()) return null;
@@ -863,12 +864,12 @@ public abstract class DataDecepticon {
         current = new Node(this.currentPosition.getX(), this.currentPosition.getY(),
                 localMap.get(this.currentPosition).getRadar());
 
-        if (map2_bordeando) {
+        if (map2_passBy) {
             //funcion de bordear obstaculos
-            if(map2_direccion){
-                actions=BordearDerecha(map2_contador,0,lastAction,current);
+            if(map2_direction){
+                actions=passByRight(map2_counter,0,lastAction,current);
             }else{
-                actions=BordearDerecha(map2_contador,1,lastAction,current);
+                actions=passByRight(map2_counter,1,lastAction,current);
             }
             
         }
@@ -876,7 +877,7 @@ public abstract class DataDecepticon {
         if (map2_comprobation == false) {
             //ir esquina inferor derecha
             if (current.getY() > 50) {
-                map2_direccion = false;
+                map2_direction = false;
                 map2_iod = false;
                 if (localMap.get(current.SE()).getRadar() == 2 && localMap.get(current.S()).getRadar() == 2
                         && localMap.get(current.E()).getRadar() == 2) {
@@ -902,7 +903,7 @@ public abstract class DataDecepticon {
                 }
                 //ir esquina superior izquierda
             } else {
-                map2_direccion = true;
+                map2_direction = true;
                 map2_iod = true;
                 if (localMap.get(current.NW()).getRadar() == 2 && localMap.get(current.N()).getRadar() == 2
                         && localMap.get(current.W()).getRadar() == 2) {
@@ -931,15 +932,15 @@ public abstract class DataDecepticon {
             //segunda ruta
         } else {
             //hacia abajo e izquierda
-            if (!map2_iod && map2_direccion && map2_contador == current.getX()) {
+            if (!map2_iod && map2_direction && map2_counter == current.getX()) {
                 if (localMap.get(current.S()).getRadar() == 0 && lastAction!=Megatron.Action.N) {
                     actions = Megatron.Action.S;
                 } else if (localMap.get(current.S()).getRadar() == 2) {
-                    map2_contador -= 3;
+                    map2_counter -= 3;
                     actions = Megatron.Action.W;
                 } else {
                     //bordear obstaculo
-                    map2_bordeando = true;
+                    map2_passBy = true;
                     if(localMap.get(current.SE()).getRadar() == 0 && lastAction!=Megatron.Action.NW){
                         actions=Megatron.Action.SE;
                     }else if(localMap.get(current.E()).getRadar() == 0 && lastAction!=Megatron.Action.W){
@@ -949,16 +950,16 @@ public abstract class DataDecepticon {
                     }
                 }
                 //hacia arriba e izquierda
-            } else if (!map2_iod && !map2_direccion && map2_contador == current.getX()) {
+            } else if (!map2_iod && !map2_direction && map2_counter == current.getX()) {
                 if (localMap.get(current.N()).getRadar() == 0 && lastAction!=Megatron.Action.S) {
                     actions = Megatron.Action.N;
                 } else if (localMap.get(current.N()).getRadar() == 2) {
-                    map2_direccion = true;
-                    map2_contador -= 3;
+                    map2_direction = true;
+                    map2_counter -= 3;
                     actions = Megatron.Action.W;
                 } else {
                     //bordear obstaculo
-                    map2_bordeando = true;
+                    map2_passBy = true;
                     if(localMap.get(current.NE()).getRadar() == 0 && lastAction!=Megatron.Action.SW){
                         actions=Megatron.Action.NE;
                     }else if(localMap.get(current.E()).getRadar() == 0 && lastAction!=Megatron.Action.W){
@@ -968,15 +969,15 @@ public abstract class DataDecepticon {
                     }
                 }
                 //hacia abajo y derecha
-            } else if (map2_iod && map2_direccion && map2_contador == current.getX()) {
+            } else if (map2_iod && map2_direction && map2_counter == current.getX()) {
                 if (localMap.get(current.S()).getRadar() == 0 && lastAction!=Megatron.Action.N) {
                     actions = Megatron.Action.S;
                 } else if (localMap.get(current.S()).getRadar() == 2) {
-                    map2_contador += 3;
+                    map2_counter += 3;
                     actions = Megatron.Action.E;
                 } else {
                     //bordear obstaculo
-                    map2_bordeando = true;
+                    map2_passBy = true;
                     if(localMap.get(current.SE()).getRadar() == 0 && lastAction!=Megatron.Action.NW){
                         actions=Megatron.Action.SE;
                     }else if(localMap.get(current.E()).getRadar() == 0 && lastAction!=Megatron.Action.W){
@@ -986,15 +987,15 @@ public abstract class DataDecepticon {
                     }
                 }
                 //hacia arriba y derecha
-            } else if (map2_iod && !map2_direccion && map2_contador == current.getX()) {
+            } else if (map2_iod && !map2_direction && map2_counter == current.getX()) {
                 if (localMap.get(current.N()).getRadar() == 0) {
                     actions = Megatron.Action.N;
                 } else if (localMap.get(current.N()).getRadar() == 2) {
-                    map2_direccion = true;
-                    map2_contador += 3;
+                    map2_direction = true;
+                    map2_counter += 3;
                     actions = Megatron.Action.E;
                 } else {
-                    map2_bordeando = true;
+                    map2_passBy = true;
                     if(localMap.get(current.NE()).getRadar() == 0 && lastAction!=Megatron.Action.SW){
                         actions=Megatron.Action.NE;
                     }else if(localMap.get(current.E()).getRadar() == 0 && lastAction!=Megatron.Action.W){
@@ -1005,17 +1006,17 @@ public abstract class DataDecepticon {
                 }
                 //ir hacia la x cambiada
             } else {
-                if(current.getX()>map2_contador){
+                if(current.getX()>map2_counter){
                     if(localMap.get(current.W()).getRadar() == 0 && lastAction!=Megatron.Action.E){
                         actions=Megatron.Action.W;
                     }else{
-                        map2_bordeando=true;
+                        map2_passBy=true;
                     }
                 }else{
                     if(localMap.get(current.E()).getRadar() == 0 && lastAction!=Megatron.Action.W){
                         actions=Megatron.Action.E;
                     }else{
-                        map2_bordeando=true;
+                        map2_passBy=true;
                     }
                 }
             }
@@ -1025,14 +1026,15 @@ public abstract class DataDecepticon {
     
     /**
      * Avoid obstacles
-     * @param int x -> go to coord x
-     * @param int direction -> direction of the drone [0-> up to down, 1-> down to up]
-     * @param lastAction -> last action of the drone
-     * @return next action to be done to avoid obstacles by specified drone
+     * 
+     * @param x Go to coord x
+     * @param direction Direction of the drone [0-> up to down, 1-> down to up]
+     * @param lastAction Last action of the drone
+     * @return Next action to be done to avoid obstacles by specified drone
      * @throws java.lang.Exception
      * @author Jesús Cobo Sánchez
      */
-    private Megatron.Action BordearDerecha(int x, int direction, Megatron.Action lastAction, Node current){
+    private Megatron.Action passByRight(int x, int direction, Megatron.Action lastAction, Node current){
         Megatron.Action action=null;
         HashMap<Coord, Node> localMap = this.map.getMap();
         
@@ -1069,7 +1071,7 @@ public abstract class DataDecepticon {
                 action = Megatron.Action.S;
             }
         }else if(x==current.getX()){
-            map2_bordeando=false;
+            map2_passBy=false;
         }
         
         return action;

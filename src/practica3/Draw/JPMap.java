@@ -15,8 +15,10 @@ import practica3.megatron.Node;
  */
 public class JPMap extends javax.swing.JPanel {
 
+    /**
+     * Information stored for painting the map and drones
+     */
     Map map;
-    String world;
     Coord dronPos;
     ArrayList<Node> visited;
     int numDron;
@@ -36,7 +38,6 @@ public class JPMap extends javax.swing.JPanel {
         
         this.lock = new Semaphore(1, true);
         this.map = new Map(100);
-        this.world = null;
         this.dronPos = null;
         this.visited = new ArrayList<>();
         this.numDron = -1;
@@ -50,16 +51,6 @@ public class JPMap extends javax.swing.JPanel {
      */
     public void setDronPosition(Coord pos) {
         this.dronPos = pos;
-    }
-
-    /**
-     * Sets the name of the world
-     * 
-     * @param world Name of the world
-     * @author José Carlos Alfaro
-     */
-    public void setWorld(String world) {
-        this.world = world;
     }
 
     /**
