@@ -1229,7 +1229,7 @@ public abstract class DataDecepticon {
      * @author Alexander Straub
      */
     public final Megatron.Action mapv4() {
-        if (this.map4_stepNum++ == 98) {
+        if (this.map4_stepNum++ * getConsumation() == 192) {
             setStandby();
         }
         

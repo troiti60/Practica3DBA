@@ -14,7 +14,7 @@ public class Map {
      */
     private final HashMap<Coord, Node> map;
     private final HashMap<Coord, Node> accessible;
-    private static Node target = null;
+    private Node target = null;
     private final int resolution;
 
     /**
@@ -53,11 +53,11 @@ public class Map {
     public final void addNode(Coord key, int value) {
         Node newNode = new Node(key, value);
 
-        if (!map.containsKey(key)) {
-            if (value == 3 && target == null) {
-                target = newNode;
+        if (!this.map.containsKey(key)) {
+            if (value == 3 && this.target == null) {
+                this.target = newNode;
             }
-            map.put(key, newNode);
+            this.map.put(key, newNode);
             checkAdjacent(newNode);
         }
 
@@ -74,7 +74,7 @@ public class Map {
      * @param node Node to be updated
      * @author Antonio Troitiño, Alexander Straub
      */
-    public void checkAdjacent(Node node) {
+    private void checkAdjacent(Node node) {
         Node aux;
 
         if (this.map.containsKey(node.getCoord().NW())) {
@@ -126,7 +126,7 @@ public class Map {
      * @author Antonio Trotiño de Río
      */
     public HashMap<Coord, Node> getMap() {
-        return map;
+        return this.map;
     }
 
     /**
@@ -145,8 +145,8 @@ public class Map {
      * @return First target sighted, null if target has not been set yet
      * @author Antonio Troitiño del Río
      */
-    public static Node getTarget() {
-        return target;
+    public Node getTarget() {
+        return this.target;
     }
 
     /**
@@ -156,8 +156,8 @@ public class Map {
      * @return False if target equals null, true otherwise
      * @author Antonio Troitiño del Río
      */
-    public static boolean isTargetSet() {
-        return target != null;
+    public boolean isTargetSet() {
+        return this.target != null;
     }
     
     /**

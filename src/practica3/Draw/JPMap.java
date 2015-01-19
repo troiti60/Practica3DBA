@@ -2,11 +2,9 @@ package practica3.Draw;
 
 import java.awt.Color;
 import java.awt.Graphics;
-import java.awt.image.BufferedImage;
 import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.concurrent.Semaphore;
 import practica3.megatron.Coord;
-import practica3.megatron.DataDecepticon;
 import practica3.megatron.Map;
 import practica3.megatron.Node;
 
@@ -19,10 +17,14 @@ public class JPMap extends javax.swing.JPanel {
 
     Map map;
     String world;
-    int numDron;
     Coord dronPos;
     ArrayList<Node> visited;
+    int numDron;
     
+    /**
+     * Semaphore to restrict access
+     */
+    private final Semaphore lock;
 
     /**
      * Constructor
@@ -30,99 +32,131 @@ public class JPMap extends javax.swing.JPanel {
      * @author José Carlos Alfaro
      */
     public JPMap() {
-        System.out.println("Iniciando constructor JPMAP");
         initComponents();
-        visited = new ArrayList<>();
-        map = new Map(100);
-        dronPos = null;        
-        System.out.println("Finalizando constructor JPMAP");
         
+        this.lock = new Semaphore(1, true);
+        this.map = new Map(100);
+        this.world = null;
+        this.dronPos = null;
+        this.visited = new ArrayList<>();
+        this.numDron = -1;
     }
-    public void setDronPosition(Coord pos){
-        dronPos = pos;
+
+    /**
+     * Sets the current position of the drone
+     * 
+     * @param pos Drone position
+     * @author José Carlos Alfaro
+     */
+    public void setDronPosition(Coord pos) {
+        this.dronPos = pos;
     }
-    
-    public void setWorld(String world){
+
+    /**
+     * Sets the name of the world
+     * 
+     * @param world Name of the world
+     * @author José Carlos Alfaro
+     */
+    public void setWorld(String world) {
         this.world = world;
     }
-    public void updateDraw(Map map, int nDron,Coord lastPos){
-        
-        if(lastPos!=null){ 
-            
-            Node n = new Node((new Coord(lastPos.getX(),lastPos.getY())),0);
+
+    /**
+     * Call to update the image
+     * 
+     * @param map Reference to the map
+     * @param nDron ID of the drone
+     * @param lastPos Last position of the drone
+     * @author José Carlos Alfaro
+     */
+    public void updateDraw(Map map, int nDron, Coord lastPos) {
+        if (lastPos != null) {
+            Node n = new Node((new Coord(lastPos.getX(), lastPos.getY())), 0);
             n.setVisited(nDron);
-            visited.add(n);      
-        }    
-        this.map = map;    
-        numDron = nDron;              
+            this.visited.add(n);
+        }
+        
+        this.map = map;
+        this.numDron = nDron;
+        
+        // Get lock and update, then wait till the process ended
+        // --> like making the paint method synchron
+        this.lock.acquireUninterruptibly();
         this.repaint();
+        this.lock.acquireUninterruptibly();
+        this.lock.release();
     }
-    
+
+    /**
+     * Method to fill the graphic
+     * 
+     * @param g Graphic
+     * @author José Carlos Alfaro
+     */
     @Override
     public void paint(Graphics g) {
         super.paint(g);
 
-        // Draw map
         if (!this.map.getMap().isEmpty()) {
-           
-            Iterator it = this.map.getMap().entrySet().iterator();
-            Coord c;
-            Node n;
-            while (it.hasNext()) {
-                java.util.Map.Entry e = (java.util.Map.Entry) it.next();       
-                n = new Node((Node) e.getValue());
-                c = n.getCoord();                
-               
+            // Draw map
+            for (java.util.Map.Entry e : this.map.getMap().entrySet()) {
+                Node n = new Node((Node) e.getValue());
+
                 if (n.getRadar() == 0) {
-                g.setColor(Color.WHITE);
-                }else if ((n.getRadar() == 1 || n.getRadar() == 2 )) {
+                    g.setColor(Color.WHITE);
+                } else if ((n.getRadar() == 1 || n.getRadar() == 2)) {
                     g.setColor(Color.BLACK);
-                }else if (n.getRadar() == 3) {
+                } else if (n.getRadar() == 3) {
                     g.setColor(Color.MAGENTA);
                 }
-                g.fillRect((n.getX()*5)+7, (n.getY()*5)+7, 5, 5); 
-                //g.drawImage(Image, (nodeMapCoord.getX()*5)+7, (nodeMapCoord.getY()*5)+7, this);
                 
-            }
-            for(int i=0;i<visited.size();i++){
-
-                    switch(visited.get(i).isVisited()){
-                       case 0:
-                        g.setColor(Color.CYAN);                       
-                        break;
-                       case 1:
-                        g.setColor(Color.PINK);
-                        break;
-                       case 2:
-                        g.setColor(Color.GREEN);
-                        break;
-                       case 3:
-                        g.setColor(Color.YELLOW);    
-                        break;
-                    }
-                    g.fillRect((visited.get(i).getX()*5)+7, (visited.get(i).getY()*5)+7, 5, 5);
-                    //g.drawImage(Image, (nodeMapCoord.getX()*5)+7, (nodeMapCoord.getY()*5)+7, this);
-            }
-            if(dronPos!= null){
-                switch(numDron){
-                    case 0:
-                        g.setColor(Color.BLUE);                      
-                        break;
-                    case 1:
-                        g.setColor(Color.RED);                       
-                        break;
-                    case 2:
-                        g.setColor(Color.GREEN);                       
-                        break;
-                    case 3:
-                        g.setColor(Color.YELLOW);                       
-                        break;
-                }
-                g.fillRect((dronPos.getX()*5)+7, (dronPos.getY()*5)+7, 5, 5);
-                //g.drawImage(Image, (dronPos.getX()*5)+7, (dronPos.getY()*5)+7, this);
+                g.fillRect((n.getX() * 5) + 7, (n.getY() * 5) + 7, 5, 5);
             }
             
+            // Draw visited path of the drones
+            for (Node n : this.visited) {
+                switch (n.isVisited()) {
+                    case 0:
+                        g.setColor(Color.CYAN);
+                        break;
+                    case 1:
+                        g.setColor(Color.PINK);
+                        break;
+                    case 2:
+                        g.setColor(Color.GREEN);
+                        break;
+                    case 3:
+                        g.setColor(Color.YELLOW);
+                        break;
+                }
+                g.fillRect((n.getX() * 5) + 7, (n.getY() * 5) + 7, 5, 5);
+            }
+            
+            // Highlight position of currently moving drone
+            if (this.dronPos != null && this.numDron != -1) {
+                switch (this.numDron) {
+                    case 0:
+                        g.setColor(Color.BLUE);
+                        break;
+                    case 1:
+                        g.setColor(Color.RED);
+                        break;
+                    case 2:
+                        g.setColor(new Color(0, 51, 0));
+                        break;
+                    case 3:
+                        g.setColor(Color.ORANGE);
+                        break;
+                }
+                
+                g.fillRect((this.dronPos.getX() * 5) + 7, (this.dronPos.getY() * 5) + 7, 5, 5);
+            }
+
         }
+        
+        // Release lock
+        this.lock.release();
     }
 
     @SuppressWarnings("unchecked")

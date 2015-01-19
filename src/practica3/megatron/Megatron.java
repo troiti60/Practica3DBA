@@ -7,7 +7,6 @@ import es.upv.dsic.gti_ia.core.SingleAgent;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.concurrent.Semaphore;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import practica3.DataAccess;
@@ -33,7 +32,6 @@ public class Megatron extends SingleAgent {
     private boolean live;
     private Action sigAction;
     private int droneNumber;
-    private Semaphore mutex;
 
     private int pasos = 0;
     private boolean zoneGoalFound = false;
@@ -125,7 +123,6 @@ public class Megatron extends SingleAgent {
         if (this.dataAccess.getWorld().equals("newyork")) {
             resolution = 500;
         }
-        mutex = new Semaphore(1);
         this.myMap = new Map(resolution);
         draw = new Ventana();
         draw.setResizable(true);
@@ -155,13 +152,7 @@ public class Megatron extends SingleAgent {
             int count = 0;
             for (int i = 0 - cont; i <= cont; i++) {
                 for (int j = 0 - cont; j <= cont; j++) {
-                    try {
-                        mutex.acquire();
-                    } catch (InterruptedException ex) {
-                        Logger.getLogger(Megatron.class.getName()).log(Level.SEVERE, null, ex);
-                    }
                     myMap.addNode(new Coord(pos.getX() + j, pos.getY() + i), perception.get(count));
-                    mutex.release();
                     this.mapImage.setCell(perception.get(count), new Coord(pos.getX() + j, pos.getY() + i));
                     count++;
                 }

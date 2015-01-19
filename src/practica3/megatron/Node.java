@@ -85,18 +85,19 @@ public class Node implements Comparable<Node> {
     }
 
     /**
-     * Mark as visited node
+     * Mark as visited node by a specific drone
      *
+     * @param drone ID of the drone
      * @author Alexander Straub
      */
-    public void setVisited(int i) {
-        this.visited = i;
+    public void setVisited(int drone) {
+        this.visited = drone;
     }
 
     /**
-     * Return visit state
+     * Return ID of drone who visited last
      *
-     * @return True if already visited
+     * @return Drone ID
      * @author Alexander Straub
      */
     public int isVisited() {
