@@ -35,6 +35,12 @@ public class Megatron extends SingleAgent {
 
     private int pasos = 0;
     private boolean zoneGoalFound = false;
+    
+    //Parking
+    private Coord coordGoal1;
+    private Coord coordGoal2;
+    private Coord coordGoal3;
+    private Coord coordGoal4;
 
     // Image of the map for visualization
     private MapImage mapImage = null;
@@ -659,5 +665,38 @@ public class Megatron extends SingleAgent {
             }
         }
         return res;
+    }
+    /**
+     * Coord goal assignament
+     *
+     * @param drone frist drone in goal position
+     * @author Jesús Cobo Sánchez
+     */
+    public void parking(int drone){
+        Coord coord1=null;
+        Coord coord2=null;
+        Coord coord3=null;
+        Coord coord4=null;
+        int cont=0;
+        HashMap<Coord, Node> localMap = myMap.getMap();
+        coord1=drones.get(drone).getPosition();
+        
+        for (Coord key : localMap.keySet()) {
+               if(localMap.get(key).getRadar()==3 && key!=coord1 && cont==0){
+                   coord2=key;
+                   cont++;
+               }else if(localMap.get(key).getRadar()==3 && key!=coord1 && cont==1){
+                   coord3=key;
+                   cont++;
+               }else if(localMap.get(key).getRadar()==3 && key!=coord1 && cont==2){
+                   coord4=key;
+                   cont++;
+               }
+         }
+        coordGoal1=coord1;
+        coordGoal2=coord2;
+        coordGoal3=coord3;
+        coordGoal4=coord4;
+        
     }
 }
