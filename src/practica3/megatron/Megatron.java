@@ -464,7 +464,15 @@ public class Megatron extends SingleAgent {
                             if (!zoneGoalFound) {
                                 // Es el primer dron que llega, asignar metas al resto
                                 // Llamar al método para aparcar
-
+                                System.out.println("Aqui estamos!!");
+                                int droneInGoal=-1;
+                                for(int i=0; i<4; i++){
+                                    if(drones.get(i).isInGoal()){
+                                        droneInGoal=i;
+                                        
+                                    }
+                                }
+                                parking(droneInGoal);
                                 int resolution;
                                 switch (this.drones.get(droneNumber).getRole()) {
                                     case 0:
@@ -501,7 +509,7 @@ public class Megatron extends SingleAgent {
                                     nodoGoal = new Node(coordGoal, 3);
 
                                     // DEBUG: only until goal has been found
-                                    state = State.Cancel;
+                                    state = State.Heuristic;
                                 } else {
                                     System.out.println("\tGoal     No");
                                     System.out.println("Megatron: Cambiando a estado Heuristic");
@@ -548,14 +556,7 @@ public class Megatron extends SingleAgent {
                             if (zoneGoalFound) {
                                 // Nodo goal ha de ser drones.get(numero).getGoal
                                 // su ndo asignado para aterrizar
-                                int droneInGoal=-1;
-                                for(int i=0; i<4; i++){
-                                    if(drones.get(i).isInGoal()){
-                                        droneInGoal=i;
-                                        
-                                    }
-                                }
-                                parking(droneInGoal);
+                                
                                 System.err.println("Megatron: Usando la búsqueda desde: ("
                                         + this.drones.get(droneNumber).getPosition().getX() + ","
                                         + this.drones.get(droneNumber).getPosition().getY() + ") hasta ("
