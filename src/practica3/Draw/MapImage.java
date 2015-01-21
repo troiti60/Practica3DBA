@@ -26,18 +26,18 @@ public class MapImage {
     /**
      * Terrain colors
      */
-    private final Color unexploredColor = Color.GRAY;
+    private final Color unexploredColor = Color.LIGHT_GRAY;
     private final Color exploredColor = Color.WHITE;
     private final Color wallColor = Color.BLACK;
-    private final Color targetColor = Color.RED;
+    private final Color targetColor = Color.MAGENTA;
     
     /**
      * Drone colors
      */
-    private final Color drone0Color = Color.GREEN;
+    private final Color drone0Color = Color.CYAN;
     private final Color drone1Color = Color.PINK;
-    private final Color drone2Color = Color.BLUE;
-    private final Color drone3Color = Color.ORANGE;
+    private final Color drone2Color = Color.GREEN;
+    private final Color drone3Color = Color.YELLOW;
     
     /**
      * Frame to show image in (for realtime)
@@ -60,11 +60,11 @@ public class MapImage {
         }
         
         // Create a frame with the image
-        frame = new JFrame("Rescue operation");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.getContentPane().add(new JLabel(new ImageIcon(this.image)));
-        frame.pack();
-        frame.setVisible(true);
+        this.frame = new JFrame();
+        this.frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        this.frame.getContentPane().add(new JLabel(new ImageIcon(this.image)));
+        this.frame.pack();
+        this.frame.setVisible(true);
     }
     
     /**

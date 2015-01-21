@@ -47,379 +47,191 @@ public final class DataFalcdron extends DataDecepticon {
         return this.consumation;
     }
 
-//    /**
-//     * Return the border cells in the right order, together with the respective
-//     * actions.
-//     *
-//     * @param position Current position of the drone
-//     * @param borderCells Array to fill with border cells
-//     * @param actions Array to fill with actions for the border cells
-//     * @author Alexander Straub
-//     */
-//    @Override
-//    protected final void mapv3_getBorderCells(Coord position, ArrayList<Node> borderCells, ArrayList<Megatron.Action> actions) {
-//        borderCells.ensureCapacity(40);
-//        actions.ensureCapacity(40);
-//
-//        // Different order of directions, depending on start position
-//        if (this.getStartPosition().getY() == 0) {
-//            borderCells.add(this.map.getMap().get(position.addX(5)));
-//            actions.add(Megatron.Action.E);
-//            borderCells.add(this.map.getMap().get(position.addY(-5)));
-//            actions.add(Megatron.Action.N);
-//            borderCells.add(this.map.getMap().get(position.addX(-5)));
-//            actions.add(Megatron.Action.W);
-//            borderCells.add(this.map.getMap().get(position.addY(5)));
-//            actions.add(Megatron.Action.S);
-//
-//            borderCells.add(this.map.getMap().get(position.add(5, -1)));
-//            actions.add(Megatron.Action.NE);
-//            borderCells.add(this.map.getMap().get(position.add(5, -2)));
-//            actions.add(Megatron.Action.NE);
-//            borderCells.add(this.map.getMap().get(position.add(5, -3)));
-//            actions.add(Megatron.Action.NE);
-//            borderCells.add(this.map.getMap().get(position.add(5, -4)));
-//            actions.add(Megatron.Action.NE);
-//            borderCells.add(this.map.getMap().get(position.add(5, -5)));
-//            actions.add(Megatron.Action.NE);
-//            borderCells.add(this.map.getMap().get(position.add(4, -5)));
-//            actions.add(Megatron.Action.NE);
-//            borderCells.add(this.map.getMap().get(position.add(3, -5)));
-//            actions.add(Megatron.Action.NE);
-//            borderCells.add(this.map.getMap().get(position.add(2, -5)));
-//            actions.add(Megatron.Action.NE);
-//            borderCells.add(this.map.getMap().get(position.add(1, -5)));
-//            actions.add(Megatron.Action.NE);
-//
-//            borderCells.add(this.map.getMap().get(position.add(-1, -5)));
-//            actions.add(Megatron.Action.NW);
-//            borderCells.add(this.map.getMap().get(position.add(-2, -5)));
-//            actions.add(Megatron.Action.NW);
-//            borderCells.add(this.map.getMap().get(position.add(-3, -5)));
-//            actions.add(Megatron.Action.NW);
-//            borderCells.add(this.map.getMap().get(position.add(-4, -5)));
-//            actions.add(Megatron.Action.NW);
-//            borderCells.add(this.map.getMap().get(position.add(-5, -5)));
-//            actions.add(Megatron.Action.NW);
-//            borderCells.add(this.map.getMap().get(position.add(-5, -4)));
-//            actions.add(Megatron.Action.NW);
-//            borderCells.add(this.map.getMap().get(position.add(-5, -3)));
-//            actions.add(Megatron.Action.NW);
-//            borderCells.add(this.map.getMap().get(position.add(-5, -2)));
-//            actions.add(Megatron.Action.NW);
-//            borderCells.add(this.map.getMap().get(position.add(-5, -1)));
-//            actions.add(Megatron.Action.NW);
-//
-//            borderCells.add(this.map.getMap().get(position.add(-5, 1)));
-//            actions.add(Megatron.Action.SW);
-//            borderCells.add(this.map.getMap().get(position.add(-5, 2)));
-//            actions.add(Megatron.Action.SW);
-//            borderCells.add(this.map.getMap().get(position.add(-5, 3)));
-//            actions.add(Megatron.Action.SW);
-//            borderCells.add(this.map.getMap().get(position.add(-5, 4)));
-//            actions.add(Megatron.Action.SW);
-//            borderCells.add(this.map.getMap().get(position.add(-5, 5)));
-//            actions.add(Megatron.Action.SW);
-//            borderCells.add(this.map.getMap().get(position.add(-4, 5)));
-//            actions.add(Megatron.Action.SW);
-//            borderCells.add(this.map.getMap().get(position.add(-3, 5)));
-//            actions.add(Megatron.Action.SW);
-//            borderCells.add(this.map.getMap().get(position.add(-2, 5)));
-//            actions.add(Megatron.Action.SW);
-//            borderCells.add(this.map.getMap().get(position.add(-1, 5)));
-//            actions.add(Megatron.Action.SW);
-//
-//            borderCells.add(this.map.getMap().get(position.add(1, 5)));
-//            actions.add(Megatron.Action.SE);
-//            borderCells.add(this.map.getMap().get(position.add(2, 5)));
-//            actions.add(Megatron.Action.SE);
-//            borderCells.add(this.map.getMap().get(position.add(3, 5)));
-//            actions.add(Megatron.Action.SE);
-//            borderCells.add(this.map.getMap().get(position.add(4, 5)));
-//            actions.add(Megatron.Action.SE);
-//            borderCells.add(this.map.getMap().get(position.add(5, 5)));
-//            actions.add(Megatron.Action.SE);
-//            borderCells.add(this.map.getMap().get(position.add(5, 4)));
-//            actions.add(Megatron.Action.SE);
-//            borderCells.add(this.map.getMap().get(position.add(5, 3)));
-//            actions.add(Megatron.Action.SE);
-//            borderCells.add(this.map.getMap().get(position.add(5, 2)));
-//            actions.add(Megatron.Action.SE);
-//            borderCells.add(this.map.getMap().get(position.add(5, 1)));
-//            actions.add(Megatron.Action.SE);
-//        } else {
-//            borderCells.add(this.map.getMap().get(position.addX(-5)));
-//            actions.add(Megatron.Action.W);
-//            borderCells.add(this.map.getMap().get(position.addY(5)));
-//            actions.add(Megatron.Action.S);
-//            borderCells.add(this.map.getMap().get(position.addX(5)));
-//            actions.add(Megatron.Action.E);
-//            borderCells.add(this.map.getMap().get(position.addY(-5)));
-//            actions.add(Megatron.Action.N);
-//
-//            borderCells.add(this.map.getMap().get(position.add(-5, 1)));
-//            actions.add(Megatron.Action.SW);
-//            borderCells.add(this.map.getMap().get(position.add(-5, 2)));
-//            actions.add(Megatron.Action.SW);
-//            borderCells.add(this.map.getMap().get(position.add(-5, 3)));
-//            actions.add(Megatron.Action.SW);
-//            borderCells.add(this.map.getMap().get(position.add(-5, 4)));
-//            actions.add(Megatron.Action.SW);
-//            borderCells.add(this.map.getMap().get(position.add(-5, 5)));
-//            actions.add(Megatron.Action.SW);
-//            borderCells.add(this.map.getMap().get(position.add(-4, 5)));
-//            actions.add(Megatron.Action.SW);
-//            borderCells.add(this.map.getMap().get(position.add(-3, 5)));
-//            actions.add(Megatron.Action.SW);
-//            borderCells.add(this.map.getMap().get(position.add(-2, 5)));
-//            actions.add(Megatron.Action.SW);
-//            borderCells.add(this.map.getMap().get(position.add(-1, 5)));
-//            actions.add(Megatron.Action.SW);
-//
-//            borderCells.add(this.map.getMap().get(position.add(1, 5)));
-//            actions.add(Megatron.Action.SE);
-//            borderCells.add(this.map.getMap().get(position.add(2, 5)));
-//            actions.add(Megatron.Action.SE);
-//            borderCells.add(this.map.getMap().get(position.add(3, 5)));
-//            actions.add(Megatron.Action.SE);
-//            borderCells.add(this.map.getMap().get(position.add(4, 5)));
-//            actions.add(Megatron.Action.SE);
-//            borderCells.add(this.map.getMap().get(position.add(5, 5)));
-//            actions.add(Megatron.Action.SE);
-//            borderCells.add(this.map.getMap().get(position.add(5, 4)));
-//            actions.add(Megatron.Action.SE);
-//            borderCells.add(this.map.getMap().get(position.add(5, 3)));
-//            actions.add(Megatron.Action.SE);
-//            borderCells.add(this.map.getMap().get(position.add(5, 2)));
-//            actions.add(Megatron.Action.SE);
-//            borderCells.add(this.map.getMap().get(position.add(5, 1)));
-//            actions.add(Megatron.Action.SE);
-//
-//            borderCells.add(this.map.getMap().get(position.add(5, -1)));
-//            actions.add(Megatron.Action.NE);
-//            borderCells.add(this.map.getMap().get(position.add(5, -2)));
-//            actions.add(Megatron.Action.NE);
-//            borderCells.add(this.map.getMap().get(position.add(5, -3)));
-//            actions.add(Megatron.Action.NE);
-//            borderCells.add(this.map.getMap().get(position.add(5, -4)));
-//            actions.add(Megatron.Action.NE);
-//            borderCells.add(this.map.getMap().get(position.add(5, -5)));
-//            actions.add(Megatron.Action.NE);
-//            borderCells.add(this.map.getMap().get(position.add(4, -5)));
-//            actions.add(Megatron.Action.NE);
-//            borderCells.add(this.map.getMap().get(position.add(3, -5)));
-//            actions.add(Megatron.Action.NE);
-//            borderCells.add(this.map.getMap().get(position.add(2, -5)));
-//            actions.add(Megatron.Action.NE);
-//            borderCells.add(this.map.getMap().get(position.add(1, -5)));
-//            actions.add(Megatron.Action.NE);
-//
-//            borderCells.add(this.map.getMap().get(position.add(-1, -5)));
-//            actions.add(Megatron.Action.NW);
-//            borderCells.add(this.map.getMap().get(position.add(-2, -5)));
-//            actions.add(Megatron.Action.NW);
-//            borderCells.add(this.map.getMap().get(position.add(-3, -5)));
-//            actions.add(Megatron.Action.NW);
-//            borderCells.add(this.map.getMap().get(position.add(-4, -5)));
-//            actions.add(Megatron.Action.NW);
-//            borderCells.add(this.map.getMap().get(position.add(-5, -5)));
-//            actions.add(Megatron.Action.NW);
-//            borderCells.add(this.map.getMap().get(position.add(-5, -4)));
-//            actions.add(Megatron.Action.NW);
-//            borderCells.add(this.map.getMap().get(position.add(-5, -3)));
-//            actions.add(Megatron.Action.NW);
-//            borderCells.add(this.map.getMap().get(position.add(-5, -2)));
-//            actions.add(Megatron.Action.NW);
-//            borderCells.add(this.map.getMap().get(position.add(-5, -1)));
-//            actions.add(Megatron.Action.NW);
-//        }
-//    }
-    
     /**
      * Return the border cells in the right order, together with the respective
      * actions.
      *
      * @param position Current position of the drone
-     * @param borderCells Array to fill with border cells
-     * @param actions Array to fill with actions for the border cells
+     * @param outBorderCells Array to fill with border cells
+     * @param outActions Array to fill with actions for the border cells
      * @author Alexander Straub
      */
     @Override
-    protected final void mapv3_getBorderCells(Coord position, ArrayList<Node> borderCells, ArrayList<Megatron.Action> actions) {
-        borderCells.ensureCapacity(40);
-        actions.ensureCapacity(40);
+    protected final void mapv3_getBorderCells(Coord position, ArrayList<Node> outBorderCells, ArrayList<Megatron.Action> outActions) {
+        outBorderCells.ensureCapacity(40);
+        outActions.ensureCapacity(40);
 
         // Different order of directions, depending on start position
         if (this.getStartPosition().getY() == 0) {
-            borderCells.add(this.map.getMap().get(position.add(5, -5)));
-            actions.add(Megatron.Action.NE);
-            borderCells.add(this.map.getMap().get(position.add(-5, -5)));
-            actions.add(Megatron.Action.NW);
-            borderCells.add(this.map.getMap().get(position.add(-5, 5)));
-            actions.add(Megatron.Action.SW);
-            borderCells.add(this.map.getMap().get(position.add(5, 5)));
-            actions.add(Megatron.Action.SE);
-            
-            borderCells.add(this.map.getMap().get(position.addX(5)));
-            actions.add(Megatron.Action.E);
-            borderCells.add(this.map.getMap().get(position.add(5, -1)));
-            actions.add(Megatron.Action.NE);
-            borderCells.add(this.map.getMap().get(position.add(5, -2)));
-            actions.add(Megatron.Action.NE);
-            borderCells.add(this.map.getMap().get(position.add(5, -3)));
-            actions.add(Megatron.Action.NE);
-            borderCells.add(this.map.getMap().get(position.add(5, -4)));
-            actions.add(Megatron.Action.NE);
-            borderCells.add(this.map.getMap().get(position.add(4, -5)));
-            actions.add(Megatron.Action.NE);
-            borderCells.add(this.map.getMap().get(position.add(3, -5)));
-            actions.add(Megatron.Action.NE);
-            borderCells.add(this.map.getMap().get(position.add(2, -5)));
-            actions.add(Megatron.Action.NE);
-            borderCells.add(this.map.getMap().get(position.add(1, -5)));
-            actions.add(Megatron.Action.NE);
-            
-            borderCells.add(this.map.getMap().get(position.addY(-5)));
-            actions.add(Megatron.Action.N);
-            borderCells.add(this.map.getMap().get(position.add(-1, -5)));
-            actions.add(Megatron.Action.NW);
-            borderCells.add(this.map.getMap().get(position.add(-2, -5)));
-            actions.add(Megatron.Action.NW);
-            borderCells.add(this.map.getMap().get(position.add(-3, -5)));
-            actions.add(Megatron.Action.NW);
-            borderCells.add(this.map.getMap().get(position.add(-4, -5)));
-            actions.add(Megatron.Action.NW);
-            borderCells.add(this.map.getMap().get(position.add(-5, -4)));
-            actions.add(Megatron.Action.NW);
-            borderCells.add(this.map.getMap().get(position.add(-5, -3)));
-            actions.add(Megatron.Action.NW);
-            borderCells.add(this.map.getMap().get(position.add(-5, -2)));
-            actions.add(Megatron.Action.NW);
-            borderCells.add(this.map.getMap().get(position.add(-5, -1)));
-            actions.add(Megatron.Action.NW);
-            
-            borderCells.add(this.map.getMap().get(position.addX(-5)));
-            actions.add(Megatron.Action.W);
-            borderCells.add(this.map.getMap().get(position.add(-5, 1)));
-            actions.add(Megatron.Action.SW);
-            borderCells.add(this.map.getMap().get(position.add(-5, 2)));
-            actions.add(Megatron.Action.SW);
-            borderCells.add(this.map.getMap().get(position.add(-5, 3)));
-            actions.add(Megatron.Action.SW);
-            borderCells.add(this.map.getMap().get(position.add(-5, 4)));
-            actions.add(Megatron.Action.SW);
-            borderCells.add(this.map.getMap().get(position.add(-4, 5)));
-            actions.add(Megatron.Action.SW);
-            borderCells.add(this.map.getMap().get(position.add(-3, 5)));
-            actions.add(Megatron.Action.SW);
-            borderCells.add(this.map.getMap().get(position.add(-2, 5)));
-            actions.add(Megatron.Action.SW);
-            borderCells.add(this.map.getMap().get(position.add(-1, 5)));
-            actions.add(Megatron.Action.SW);
-            
-            borderCells.add(this.map.getMap().get(position.addY(5)));
-            actions.add(Megatron.Action.S);
-            borderCells.add(this.map.getMap().get(position.add(1, 5)));
-            actions.add(Megatron.Action.SE);
-            borderCells.add(this.map.getMap().get(position.add(2, 5)));
-            actions.add(Megatron.Action.SE);
-            borderCells.add(this.map.getMap().get(position.add(3, 5)));
-            actions.add(Megatron.Action.SE);
-            borderCells.add(this.map.getMap().get(position.add(4, 5)));
-            actions.add(Megatron.Action.SE);
-            borderCells.add(this.map.getMap().get(position.add(5, 4)));
-            actions.add(Megatron.Action.SE);
-            borderCells.add(this.map.getMap().get(position.add(5, 3)));
-            actions.add(Megatron.Action.SE);
-            borderCells.add(this.map.getMap().get(position.add(5, 2)));
-            actions.add(Megatron.Action.SE);
-            borderCells.add(this.map.getMap().get(position.add(5, 1)));
-            actions.add(Megatron.Action.SE);
+            outBorderCells.add(this.map.getMap().get(position.add(5, -5)));
+            outActions.add(Megatron.Action.NE);
+            outBorderCells.add(this.map.getMap().get(position.add(-5, -5)));
+            outActions.add(Megatron.Action.NW);
+            outBorderCells.add(this.map.getMap().get(position.add(-5, 5)));
+            outActions.add(Megatron.Action.SW);
+            outBorderCells.add(this.map.getMap().get(position.add(5, 5)));
+            outActions.add(Megatron.Action.SE);
+
+            outBorderCells.add(this.map.getMap().get(position.addX(5)));
+            outActions.add(Megatron.Action.E);
+            outBorderCells.add(this.map.getMap().get(position.add(5, -1)));
+            outActions.add(Megatron.Action.NE);
+            outBorderCells.add(this.map.getMap().get(position.add(5, -2)));
+            outActions.add(Megatron.Action.NE);
+            outBorderCells.add(this.map.getMap().get(position.add(5, -3)));
+            outActions.add(Megatron.Action.NE);
+            outBorderCells.add(this.map.getMap().get(position.add(5, -4)));
+            outActions.add(Megatron.Action.NE);
+            outBorderCells.add(this.map.getMap().get(position.add(4, -5)));
+            outActions.add(Megatron.Action.NE);
+            outBorderCells.add(this.map.getMap().get(position.add(3, -5)));
+            outActions.add(Megatron.Action.NE);
+            outBorderCells.add(this.map.getMap().get(position.add(2, -5)));
+            outActions.add(Megatron.Action.NE);
+            outBorderCells.add(this.map.getMap().get(position.add(1, -5)));
+            outActions.add(Megatron.Action.NE);
+
+            outBorderCells.add(this.map.getMap().get(position.addY(-5)));
+            outActions.add(Megatron.Action.N);
+            outBorderCells.add(this.map.getMap().get(position.add(-1, -5)));
+            outActions.add(Megatron.Action.NW);
+            outBorderCells.add(this.map.getMap().get(position.add(-2, -5)));
+            outActions.add(Megatron.Action.NW);
+            outBorderCells.add(this.map.getMap().get(position.add(-3, -5)));
+            outActions.add(Megatron.Action.NW);
+            outBorderCells.add(this.map.getMap().get(position.add(-4, -5)));
+            outActions.add(Megatron.Action.NW);
+            outBorderCells.add(this.map.getMap().get(position.add(-5, -4)));
+            outActions.add(Megatron.Action.NW);
+            outBorderCells.add(this.map.getMap().get(position.add(-5, -3)));
+            outActions.add(Megatron.Action.NW);
+            outBorderCells.add(this.map.getMap().get(position.add(-5, -2)));
+            outActions.add(Megatron.Action.NW);
+            outBorderCells.add(this.map.getMap().get(position.add(-5, -1)));
+            outActions.add(Megatron.Action.NW);
+
+            outBorderCells.add(this.map.getMap().get(position.addX(-5)));
+            outActions.add(Megatron.Action.W);
+            outBorderCells.add(this.map.getMap().get(position.add(-5, 1)));
+            outActions.add(Megatron.Action.SW);
+            outBorderCells.add(this.map.getMap().get(position.add(-5, 2)));
+            outActions.add(Megatron.Action.SW);
+            outBorderCells.add(this.map.getMap().get(position.add(-5, 3)));
+            outActions.add(Megatron.Action.SW);
+            outBorderCells.add(this.map.getMap().get(position.add(-5, 4)));
+            outActions.add(Megatron.Action.SW);
+            outBorderCells.add(this.map.getMap().get(position.add(-4, 5)));
+            outActions.add(Megatron.Action.SW);
+            outBorderCells.add(this.map.getMap().get(position.add(-3, 5)));
+            outActions.add(Megatron.Action.SW);
+            outBorderCells.add(this.map.getMap().get(position.add(-2, 5)));
+            outActions.add(Megatron.Action.SW);
+            outBorderCells.add(this.map.getMap().get(position.add(-1, 5)));
+            outActions.add(Megatron.Action.SW);
+
+            outBorderCells.add(this.map.getMap().get(position.addY(5)));
+            outActions.add(Megatron.Action.S);
+            outBorderCells.add(this.map.getMap().get(position.add(1, 5)));
+            outActions.add(Megatron.Action.SE);
+            outBorderCells.add(this.map.getMap().get(position.add(2, 5)));
+            outActions.add(Megatron.Action.SE);
+            outBorderCells.add(this.map.getMap().get(position.add(3, 5)));
+            outActions.add(Megatron.Action.SE);
+            outBorderCells.add(this.map.getMap().get(position.add(4, 5)));
+            outActions.add(Megatron.Action.SE);
+            outBorderCells.add(this.map.getMap().get(position.add(5, 4)));
+            outActions.add(Megatron.Action.SE);
+            outBorderCells.add(this.map.getMap().get(position.add(5, 3)));
+            outActions.add(Megatron.Action.SE);
+            outBorderCells.add(this.map.getMap().get(position.add(5, 2)));
+            outActions.add(Megatron.Action.SE);
+            outBorderCells.add(this.map.getMap().get(position.add(5, 1)));
+            outActions.add(Megatron.Action.SE);
         } else {
-            borderCells.add(this.map.getMap().get(position.add(-5, 5)));
-            actions.add(Megatron.Action.SW);
-            borderCells.add(this.map.getMap().get(position.add(5, 5)));
-            actions.add(Megatron.Action.SE);
-            borderCells.add(this.map.getMap().get(position.add(5, -5)));
-            actions.add(Megatron.Action.NE);
-            borderCells.add(this.map.getMap().get(position.add(-5, -5)));
-            actions.add(Megatron.Action.NW);
-            
-            borderCells.add(this.map.getMap().get(position.addX(-5)));
-            actions.add(Megatron.Action.W);
-            borderCells.add(this.map.getMap().get(position.add(-5, 1)));
-            actions.add(Megatron.Action.SW);
-            borderCells.add(this.map.getMap().get(position.add(-5, 2)));
-            actions.add(Megatron.Action.SW);
-            borderCells.add(this.map.getMap().get(position.add(-5, 3)));
-            actions.add(Megatron.Action.SW);
-            borderCells.add(this.map.getMap().get(position.add(-5, 4)));
-            actions.add(Megatron.Action.SW);
-            borderCells.add(this.map.getMap().get(position.add(-4, 5)));
-            actions.add(Megatron.Action.SW);
-            borderCells.add(this.map.getMap().get(position.add(-3, 5)));
-            actions.add(Megatron.Action.SW);
-            borderCells.add(this.map.getMap().get(position.add(-2, 5)));
-            actions.add(Megatron.Action.SW);
-            borderCells.add(this.map.getMap().get(position.add(-1, 5)));
-            actions.add(Megatron.Action.SW);
-            
-            borderCells.add(this.map.getMap().get(position.addY(5)));
-            actions.add(Megatron.Action.S);
-            borderCells.add(this.map.getMap().get(position.add(1, 5)));
-            actions.add(Megatron.Action.SE);
-            borderCells.add(this.map.getMap().get(position.add(2, 5)));
-            actions.add(Megatron.Action.SE);
-            borderCells.add(this.map.getMap().get(position.add(3, 5)));
-            actions.add(Megatron.Action.SE);
-            borderCells.add(this.map.getMap().get(position.add(4, 5)));
-            actions.add(Megatron.Action.SE);
-            borderCells.add(this.map.getMap().get(position.add(5, 4)));
-            actions.add(Megatron.Action.SE);
-            borderCells.add(this.map.getMap().get(position.add(5, 3)));
-            actions.add(Megatron.Action.SE);
-            borderCells.add(this.map.getMap().get(position.add(5, 2)));
-            actions.add(Megatron.Action.SE);
-            borderCells.add(this.map.getMap().get(position.add(5, 1)));
-            actions.add(Megatron.Action.SE);
-            
-            borderCells.add(this.map.getMap().get(position.addX(5)));
-            actions.add(Megatron.Action.E);
-            borderCells.add(this.map.getMap().get(position.add(5, -1)));
-            actions.add(Megatron.Action.NE);
-            borderCells.add(this.map.getMap().get(position.add(5, -2)));
-            actions.add(Megatron.Action.NE);
-            borderCells.add(this.map.getMap().get(position.add(5, -3)));
-            actions.add(Megatron.Action.NE);
-            borderCells.add(this.map.getMap().get(position.add(5, -4)));
-            actions.add(Megatron.Action.NE);
-            borderCells.add(this.map.getMap().get(position.add(4, -5)));
-            actions.add(Megatron.Action.NE);
-            borderCells.add(this.map.getMap().get(position.add(3, -5)));
-            actions.add(Megatron.Action.NE);
-            borderCells.add(this.map.getMap().get(position.add(2, -5)));
-            actions.add(Megatron.Action.NE);
-            borderCells.add(this.map.getMap().get(position.add(1, -5)));
-            actions.add(Megatron.Action.NE);
-            
-            borderCells.add(this.map.getMap().get(position.addY(-5)));
-            actions.add(Megatron.Action.N);
-            borderCells.add(this.map.getMap().get(position.add(-1, -5)));
-            actions.add(Megatron.Action.NW);
-            borderCells.add(this.map.getMap().get(position.add(-2, -5)));
-            actions.add(Megatron.Action.NW);
-            borderCells.add(this.map.getMap().get(position.add(-3, -5)));
-            actions.add(Megatron.Action.NW);
-            borderCells.add(this.map.getMap().get(position.add(-4, -5)));
-            actions.add(Megatron.Action.NW);
-            borderCells.add(this.map.getMap().get(position.add(-5, -4)));
-            actions.add(Megatron.Action.NW);
-            borderCells.add(this.map.getMap().get(position.add(-5, -3)));
-            actions.add(Megatron.Action.NW);
-            borderCells.add(this.map.getMap().get(position.add(-5, -2)));
-            actions.add(Megatron.Action.NW);
-            borderCells.add(this.map.getMap().get(position.add(-5, -1)));
-            actions.add(Megatron.Action.NW);
+            outBorderCells.add(this.map.getMap().get(position.add(-5, 5)));
+            outActions.add(Megatron.Action.SW);
+            outBorderCells.add(this.map.getMap().get(position.add(5, 5)));
+            outActions.add(Megatron.Action.SE);
+            outBorderCells.add(this.map.getMap().get(position.add(5, -5)));
+            outActions.add(Megatron.Action.NE);
+            outBorderCells.add(this.map.getMap().get(position.add(-5, -5)));
+            outActions.add(Megatron.Action.NW);
+
+            outBorderCells.add(this.map.getMap().get(position.addX(-5)));
+            outActions.add(Megatron.Action.W);
+            outBorderCells.add(this.map.getMap().get(position.add(-5, 1)));
+            outActions.add(Megatron.Action.SW);
+            outBorderCells.add(this.map.getMap().get(position.add(-5, 2)));
+            outActions.add(Megatron.Action.SW);
+            outBorderCells.add(this.map.getMap().get(position.add(-5, 3)));
+            outActions.add(Megatron.Action.SW);
+            outBorderCells.add(this.map.getMap().get(position.add(-5, 4)));
+            outActions.add(Megatron.Action.SW);
+            outBorderCells.add(this.map.getMap().get(position.add(-4, 5)));
+            outActions.add(Megatron.Action.SW);
+            outBorderCells.add(this.map.getMap().get(position.add(-3, 5)));
+            outActions.add(Megatron.Action.SW);
+            outBorderCells.add(this.map.getMap().get(position.add(-2, 5)));
+            outActions.add(Megatron.Action.SW);
+            outBorderCells.add(this.map.getMap().get(position.add(-1, 5)));
+            outActions.add(Megatron.Action.SW);
+
+            outBorderCells.add(this.map.getMap().get(position.addY(5)));
+            outActions.add(Megatron.Action.S);
+            outBorderCells.add(this.map.getMap().get(position.add(1, 5)));
+            outActions.add(Megatron.Action.SE);
+            outBorderCells.add(this.map.getMap().get(position.add(2, 5)));
+            outActions.add(Megatron.Action.SE);
+            outBorderCells.add(this.map.getMap().get(position.add(3, 5)));
+            outActions.add(Megatron.Action.SE);
+            outBorderCells.add(this.map.getMap().get(position.add(4, 5)));
+            outActions.add(Megatron.Action.SE);
+            outBorderCells.add(this.map.getMap().get(position.add(5, 4)));
+            outActions.add(Megatron.Action.SE);
+            outBorderCells.add(this.map.getMap().get(position.add(5, 3)));
+            outActions.add(Megatron.Action.SE);
+            outBorderCells.add(this.map.getMap().get(position.add(5, 2)));
+            outActions.add(Megatron.Action.SE);
+            outBorderCells.add(this.map.getMap().get(position.add(5, 1)));
+            outActions.add(Megatron.Action.SE);
+
+            outBorderCells.add(this.map.getMap().get(position.addX(5)));
+            outActions.add(Megatron.Action.E);
+            outBorderCells.add(this.map.getMap().get(position.add(5, -1)));
+            outActions.add(Megatron.Action.NE);
+            outBorderCells.add(this.map.getMap().get(position.add(5, -2)));
+            outActions.add(Megatron.Action.NE);
+            outBorderCells.add(this.map.getMap().get(position.add(5, -3)));
+            outActions.add(Megatron.Action.NE);
+            outBorderCells.add(this.map.getMap().get(position.add(5, -4)));
+            outActions.add(Megatron.Action.NE);
+            outBorderCells.add(this.map.getMap().get(position.add(4, -5)));
+            outActions.add(Megatron.Action.NE);
+            outBorderCells.add(this.map.getMap().get(position.add(3, -5)));
+            outActions.add(Megatron.Action.NE);
+            outBorderCells.add(this.map.getMap().get(position.add(2, -5)));
+            outActions.add(Megatron.Action.NE);
+            outBorderCells.add(this.map.getMap().get(position.add(1, -5)));
+            outActions.add(Megatron.Action.NE);
+
+            outBorderCells.add(this.map.getMap().get(position.addY(-5)));
+            outActions.add(Megatron.Action.N);
+            outBorderCells.add(this.map.getMap().get(position.add(-1, -5)));
+            outActions.add(Megatron.Action.NW);
+            outBorderCells.add(this.map.getMap().get(position.add(-2, -5)));
+            outActions.add(Megatron.Action.NW);
+            outBorderCells.add(this.map.getMap().get(position.add(-3, -5)));
+            outActions.add(Megatron.Action.NW);
+            outBorderCells.add(this.map.getMap().get(position.add(-4, -5)));
+            outActions.add(Megatron.Action.NW);
+            outBorderCells.add(this.map.getMap().get(position.add(-5, -4)));
+            outActions.add(Megatron.Action.NW);
+            outBorderCells.add(this.map.getMap().get(position.add(-5, -3)));
+            outActions.add(Megatron.Action.NW);
+            outBorderCells.add(this.map.getMap().get(position.add(-5, -2)));
+            outActions.add(Megatron.Action.NW);
+            outBorderCells.add(this.map.getMap().get(position.add(-5, -1)));
+            outActions.add(Megatron.Action.NW);
         }
     }
 

@@ -256,5 +256,16 @@ public class Coord {
     public int hashCode() {
         return (this.x + (this.y * 1000));
     }
+    
+    /**
+     * Returns the coordinates as readable string
+     * 
+     * @return Coordinates
+     * @author Alexander Straub
+     */
+    @Override
+    public String toString() {
+        return "(" + this.x + "," + this.y + ")";
+    }
 
 }

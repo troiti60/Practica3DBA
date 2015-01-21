@@ -5,10 +5,8 @@ import es.upv.dsic.gti_ia.core.ACLMessage;
 import es.upv.dsic.gti_ia.core.AgentID;
 import es.upv.dsic.gti_ia.core.SingleAgent;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Collection;
 import java.util.LinkedHashMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import practica3.DataAccess;
 import practica3.JsonDBA;
 import practica3.Draw.MapImage;
@@ -23,24 +21,11 @@ public class Megatron extends SingleAgent {
 
     private final ArrayList<DataDecepticon> drones;
     private Map myMap;
-    private int energyOfWorld;
     private final JsonDBA json;
     private DataAccess dataAccess;
-    private Node nodoGoal;
     private Window draw;
-    private State state;
-    private boolean live;
-    private Action sigAction;
-    private int droneNumber;
 
-    private int pasos = 0;
     private boolean zoneGoalFound = false;
-    
-    //Parking
-    private Coord coordGoal1;
-    private Coord coordGoal2;
-    private Coord coordGoal3;
-    private Coord coordGoal4;
 
     // Image of the map for visualization
     private MapImage mapImage = null;
@@ -117,10 +102,15 @@ public class Megatron extends SingleAgent {
      */
     public Megatron(AgentID aid) throws Exception {
         super(aid);
-        drones = new ArrayList<>(4);
+        this.drones = new ArrayList<>(4);
         this.json = new JsonDBA();
     }
 
+    /**
+     * Init function for agents
+     *
+     * @author Alexander Straub
+     */
     @Override
     protected void init() {
         this.dataAccess = DataAccess.createInstance();
@@ -130,263 +120,282 @@ public class Megatron extends SingleAgent {
             resolution = 500;
         }
         this.myMap = new Map(resolution);
-        draw = new Window();
-        draw.setResizable(true);
-        draw.setVisible(true);
+
+        this.draw = new Window();
+        this.draw.setResizable(true);
+        this.draw.setVisible(true);
 
         this.mapImage = new MapImage(resolution);
     }
 
     /**
      * This method is thought to be called by Megatron itself after parsing a
-     * new perception of one of his drons so he can update the map.
+     * new perception of one of his drones so he can update the map
      *
-     * @param pos current dron position
-     * @param perception last perception received by decepticon
-     * @param dron local identifier of the sender. It must be an integer between
-     * 0 and 3
+     * @param pos Current drone position
+     * @param perception Last perception received by the decepticon
+     * @param drone Drone ID
+     * @param woldEnergy Energy level of the world
      * @author Antonio Troitiño del Río
      */
-    private void updateMap(Coord pos, ArrayList<Integer> perception, int dron) {
-        if (perception.isEmpty() || dron >= drones.size()) {
-            System.err.println("ERROR: Megatron received an empty perception!");
+    private void updateMapAndDrone(Coord pos, ArrayList<Integer> perception, int drone, int battery, int worldEnergy) {
+        if (perception.isEmpty() || drone >= this.drones.size()) {
+            System.err.println("Megatron: Received an empty perception");
         } else {
-            drones.get(dron).setPosition(pos);
-            this.mapImage.setDronePosition(dron, pos);
+            // Set new drone position and battery level
+            this.drones.get(drone).setPosition(pos);
+            this.drones.get(drone).setFuel(battery);
+            this.mapImage.setDronePosition(drone, pos);
+
+            // Add perceived nodes to the map
             int cont = Math.round((float) Math.sqrt(perception.size()));
             cont = (cont - 1) / 2;
             int count = 0;
             for (int i = 0 - cont; i <= cont; i++) {
                 for (int j = 0 - cont; j <= cont; j++) {
-                    myMap.addNode(new Coord(pos.getX() + j, pos.getY() + i), perception.get(count));
+                    this.myMap.addNode(new Coord(pos.getX() + j, pos.getY() + i), perception.get(count));
                     this.mapImage.setCell(perception.get(count), new Coord(pos.getX() + j, pos.getY() + i));
                     count++;
                 }
             }
+
+            // Draw new map and positions
+            this.draw.getJpanel().setDronPosition(pos);
+            this.draw.getJpanel().updateDraw(this.myMap, drone, this.drones.get(drone).getLastPosition());
+            this.draw.setLabelCoordinate(pos.getX(), pos.getY(), drone);
+            this.draw.setBatteryDroneValue(drone, this.drones.get(drone).getFuel());
+            this.draw.setTotalBatteryValue(worldEnergy);
+
+            System.out.println("Megatron: Map updated");
         }
-        draw.getJpanel().setDronPosition(pos);
-        draw.getJpanel().updateDraw(myMap,dron,drones.get(dron).getLastPosition());
-        draw.setLabelCoordinate(pos.getX(), pos.getY(),dron);
-        draw.setBatteryDroneValue(dron,drones.get(dron).getFuel());
-        draw.setTotalBatteryValue(energyOfWorld);
-
-        System.out.println("Megatron: Mapa actualizado");
-    }
-
-    /**
-     * Method to update data related to Decepticon
-     *
-     * @param numDron The number of Decepticon to update
-     * @param newCoord The new coordinate
-     * @param newFuel The current fuel
-     * @author Fco Javier Ortega Rodriguez
-     *
-     */
-    private void updateDataDecepticon(int numDron, Coord newCoord, int newFuel) {
-        this.drones.get(numDron).setPosition(newCoord);
-        this.drones.get(numDron).setFuel(newFuel);
     }
 
     /**
      * Send the message to subscribe to the world
      *
-     * @author JC con su flow
-     *
+     * @author José Carlos Alfaro
      */
-    public void Suscribe() {
-        ACLMessage outbox = new ACLMessage();
-        outbox.setPerformative(ACLMessage.SUBSCRIBE);
-        outbox.setReceiver(new AgentID("Canis"));
+    public void subscribe() {
+        ACLMessage outbox = new ACLMessage(ACLMessage.SUBSCRIBE);
+        outbox.setReceiver(new AgentID(this.dataAccess.getVirtualHost()));
         outbox.setSender(getAid());
-        outbox.setContent(json.createJson("world", dataAccess.getWorld()));
-        System.out.println("\tContenido subscribe: " + outbox.getContent());
+        outbox.setContent(this.json.createJson("world", this.dataAccess.getWorld()));
         this.send(outbox);
 
+        System.out.println("Megatron: Subscription request " + outbox.getContent());
     }
 
     /**
      * Send the message to cancel the session
      *
-     * @author JC
+     * @author José Carlos Alfaro
      */
-    public void Cancel() {
-        ACLMessage outbox = new ACLMessage();
-        outbox.setPerformative(ACLMessage.CANCEL);
-        outbox.setReceiver(new AgentID("Canis"));
+    public void cancel() {
+        ACLMessage outbox = new ACLMessage(ACLMessage.CANCEL);
+        outbox.setReceiver(new AgentID(this.dataAccess.getVirtualHost()));
         outbox.setSender(getAid());
-        outbox.setContent(dataAccess.getKey());
+        outbox.setContent(this.dataAccess.getKey());
         this.send(outbox);
+
+        System.out.println("Megatron: Cancel sent to server");
     }
 
     /**
      * It will send the order to move depending the action.
      *
-     * @author JC
-     * @param nameDron Agent's name will recibe the message
-     * @param action Kind of movement.
+     * @param nameDrone Agent's name who will receive the message
+     * @param action Direction of movement.
+     * @author José Carlos Alfaro
      */
-    public void Move(String nameDron, Action action) {
+    public void move(String nameDrone, Action action) {
         LinkedHashMap<String, String> hm = new LinkedHashMap<>();
         hm.put("command", action.toString());
-        hm.put("key", dataAccess.getKey());
-        String msg = json.createJson(hm);
+        hm.put("key", this.dataAccess.getKey());
+        String msg = this.json.createJson(hm);
 
-        ACLMessage outbox = new ACLMessage();
+        ACLMessage outbox = new ACLMessage(ACLMessage.REQUEST);
         outbox.setSender(getAid());
-        outbox.setPerformative(ACLMessage.REQUEST);
-        outbox.setReceiver(new AgentID(nameDron));
+        outbox.setReceiver(new AgentID(nameDrone));
         outbox.setContent(msg);
         this.send(outbox);
     }
 
     /**
-     * it will send the order to refuel
+     * It will send the order to refuel
      *
-     * @author JC
-     * @param nameDron Agent's name will recibe the message
+     * @param nameDrone Agent's name who will receive the message
+     * @author José Carlos Alfaro
      */
-    public void Refuel(String nameDron) {
+    public void refuel(String nameDrone) {
         LinkedHashMap<String, String> hm = new LinkedHashMap<>();
         hm.put("command", "refuel");
-        hm.put("key", dataAccess.getKey());
-        String msg = json.createJson(hm);
+        hm.put("key", this.dataAccess.getKey());
+        String msg = this.json.createJson(hm);
 
-        ACLMessage outbox = new ACLMessage();
+        ACLMessage outbox = new ACLMessage(ACLMessage.REQUEST);
         outbox.setSender(getAid());
-        outbox.setPerformative(ACLMessage.REQUEST);
-        outbox.setReceiver(new AgentID(nameDron));
+        outbox.setReceiver(new AgentID(nameDrone));
         outbox.setContent(msg);
         this.send(outbox);
-
     }
 
+    /**
+     * Main method in form of a state machine
+     *
+     * @author All
+     */
     @Override
     public void execute() {
-        ACLMessage inbox = null;
-        String msg = null;
-        state = State.Subscribe;
-        live = true;
-        sigAction = null;
-        droneNumber = -1;
-        System.out.println("Megatron: Iniciado");
+        // Objects for communication
+        ACLMessage inbox;
+        String msg;
 
-        while (live) {
-            pasos++;
-            System.err.println("Paso: " + pasos);
+        // Objects for the state
+        State state = State.Subscribe;
+        boolean alive = true;
+        Action nextAction = null;
+        int droneNumber = -1;
+        int worldEnergy = 0;
+        boolean firstSearch = true;
+
+        System.out.println("Megatron: Initiating");
+
+        // While there are drones alive, go on
+        while (alive) {
+            // If all drones have arrived or are dead, go to cancel
+            if (!this.drones.isEmpty()) {
+                boolean stop = true;
+                for (DataDecepticon drone : this.drones) {
+                    stop &= drone.isInGoal() || !drone.isAlive();
+                }
+
+                if (stop) {
+                    state = State.Cancel;
+                }
+            }
+
+            // State machine
             switch (state) {
-                // Suscribe
+                // Suscribe to server
                 case Subscribe:
-                    System.out.println("Megatron------ Estado: Subscribe");
-                    Suscribe();
+                    System.out.println("Megatron------ State: Subscribe");
+                    subscribe();
 
                     try {
                         inbox = receiveACLMessage();
                         msg = inbox.getContent();
                     } catch (InterruptedException ex) {
-                        System.err.println("Megatron: Problema al recibir mensaje en Subscribe: " + ex);
-                        System.err.println("Megatron: Cambiando a estado Cancel");
+                        System.err.println("Megatron: Problem receiving answer after subscribing");
+                        System.err.println("\t" + ex.getMessage());
+
                         state = State.Cancel;
+                        break;
                     }
 
-                    if (inbox != null && inbox.getPerformativeInt() == ACLMessage.INFORM) {
+                    if (inbox.getPerformativeInt() == ACLMessage.INFORM) {
                         String result = (String) json.getElement(msg, "result");
-                        dataAccess.setKey(result);
-                        System.out.println("Megatron: Clave recibida " + dataAccess.getKey());
-                        System.out.println("Megatron: Cambiando a estado Create");
-                        state = State.Create;
-                    } else {
-                        System.err.print("Megatron ERROR");
-                        if (inbox != null) {
-                            System.err.print(": " + inbox.getPerformative());
-                        }
-                        System.err.print("\n");
-                        state = State.Cancel;
-                    }
-                    break;
+                        this.dataAccess.setKey(result);
 
-                // Lanzar x drones de mapeo
+                        System.out.println("Megatron: Key received " + this.dataAccess.getKey());
+
+                        state = State.Create;
+                        break;
+                    } else {
+                        System.err.println("Megatron: Server denied subscription");
+                        System.err.println("\t" + inbox.getPerformative());
+
+                        state = State.Cancel;
+                        break;
+                    }
+
+                // Create drones to find the objective
                 case Create:
-                    System.out.println("Megatron------ Estado: Create");
+                    System.out.println("Megatron------ State: Create");
 
                     try {
                         Decepticon drone;
-                        
-                        System.out.println("Megatron: Lanzando decepticion 1...");
+
+                        System.out.println("Megatron: Launching decepticon 1: " + this.dataAccess.getNameDrone1());
                         drone = new Birdron(new AgentID(this.dataAccess.getNameDrone1()),
-                                this.getAid(), dataAccess.getKey());
+                                this.getAid(), this.dataAccess.getKey());
                         drone.start();
                         this.drones.add(new DataBirdron(this.myMap));
-                        
-                        System.out.println("Megatron: Lanzando decepticion 2...");
+
+                        System.out.println("Megatron: Launching decepticon 2: " + this.dataAccess.getNameDrone2());
                         drone = new Birdron(new AgentID(this.dataAccess.getNameDrone2()),
-                                this.getAid(), dataAccess.getKey());
+                                this.getAid(), this.dataAccess.getKey());
                         drone.start();
                         this.drones.add(new DataBirdron(this.myMap));
-                        
-                        System.out.println("Megatron: Lanzando decepticion 3...");
+
+                        System.out.println("Megatron: Launching decepticon 3: " + this.dataAccess.getNameDrone3());
                         drone = new Flytron(new AgentID(this.dataAccess.getNameDrone3()),
-                                this.getAid(), dataAccess.getKey());
+                                this.getAid(), this.dataAccess.getKey());
                         drone.start();
                         this.drones.add(new DataFlytron(this.myMap));
 
-                        System.out.println("Megatron: Lanzando decepticion 4...");
+                        System.out.println("Megatron: Launching decepticon 4: " + this.dataAccess.getNameDrone4());
                         drone = new Falcdron(new AgentID(this.dataAccess.getNameDrone4()),
-                                this.getAid(), dataAccess.getKey());
+                                this.getAid(), this.dataAccess.getKey());
                         drone.start();
                         this.drones.add(new DataFalcdron(this.myMap));
 
-                        System.out.println("Megatron: Cambiando a estado Feel");
                         state = State.Feel;
-
+                        break;
                     } catch (Exception ex) {
-                        Logger.getLogger(Megatron.class.getName()).log(Level.SEVERE, null, ex);
-                        System.err.println("Megatron: ERROR al instanciar los drones");
-                        System.err.println("Megatron: Cambiando a estado Cancel");
+                        System.err.println("Megatron: Failed to instantiate and start drones");
+                        System.err.println("\t" + ex.getMessage());
+
                         state = State.Cancel;
+                        break;
                     }
 
-                    break;
-
+                // In case not every drone has yet been launched, launch the rest
                 case LaunchRest:
-                    System.out.println("Megatron------ Estado: LaunchRest");
+                    System.out.println("Megatron------ State: LaunchRest");
+
                     try {
                         Decepticon drone;
 
-                        System.out.println("Megatron: Lanzando decepticion 2...");
-                        drone = new Birdron(new AgentID(this.dataAccess.getNameDrone2()),
-                                this.getAid(), dataAccess.getKey());
-                        drone.start();
+                        if (this.drones.size() == 1) {
+                            System.out.println("Megatron: Launching decepticon 2: " + this.dataAccess.getNameDrone2());
+                            drone = new Birdron(new AgentID(this.dataAccess.getNameDrone2()),
+                                    this.getAid(), this.dataAccess.getKey());
+                            drone.start();
+                            this.drones.add(new DataBirdron(this.myMap));
+                        }
 
-                        System.out.println("Megatron: Lanzando decepticion 3...");
-                        drone = new Birdron(new AgentID(this.dataAccess.getNameDrone3()),
-                                this.getAid(), dataAccess.getKey());
-                        drone.start();
+                        if (this.drones.size() == 2) {
+                            System.out.println("Megatron: Launching decepticon 3: " + this.dataAccess.getNameDrone3());
+                            drone = new Birdron(new AgentID(this.dataAccess.getNameDrone3()),
+                                    this.getAid(), this.dataAccess.getKey());
+                            drone.start();
+                            this.drones.add(new DataBirdron(this.myMap));
+                        }
 
-                        System.out.println("Megatron: Lanzando decepticion 4...");
-                        drone = new Birdron(new AgentID(this.dataAccess.getNameDrone4()),
-                                this.getAid(), dataAccess.getKey());
-                        drone.start();
+                        if (this.drones.size() == 3) {
+                            System.out.println("Megatron: Launching decepticon 4: " + this.dataAccess.getNameDrone4());
+                            drone = new Birdron(new AgentID(this.dataAccess.getNameDrone4()),
+                                    this.getAid(), this.dataAccess.getKey());
+                            drone.start();
+                            this.drones.add(new DataBirdron(this.myMap));
+                        }
 
-                        this.drones.add(new DataBirdron(this.myMap));
-                        this.drones.add(new DataBirdron(this.myMap));
-                        this.drones.add(new DataBirdron(this.myMap));
-
-                        System.out.println("Megatron: Cambiando a estado Feel");
-                        state = State.Feel;
-
+                        state = State.Heuristic;
+                        break;
                     } catch (Exception ex) {
-                        Logger.getLogger(Megatron.class.getName()).log(Level.SEVERE, null, ex);
-                        System.err.println("Megatron: ERROR al instanciar los drones");
-                        System.err.println("Megatron: Cambiando a estado Cancel");
+                        System.err.println("Megatron: Failed to instantiate and start drones");
+                        System.err.println("\t" + ex.getMessage());
+
                         state = State.Cancel;
+                        break;
                     }
 
-                    break;
-                // Esperar x percepciones
+                // Receive update on drone sensors
                 case Feel:
-                    System.out.println("Megatron------ Estado: Feel");
+                    System.out.println("Megatron------ State: Feel");
+
                     droneNumber = -1;
-                    
+
                     // If drones are on standby but all other drones are
                     // incapacitated, reactivate one of them
                     boolean reactivate = true;
@@ -399,29 +408,30 @@ public class Megatron extends SingleAgent {
                         if (this.drones.get(i).isOnStandby()) {
                             this.drones.get(i).reactivate();
                             reactivate = false;
-                            this.state = State.Heuristic;
-                            this.droneNumber = i;
+                            state = State.Heuristic;
+                            droneNumber = i;
                         }
                     }
-                    
-                    if (this.state == State.Heuristic) break;
 
+                    if (state == State.Heuristic) {
+                        break;
+                    }
+
+                    // Wait for message from drones
                     try {
-                        System.out.println("Megatron: Esperando mensaje");
+                        System.out.println("Megatron: Waiting for message");
                         inbox = receiveACLMessage();
-                        System.out.println("Megatron: Mensaje recibido de " + inbox.getSender().toString());
-                        System.out.println("\tM: " + inbox.getSender().getLocalName() + " " + inbox.getPerformative() + " " + inbox.getContent());
+                        System.out.println("Megatron: Message received from " + inbox.getSender().toString());
+                        System.out.println("\t" + inbox.getSender().getLocalName() + " " + inbox.getPerformative() + " " + inbox.getContent());
                     } catch (InterruptedException ex) {
-                        Logger.getLogger(Megatron.class.getName()).log(Level.SEVERE, null, ex);
-                        System.err.println("Megatron: Error al recibir el mensaje");
-                        System.err.println("Megatron: Cambiando a estado Cancel");
+                        System.err.println("Megatron: Error receiving message from drone");
+                        System.err.println("\t" + ex.getMessage());
+
                         state = State.Cancel;
                         break;
                     }
 
-                    //if(!inbox.getSender().getLocalName().equals("Canis")){
-                    System.out.println("Megatron: Recibido de un Decepticon");
-
+                    // Get drone number from the sender's name
                     if (inbox.getSender().getLocalName().equals(this.dataAccess.getNameDrone1())) {
                         droneNumber = 0;
                     } else if (inbox.getSender().getLocalName().equals(this.dataAccess.getNameDrone2())) {
@@ -432,195 +442,179 @@ public class Megatron extends SingleAgent {
                         droneNumber = 3;
                     }
 
+                    // If it is a normal message
                     if (inbox.getPerformativeInt() == ACLMessage.INFORM) {
-                        System.out.println("Megatron: Informe");
+                        String result = this.json.getElement(inbox.getContent(), "result").toString();
 
-                        String result = json.getElement(inbox.getContent(), "result").toString();
-                        int battery = json.getElementInteger(result, "battery");
-                        System.out.println("Mostrando Bateria: " + battery);
-                        int x = json.getElementInteger(result, "x");
-                        int y = json.getElementInteger(result, "y");
-                        Coord nuevaCordenada = new Coord(x, y);
-                        System.out.println("Coordenadas guardadas: " + "(" + x + " , " + y + ")");
-                        ArrayList<Integer> sensor = json.jsonElementToArrayInt(json.getElement(result, "sensor"));
-                        int energy = json.getElementInteger(result, "energy");
-                        System.out.println("Mostrando energia restante: " + energy);
-                        boolean goal = (boolean) json.getElement(result, "goal");
+                        // Get battery status
+                        int battery = this.json.getElementInteger(result, "battery");
+                        System.out.println("\tBattery level: " + battery);
+
+                        // Get position
+                        int x = this.json.getElementInteger(result, "x");
+                        int y = this.json.getElementInteger(result, "y");
+                        Coord newCoordinates = new Coord(x, y);
+                        System.out.println("\tDrone position: " + "(" + x + " , " + y + ")");
+
+                        // Get sensor data
+                        ArrayList<Integer> sensor = this.json.jsonElementToArrayInt(this.json.getElement(result, "sensor"));
+                        System.out.println("\tSensor: " + sensor.toString());
+
+                        // Get world energy
+                        int energy = this.json.getElementInteger(result, "energy");
+                        System.out.println("\tWorld energy: " + energy);
+
+                        // Save if goal was found and drone is in goal area
+                        boolean goal = (boolean) this.json.getElement(result, "goal");
                         boolean goalFound = (boolean) sensor.contains(3);
 
-                        System.out.println("\tSensor      " + sensor.toString());
+                        // Update map and information of the drone
+                        updateMapAndDrone(newCoordinates, sensor, droneNumber, battery, energy);
+                        worldEnergy = energy;
                         
-                        updateMap(nuevaCordenada, sensor, droneNumber);
-                        updateDataDecepticon(droneNumber, nuevaCordenada, battery);
-                        energyOfWorld = energy;
+                        // If goal was found for the first time
+                        if (goalFound && !this.zoneGoalFound) {
+                            // If this is the first time the goal area was found
+                            this.zoneGoalFound = true;
 
+                            // Get parking spot for all the drones
+                            parking(droneNumber);
+
+                            System.out.println("Megatron: Drone " + inbox.getSender().getLocalName() + " has found the objective");
+
+                            state = State.LaunchRest;
+                            if (!goal) {
+                                break;
+                            }
+                        }
+                        
+                        // If drone is in the goal area
                         if (goal) {
-                            System.out.println("\tGoal     Si");
+                            System.out.println("Megatron: Drone " + inbox.getSender().getLocalName() + " has arrived");
+                            this.drones.get(droneNumber).setMyGoal(newCoordinates);
+                            this.myMap.setDroneParkingSpace(newCoordinates);
+                            
+                            if (state != State.LaunchRest) {
+                                state = State.Feel;
+                            }
+                            break;
+                        }
 
-                            this.drones.get(droneNumber).setMyGoal(nuevaCordenada);
+                        state = State.Heuristic;
+                        break;
+                    } else {
+                        // Drone died
+                        this.drones.get(droneNumber).setDead();
 
-                            state = State.Heuristic;
-                        } else if (goalFound) {
-                            if (!zoneGoalFound) {
-                                // Es el primer dron que llega, asignar metas al resto
-                                // Llamar al método para aparcar
-                                System.out.println("Aqui estamos!!");
-                                int droneInGoal=-1;
-                                for(int i=0; i<4; i++){
-                                    if(drones.get(i).isInGoal()){
-                                        droneInGoal=i;
-                                        
+                        // If all drones are dead, go to cancel
+                        if (!this.drones.get(0).isAlive() && !this.drones.get(1).isAlive()
+                                && !this.drones.get(2).isAlive() && !this.drones.get(3).isAlive()) {
+
+                            state = State.Cancel;
+                            break;
+                        } else {
+                            state = State.Feel;
+                            break;
+                        }
+                    }
+
+                // Heuristic: Find objective, find way to target, refuel
+                case Heuristic:
+                    System.out.println("Megatron------ State: Heuristic");
+
+                    try {
+                        // Check if drone needs to refuel
+                        if (fuelHeuristic(droneNumber, this.drones.get(droneNumber).getMyGoal())) {
+                            System.out.println("Megatron: Drone " + this.dataAccess.getNameDrone()[droneNumber] + " needs refueling");
+                            refuel(this.dataAccess.getNameDrone()[droneNumber]);
+
+                            state = State.Feel;
+                            break;
+                        } else {
+                            // Decide between searching for the goal area or finding a way
+                            if (this.zoneGoalFound) {
+                                System.out.println("Megatron: Using search algorithm to get from "
+                                        + this.drones.get(droneNumber).getPosition().toString()
+                                        + " to " + this.drones.get(droneNumber).getMyGoal().toString());
+
+                                // Ask for next action
+                                nextAction = this.drones.get(droneNumber).findWay(this.drones.get(droneNumber).getPosition(), this.drones.get(droneNumber).getMyGoal());
+                                
+                                // Start heuristic to decide who goes to the target
+                                if (firstSearch) {
+                                    firstSearch = false;
+                                    
+                                    System.out.println("Megatron: Starting heuristic to decide who goes and who dies");
+                                    if (!deathHeuristic(droneNumber, worldEnergy)) {
+                                        nextAction = null;
                                     }
                                 }
-                                parking(droneInGoal);
-                                int resolution;
-                                switch (this.drones.get(droneNumber).getRole()) {
-                                    case 0:
-                                        resolution = 3;
-                                        break;
-                                    case 1:
-                                        resolution = 5;
-                                        break;
-                                    default:
-                                        resolution = 11;
-                                        break;
-                                }
-
-                                int mapWidth = 100;
-                                if (this.dataAccess.getWorld().equals("newyork")) {
-                                    mapWidth = 500;
-                                }
-
-                                int index = sensor.indexOf(3);
-                                int i = index % resolution;
-                                i -= resolution / 2;
-                                int j = index / resolution;
-                                j -= resolution / 2;
-
-                                Coord coordGoal = nuevaCordenada.add(i, j);
-                                if (coordGoal.getX() >= 0 && coordGoal.getY() >= 0
-                                        && coordGoal.getX() < mapWidth && coordGoal.getY() < mapWidth) {
-
-                                    zoneGoalFound = true;
-                                    System.err.println("Paso " + pasos + "\n\n###################\nD:" + droneNumber + " ha encontrado el objetivo\n###########\n");
-                                    System.out.println("Megatron: Cambiando a estado LaunchRest");
-                                    state = State.LaunchRest;
-
-                                    nodoGoal = new Node(coordGoal, 3);
-
-                                    // DEBUG: only until goal has been found
-                                    state = State.Heuristic;
-                                } else {
-                                    System.out.println("\tGoal     No");
-                                    System.out.println("Megatron: Cambiando a estado Heuristic");
-                                    state = State.Heuristic;
-                                }
-                            }
-                        } else {
-                            System.out.println("\tGoal     No");
-                            System.out.println("Megatron: Cambiando a estado Heuristic");
-                            state = State.Heuristic;
-                        }
-
-                        if (goal) {
-                            System.err.println("Paso " + pasos + "\n\n###################\nD:" + droneNumber + " En objetivo\n###########\n");
-
-                            // si todos los vivos han llegado
-                            //System.out.println("Megatron: Primer decepticon llegó, cancelando...");
-                            //state = State.Cancel;
-                        }
-                    } else {
-                        this.drones.get(droneNumber).setDead();
-                        if (!this.drones.get(0).isAlive() && !this.drones.get(1).isAlive() &&
-                                !this.drones.get(2).isAlive() && !this.drones.get(3).isAlive()) {
-                            System.err.println("Megatron: Cambiando a estado Cancel");
-                            state = State.Cancel;
-                        } else {
-                            state = State.Feel;
-                        }
-                    }
-                    //}
-
-                    break;
-
-                // Heuristica
-                case Heuristic:
-                    System.out.println("Megatron------ Estado: Heuristic");
-                    try {
-                        if (fuelH(droneNumber, nodoGoal)) { // Heuristica refuel
-                            System.err.println("Megatron: Necesita repostar");
-                            Refuel(this.dataAccess.getNameDrone()[droneNumber]);
-                            System.err.println("Megatron: Cambiando a estado Feel");
-                            state = State.Feel;
-                        } else {
-                            if (zoneGoalFound) {
-                                // Nodo goal ha de ser drones.get(numero).getGoal
-                                // su ndo asignado para aterrizar
                                 
-                                System.err.println("Megatron: Usando la búsqueda desde: ("
-                                        + this.drones.get(droneNumber).getPosition().getX() + ","
-                                        + this.drones.get(droneNumber).getPosition().getY() + ") hasta ("
-                                        + nodoGoal.toString());
-                                sigAction = this.drones.get(droneNumber).aStar(this.myMap.getMap().get(this.drones.get(droneNumber).getPosition()), nodoGoal).firstElement();
+                                // TODO: New heuristic if drones from heuristic before
+                                // arrived but there are still drones alive with a chance to get there
+                                
                             } else {
+                                // Let Flytron use another method of searching
                                 if (this.drones.get(droneNumber).getRole() == 0) {
-                                    sigAction = this.drones.get(droneNumber).mapv4();
+                                    nextAction = this.drones.get(droneNumber).mapv4();
                                 } else {
-                                    sigAction = this.drones.get(droneNumber).mapv3();
+                                    nextAction = this.drones.get(droneNumber).mapv3();
                                 }
                             }
 
-                            System.out.println("Megatron: Dron " + droneNumber + " accion " + sigAction);
+                            System.out.println("Megatron: Action " + nextAction + " chosen for drone " + this.dataAccess.getNameDrone()[droneNumber]);
 
-                            System.out.println("Megatron: Cambiando a estado Action");
-                            state = State.Action; // o cancel si ya han llegado todos
+                            state = State.Action;
+                            break;
                         }
                     } catch (Exception ex) {
-                        Logger.getLogger(Megatron.class.getName()).log(Level.SEVERE, null, ex);
-                        System.err.println("Megatron: Error en la heuristica");
-                        System.err.println("Megatron: Cambiando a estado Cancel");
+                        System.err.println("Megatron: Error occured in the heuristics");
+                        System.err.println("\t" + ex.getMessage());
+
                         state = State.Cancel;
+                        break;
                     }
-                    break;
 
-                // Dar orden a drone x
+                // Execute the action
                 case Action:
-                    System.out.println("Megatron------ Estado: Action");
+                    System.out.println("Megatron------ State: Action");
 
-                    if (sigAction == null) {
-                        System.out.println("Megatron: Realizando ninguna acción " + this.dataAccess.getNameDrone()[droneNumber]);
+                    if (nextAction == null) {
+                        System.out.println("Megatron: No action executed for " + this.dataAccess.getNameDrone()[droneNumber]);
                     } else {
-                        System.out.println("Megatron: Realizando la acción " + sigAction + " en " + this.dataAccess.getNameDrone()[droneNumber]);
-                        Move(this.dataAccess.getNameDrone()[droneNumber], sigAction);
+                        System.out.println("Megatron: Drone " + this.dataAccess.getNameDrone()[droneNumber] + " executing action " + nextAction);
+                        move(this.dataAccess.getNameDrone()[droneNumber], nextAction);
                     }
 
-                    System.out.println("Megatron: Cambiando a estado Feel");
                     state = State.Feel;
-
                     break;
 
-                // Cancelar todo para reiniciar
+                // Cancel if drones are dead or arrived
                 case Cancel:
-                    System.out.println("Megatron------ Estado: Cancel");
+                    System.out.println("Megatron------ State: Cancel");
 
-                    System.out.println("\n#######\nInforme\n#######");
-                    for (int i = 0; i < 4; i++) {
-                        System.out.print("\n\t" + this.dataAccess.getNameDrone()[i] + "\t");
+                    System.out.println("\n####### Inform #######\n");
+                    for (int i = 0; i < this.drones.size(); i++) {
+                        System.out.print("\t" + this.dataAccess.getNameDrone()[i] + "\t");
+
                         if (this.drones.get(i).isAlive()) {
-                            System.out.print("Vivo");
+                            System.out.print("Alive");
                         } else {
-                            System.out.print("Muerto");
+                            System.out.print("Dead");
                         }
+
                         if (this.drones.get(i).isInGoal()) {
-                            System.out.print("\ten meta");
+                            System.out.println("\tArrived");
                         } else {
-                            System.out.print("\tfuera de la meta");
+                            System.out.println("\tNot arrived");
                         }
                     }
-                    System.out.println("\n#######\n#######");
-                    Cancel();
-                    System.out.println("Megatron: Muriendo");
-                    live = false;
+                    System.out.println("\n######################\n");
+
+                    cancel();
+
+                    System.out.println("Megatron: Dying");
+                    alive = false;
 
                     try {
                         this.mapImage.saveToFile();
@@ -631,95 +625,235 @@ public class Megatron extends SingleAgent {
             }
         }
 
-        System.out.println("Megatron: Muerto");
+        System.out.println("Megatron: Dead");
     }
 
     /**
      * Fuel heuristic
      *
-     * @param pasos steps from current position to reach goal
-     * @param drone the integer of the current bot
-     * @param goal goal Nodo
-     * @return true if steps to reach goal equals pasos, false otherwise
+     * @param drone Drone ID
+     * @param goal Goal node
+     * @return True if drone has to refuel
      * @author Daniel Sánchez Alcaide
      */
-    private boolean fuelH(int drone, Node goal) throws Exception {
+    private boolean fuelHeuristic(int drone, Coord goal) throws Exception {
         boolean res = false;
-        int consumo = 1;
-        switch (drones.get(drone).getRole()) {
-            //mosca
-            case 0:
-                consumo = 2;
-                break;
-            //pájaro (del terror)
-            case 1:
-                consumo = 1;
-                break;
-            //halcón (milenario)
-            case 2:
-                consumo = 4;
-                break;
-        }
-        if (!zoneGoalFound && drones.get(drone).getFuel() <= consumo) {
+        int consume = this.drones.get(drone).getConsumation();
+
+        if (!this.zoneGoalFound && this.drones.get(drone).getFuel() <= consume) {
             res = true;
-        } else {
-            HashMap<Coord, Node> map = myMap.getMap();
-            Node current = new Node(drones.get(drone).getPosition().getX(),
-                    drones.get(drone).getPosition().getY(),
-                    map.get(drones.get(drone).getPosition()).getRadar());
-            if (drones.get(drone).aStar(current, goal).capacity() * consumo == 100) {
-                //Esto consume mucho tiempo de CPU, es mejor crear una variable en la clase y
-                //guardar ahí la pila cuando se llame a la búsqueda desde los mapeos o desde donde sea
+        } else if (this.zoneGoalFound) {
+            Node current = this.myMap.getAccessibleMap().get(this.drones.get(drone).getPosition());
+
+            // TODO: Better heuristic for this case
+            
+            if (this.drones.get(drone).getFuel() <= consume) {
                 res = true;
             }
         }
+
         return res;
     }
+    
     /**
-     * Coord goal assignament
-     *
-     * @param drone frist drone in goal position
-     * @author Jesús Cobo Sánchez
+     * Heuristic to decide who goes and who has to die
+     * 
+     * @param droneNumber Drone ID
+     * @param worldFuel Amount of fuel left
+     * @return Indicator for the current drone: false-don't move
+     * @author Alexander Straub
      */
-    public void parking(int drone){
-        Coord coord1=null;
-        Coord coord2=null;
-        Coord coord3=null;
-        Coord coord4=null;
-        int cont=0;
-        HashMap<Coord, Node> localMap = myMap.getMap();
-        coord1=drones.get(drone).getPosition();
+    private boolean deathHeuristic(int droneNumber, int worldFuel) {
+        // Execute find way algorithm for all drones
+        int wayLength = 0, minWayLength = 0;
         
-        for (Coord key : localMap.keySet()) {
-               if(localMap.get(key).getRadar()==3 && key!=coord1 && cont==0){
-                   coord2=key;
-                   cont++;
-               }else if(localMap.get(key).getRadar()==3 && key!=coord1 && cont==1){
-                   coord3=key;
-                   cont++;
-               }else if(localMap.get(key).getRadar()==3 && key!=coord1 && cont==2){
-                   coord4=key;
-                   cont++;
-               }
-         }
-        coordGoal1=coord1;
-        coordGoal2=coord2;
-        coordGoal3=coord3;
-        coordGoal4=coord4;
-        
-        int cont2=0;
-        for(int i=0; i<4; i++){
-            if(i!=drone && cont==0){
-                drones.get(i).setMyGoal(coordGoal2);
-                cont++;
-            }else if(i!=drone && cont==1){
-                drones.get(i).setMyGoal(coordGoal3);
-                cont++;
-            }else if(i!=drone && cont==2){
-                drones.get(i).setMyGoal(coordGoal4);
-                cont++;
+        for (int i = 0; i < 4; i++) {
+            if (droneNumber != i) {
+                this.drones.get(i).findWay(this.drones.get(i).getPosition(), 
+                        this.drones.get(i).getMyGoal(), true);
+            }
+            
+            // Get actual path length and optimal path length
+            if (this.drones.get(i).getRole() != 0 && this.drones.get(i).findWay_getWayLength() != 0) {
+                wayLength += this.drones.get(i).findWay_getWayLength();
+                minWayLength += this.drones.get(i).findWay_getMinWayLength();
             }
         }
         
+        // Calculate ratio (or guess)
+        double ratio;
+        
+        if (wayLength == 0) {
+            ratio = Math.sqrt(2.0);
+        } else {
+            ratio = (double)wayLength / (double)minWayLength;
+        }
+        
+        // Get path costs assumed for drones
+        int[] costs = new int[4];
+        
+        for (int i = 0; i < 4; i++) {
+            if (this.drones.get(i).findWay_getWayLength() != 0) {
+                costs[i] = this.drones.get(i).findWay_getWayLength() * this.drones.get(i).getConsumation();
+            } else {
+                costs[i] = (int)(this.drones.get(i).findWay_getMinWayLength() * ratio) * this.drones.get(i).getConsumation();
+            }
+        }
+        
+        // Substract local battery from path costs
+        for (int i = 0; i < 4; i++) {
+            costs[i] -= this.drones.get(i).getFuel();
+        }
+        
+        // For the costs we have to consider that the drone is not at full fuel
+        // so a recharge will at least restore 100 - current fuel
+        for (int i = 0; i < 4; i++) {
+            if (costs[i] > this.drones.get(i).getFuel() && costs[i] < 100) {
+                costs[i] = 100;
+            }
+        }
+        
+        // Kill drones who will not be able to reach the target (absolutely sure)
+        for (int i = 0; i < 4; i++) {
+            if (this.drones.get(i).findWay_getMinWayLength() * this.drones.get(i).getConsumation() 
+                    > this.drones.get(i).getFuel() + worldFuel) {
+                this.drones.get(i).setDead();
+            }
+        }
+        
+        // Sort drones: first the ones needing less fewel
+        int[] indices = new int[4];
+        
+        for (int i = 0; i < 4; i++) {
+            indices[i] = i;
+        }
+        
+        for (int i = 0; i < 3; i++) {
+            for (int j = i + 1; j < 4; j++) {
+                if (costs[i] > costs[j]) {
+                    int temp = indices[j];
+                    indices[j] = indices[i];
+                    indices[i] = temp;
+                }
+            }
+        }
+        
+        // Fill until world fuel reached
+        int fuelNeeded = 0;
+        
+        for (int i = 0; i < 4; i++) {
+            fuelNeeded += Math.max(0, costs[indices[i]]);
+            
+            if (fuelNeeded > worldFuel) {
+                this.drones.get(indices[i]).setStandby();
+            }
+        }
+        
+        return !this.drones.get(droneNumber).isOnStandby();
+    }
+
+    /**
+     * Coord goal assignment
+     *
+     * @param drone Drone that found the target zone
+     * @author Jesús Cobo Sánchez, Alexander Straub
+     */
+    public void parking(int drone) {
+        ArrayList<Node> targetNodes = new ArrayList<>(4);
+        Collection<Node> localMap = this.myMap.getAccessibleMap().values();
+
+        // Extract target nodes from map
+        for (Node node : localMap) {
+            if (node.getRadar() == 3) {
+                targetNodes.add(node);
+            }
+        }
+
+        // If not enough nodes have yet been explored, create more
+        if (targetNodes.size() < 4) {
+            if (targetNodes.size() == 1) {
+                if (targetNodes.get(0).getCoord().getY() < this.drones.get(drone).getPosition().getY()) {
+                    if (targetNodes.get(0).getCoord().getX() < this.drones.get(drone).getPosition().getX()) {
+                        targetNodes.add(new Node(targetNodes.get(0).N(), 3));
+                        targetNodes.add(new Node(targetNodes.get(0).W(), 3));
+                        targetNodes.add(new Node(targetNodes.get(0).NW(), 3));
+                    } else {
+                        targetNodes.add(new Node(targetNodes.get(0).N(), 3));
+                        targetNodes.add(new Node(targetNodes.get(0).E(), 3));
+                        targetNodes.add(new Node(targetNodes.get(0).NE(), 3));
+                    }
+                } else {
+                    if (targetNodes.get(0).getCoord().getX() < this.drones.get(drone).getPosition().getX()) {
+                        targetNodes.add(new Node(targetNodes.get(0).S(), 3));
+                        targetNodes.add(new Node(targetNodes.get(0).W(), 3));
+                        targetNodes.add(new Node(targetNodes.get(0).SW(), 3));
+                    } else {
+                        targetNodes.add(new Node(targetNodes.get(0).S(), 3));
+                        targetNodes.add(new Node(targetNodes.get(0).E(), 3));
+                        targetNodes.add(new Node(targetNodes.get(0).SE(), 3));
+                    }
+                }
+            } else if (targetNodes.size() == 2) {
+                // Find target that is not diagonal to the current position
+                Node targetStraight;
+                
+                if (targetNodes.get(0).getCoord().getY() != this.drones.get(drone).getPosition().getY() && 
+                        targetNodes.get(0).getCoord().getX() != this.drones.get(drone).getPosition().getX()) {
+                    
+                    targetStraight = targetNodes.get(1);
+                } else {
+                    targetStraight = targetNodes.get(0);
+                }
+                
+                // If the straight target is to the north, add the north of both targets
+                // Do so analogously for the other directions
+                if (targetStraight.getY() < this.drones.get(drone).getPosition().getY()) {
+                    targetNodes.add(new Node(targetNodes.get(0).N(), 3));
+                    targetNodes.add(new Node(targetNodes.get(1).N(), 3));
+                } else if (targetStraight.getY() > this.drones.get(drone).getPosition().getY()) {
+                    targetNodes.add(new Node(targetNodes.get(0).S(), 3));
+                    targetNodes.add(new Node(targetNodes.get(1).S(), 3));
+                } else if (targetStraight.getX() < this.drones.get(drone).getPosition().getX()) {
+                    targetNodes.add(new Node(targetNodes.get(0).W(), 3));
+                    targetNodes.add(new Node(targetNodes.get(1).W(), 3));
+                } else {
+                    targetNodes.add(new Node(targetNodes.get(0).E(), 3));
+                    targetNodes.add(new Node(targetNodes.get(1).E(), 3));
+                }
+            } else {
+                // Find target that is not diagonal to the current position
+                Node targetStraight = targetNodes.get(0);
+                
+                for (Node targetNode : targetNodes) {
+                    if (targetNode.getCoord().getY() == this.drones.get(drone).getPosition().getY() ||
+                            targetNode.getCoord().getX() == this.drones.get(drone).getPosition().getX()) {
+                        
+                        targetStraight = targetNode;
+                    }
+                }
+                
+                // If the straight target is to the north, add its north
+                // Do so analogously for the other directions
+                if (targetStraight.getY() < this.drones.get(drone).getPosition().getY()) {
+                    targetNodes.add(new Node(targetStraight.N(), 3));
+                } else if (targetStraight.getY() > this.drones.get(drone).getPosition().getY()) {
+                    targetNodes.add(new Node(targetStraight.S(), 3));
+                } else if (targetStraight.getX() < this.drones.get(drone).getPosition().getX()) {
+                    targetNodes.add(new Node(targetStraight.W(), 3));
+                } else {
+                    targetNodes.add(new Node(targetStraight.E(), 3));
+                }
+            }
+
+            // Add new found nodes to map
+            for (Node node : targetNodes) {
+                this.myMap.addNode(node);
+            }
+        }
+
+        // Set goal nodes for drones
+        for (int i = 0; i < 4; i++) {
+            this.drones.get(i).setMyGoal(targetNodes.get(i).getCoord());
+        }
     }
 }
