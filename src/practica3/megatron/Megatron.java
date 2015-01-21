@@ -7,6 +7,7 @@ import es.upv.dsic.gti_ia.core.SingleAgent;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.Stack;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import practica3.DataAccess;
@@ -32,7 +33,8 @@ public class Megatron extends SingleAgent {
     private boolean live;
     private Action sigAction;
     private int droneNumber;
-
+    private double PENALTY; // read-only multiplicative value used to estimate the number of steps
+                            //necessary to go from A to B on an unknown environment
     private int pasos = 0;
     private boolean zoneGoalFound = false;
     
@@ -117,6 +119,7 @@ public class Megatron extends SingleAgent {
      */
     public Megatron(AgentID aid) throws Exception {
         super(aid);
+        this.PENALTY = 1.0;
         drones = new ArrayList<>(4);
         this.json = new JsonDBA();
     }
@@ -721,5 +724,101 @@ public class Megatron extends SingleAgent {
             }
         }
         
+    }
+    /**
+     * Finds the node where a drone will be after following a plan of actions
+     * @param start position where the drone is
+     * @param path of actions the drone will follow
+     * @returns node the end of the road
+     * @author Antonio Troitiño del Río
+     */
+    private Node endOfPath(Coord start, Stack<Action> path){
+        HashMap<Coord, Node> localMap = myMap.getMap();
+        Coord end=start;
+        while(!path.isEmpty()){
+            Action step = path.pop();
+            if(step==Action.N)
+                end=end.N();
+            else if (step==Action.NE)
+                end=end.NE();
+            else if (step==Action.E)
+                end=end.E();
+            else if (step==Action.SE)
+                end=end.SE();
+            else if (step==Action.S)
+                end=end.S();
+            else if (step==Action.SW)
+                end=end.SW();
+            else if (step==Action.W)
+                end=end.W();
+            else if (step==Action.NW)
+                end=end.NW();
+        }
+        Node solution=null;
+        if(localMap.containsKey(end))
+           solution=localMap.get(end);
+        else System.err.println("Node given by aStar is not contained at Map");
+        return solution;
+    }
+    
+    /** Estimates the number of steps to go from A to B in an unknown map
+     * @param A Coordinates of the beginning point
+     * @param B Coordinates of the ending
+     * @return Estimated number of steps betwen those points
+     * @author Antonio Troitiño del Río
+     */
+    private int stepsEstimation(Coord A,Coord B){
+        int xa=A.getX(),xb=B.getX(),ya=A.getY(),yb=B.getY();
+        int res;
+        if(Math.abs(xa-xb)<Math.abs(ya-yb))
+            res=Math.abs(ya-yb);
+        else res=Math.abs(xa-xb);
+        res=(int) Math.ceil(res*PENALTY);
+        return res;
+    
+    
+    }
+    
+    /** Estimates energy consumption for a drone to reach the goal
+     * @param drone whose consumption has to be estimated
+     * @return estimated value for that drone. 
+     * (Integer.MAX_VALUE if drone is already on target)
+     * @author Antonio Troitiño del Río
+     */
+    private int consummationToGoal( DataDecepticon drone){
+        HashMap<Coord, Node> localMap = myMap.getMap();
+        if(localMap.get(drone.getPosition()).getRadar()==3)
+            return Integer.MAX_VALUE;
+        else {
+            int steps=0;
+            try {
+                Stack<Action> toGoal=drone.aStar(localMap.get(drone.getPosition()), localMap.get(drone.getMyGoal()));
+                steps+=toGoal.size();
+                Node fin = endOfPath(drone.getPosition(),toGoal);
+                if (fin.getRadar()==3) return steps*drone.getConsumation();
+                toGoal=drone.aStar(localMap.get(drone.getMyGoal()), localMap.get(drone.getPosition()));
+                steps+=toGoal.size();
+                Node fin2 = endOfPath(drone.getMyGoal(),toGoal);
+                steps+=stepsEstimation(fin.getCoord(),fin2.getCoord());
+            } catch (Exception ex) {
+                Logger.getLogger(Megatron.class.getName()).log(Level.SEVERE, null, ex);
+                System.err.println("Error while receiving aStar actions stack");
+            }
+               
+            return steps*drone.getConsumation();
+        }
+    }
+    
+    /**
+     * Decides next drone to reach the goal
+     * @return position of chosen drone in the "drones" array
+     * @author Antonio Troitiño del Río
+     */
+    private int nextDrone(){
+        ArrayList<Integer> values = new ArrayList();
+        for(int i=0;i<4;i++) values.add(consummationToGoal(drones.get(i)));
+        int min = values.get(0);
+        for(int i=1;i<4;i++) if(values.get(i)<values.get(min)) min=i;
+        return min;
     }
 }
