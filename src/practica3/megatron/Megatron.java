@@ -6,6 +6,7 @@ import es.upv.dsic.gti_ia.core.AgentID;
 import es.upv.dsic.gti_ia.core.SingleAgent;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Stack;
 import java.util.logging.Level;
@@ -933,11 +934,11 @@ public class Megatron extends SingleAgent {
         else {
             int steps=0;
             try {
-                Stack<Action> toGoal=drone.aStar(localMap.get(drone.getPosition()), localMap.get(drone.getMyGoal()));
+                Stack<Action> toGoal=drone.aStar(localMap.get(drone.getPosition()).getCoord(), localMap.get(drone.getMyGoal()).getCoord());
                 steps+=toGoal.size();
                 Node fin = endOfPath(drone.getPosition(),toGoal);
                 if (fin.getRadar()==3) return steps*drone.getConsumation();
-                toGoal=drone.aStar(localMap.get(drone.getMyGoal()), localMap.get(drone.getPosition()));
+                toGoal=drone.aStar(localMap.get(drone.getMyGoal()).getCoord(), localMap.get(drone.getPosition()).getCoord());
                 steps+=toGoal.size();
                 Node fin2 = endOfPath(drone.getMyGoal(),toGoal);
                 steps+=stepsEstimation(fin.getCoord(),fin2.getCoord());
