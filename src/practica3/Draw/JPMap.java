@@ -19,7 +19,7 @@ public class JPMap extends javax.swing.JPanel {
      * Information stored for painting the map and drones
      */
     Map map;
-    Coord dronPos;
+    Coord dronePos;
     ArrayList<Node> visited;
     int numDron;
     
@@ -38,7 +38,7 @@ public class JPMap extends javax.swing.JPanel {
         
         this.lock = new Semaphore(1, true);
         this.map = new Map(100);
-        this.dronPos = null;
+        this.dronePos = null;
         this.visited = new ArrayList<>();
         this.numDron = -1;
     }
@@ -50,7 +50,7 @@ public class JPMap extends javax.swing.JPanel {
      * @author José Carlos Alfaro
      */
     public void setDronPosition(Coord pos) {
-        this.dronPos = pos;
+        this.dronePos = pos;
     }
 
     /**
@@ -91,9 +91,7 @@ public class JPMap extends javax.swing.JPanel {
 
         if (!this.map.getMap().isEmpty()) {
             // Draw map
-            for (java.util.Map.Entry e : this.map.getMap().entrySet()) {
-                Node n = new Node((Node) e.getValue());
-
+            for (Node n : this.map.getMap().values()) {
                 if (n.getRadar() == 0) {
                     g.setColor(Color.WHITE);
                 } else if ((n.getRadar() == 1 || n.getRadar() == 2)) {
@@ -125,7 +123,7 @@ public class JPMap extends javax.swing.JPanel {
             }
             
             // Highlight position of currently moving drone
-            if (this.dronPos != null && this.numDron != -1) {
+            if (this.dronePos != null && this.numDron != -1) {
                 switch (this.numDron) {
                     case 0:
                         g.setColor(Color.BLUE);
@@ -141,7 +139,7 @@ public class JPMap extends javax.swing.JPanel {
                         break;
                 }
                 
-                g.fillRect((this.dronPos.getX() * 5) + 7, (this.dronPos.getY() * 5) + 7, 5, 5);
+                g.fillRect((this.dronePos.getX() * 5) + 7, (this.dronePos.getY() * 5) + 7, 5, 5);
             }
 
         }

@@ -13,20 +13,14 @@ public class Node implements Comparable<Node> {
     // Coordinates of the node
     private final Coord coord;
 
-    // Is connected to the graph of the bot?
-    private boolean connected = false;
-
     // Radar value: 0=free 1=wall 2=border 3=objective
-    private final int radar;
+    private int radar;
 
     // Array of adyacent nodes
     private final ArrayList<Node> adyacents = new ArrayList<>();
 
     // Array of adyacent walls
     private final ArrayList<Node> adyacentWalls = new ArrayList<>();
-
-    // Explored if all 8 neighbours are in any of the lists above
-    private int explored;
 
     // Indicates whether the node has already been visited
     private int visited = -1;
@@ -46,7 +40,6 @@ public class Node implements Comparable<Node> {
     public Node(int x, int y, int radar) {
         this.coord = new Coord(x, y);
         this.radar = radar;
-        this.explored = 0;
     }
 
     /**
@@ -59,7 +52,6 @@ public class Node implements Comparable<Node> {
     public Node(Coord coord, int radar) {
         this.coord = coord;
         this.radar = radar;
-        this.explored = 0;
     }
 
     /**
@@ -69,9 +61,8 @@ public class Node implements Comparable<Node> {
      * @author José Carlos Alfaro
      */
     public Node(Node n) {
-        this.coord = n.coord;
+        this.coord = new Coord(n.coord);
         this.radar = n.radar;
-        this.explored = n.explored;
     }
 
     /**
@@ -81,7 +72,7 @@ public class Node implements Comparable<Node> {
      * @author Antonio Troitiño
      */
     public boolean isExplored() {
-        return this.radar != 1 && this.explored == 8;
+        return this.radar != 1 && getExplored() == 8;
     }
     
     /**
@@ -91,7 +82,7 @@ public class Node implements Comparable<Node> {
      * @author Alexander Straub
      */
     public int getExplored() {
-        return this.explored;
+        return this.adyacents.size() + this.adyacentWalls.size();
     }
 
     /**
@@ -123,10 +114,39 @@ public class Node implements Comparable<Node> {
     public void add(Node aNode) {
         if (aNode.getRadar() == 0 || aNode.getRadar() == 3) {
             this.adyacents.add(aNode);
-            this.explored++;
         } else if (aNode.getRadar() == 1 || aNode.getRadar() == 2) {
-            this.explored++;
             this.adyacentWalls.add(aNode);
+        }
+    }
+    
+    /**
+     * Move node from one adyacent list to the other
+     * 
+     * @param aNode Node to move
+     * @author Alexander Straub
+     */
+    public void move(Node aNode) {
+        if (this.adyacentWalls.contains(aNode)) {
+            this.adyacents.add(aNode);
+            this.adyacentWalls.remove(aNode);
+        } else if (this.adyacents.contains(aNode)) {
+            this.adyacentWalls.add(aNode);
+            this.adyacents.remove(aNode);
+        }
+    }
+    
+    /**
+     * Remove node from one adyacent
+     * 
+     * @param aNode Node to remove
+     * @author Alexander Straub
+     */
+    public void remove(Node aNode) {
+        if (this.adyacentWalls.contains(aNode)) {
+            this.adyacentWalls.remove(aNode);
+        }
+        if (this.adyacents.contains(aNode)) {
+            this.adyacents.remove(aNode);
         }
     }
 
@@ -149,7 +169,16 @@ public class Node implements Comparable<Node> {
     public int getY() {
         return this.coord.getY();
     }
-
+    
+    /**
+     * Set node to not accessible
+     * 
+     * @author Alexander Straub
+     */
+    public void setOccupied() {
+        this.radar = 1;
+    }
+    
     /**
      * Return the radar value
      *
@@ -178,26 +207,6 @@ public class Node implements Comparable<Node> {
      */
     public ArrayList<Node> getAdyacentWalls() {
         return this.adyacentWalls;
-    }
-
-    /**
-     * Set the state of connected to the graph of the bot
-     *
-     * @param connected True if connected to the graph
-     * @author Antonio Troitiño
-     */
-    public void setConnected(boolean connected) {
-        this.connected = connected;
-    }
-
-    /**
-     * Returns the state of connected to the graph of the bot
-     *
-     * @return True if connected to the graph
-     * @author Antonio Troitiño
-     */
-    public boolean getConnected() {
-        return this.connected;
     }
 
     /**
@@ -365,6 +374,17 @@ public class Node implements Comparable<Node> {
             return -1;
         }
         return 0;
+    }
+    
+    /**
+     * Returns the node's coordinates as readable string
+     * 
+     * @return Node's coordinates
+     * @author Alexander Straub
+     */
+    @Override
+    public String toString() {
+        return this.coord.toString();
     }
 
     /**

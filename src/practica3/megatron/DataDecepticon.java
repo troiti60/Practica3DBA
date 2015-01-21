@@ -122,7 +122,7 @@ public abstract class DataDecepticon {
             }
         }
 
-        if (this.currentPosition.equals(this.myGoal)) {
+        if (this.myGoal != null && this.currentPosition.equals(this.myGoal)) {
             this.inGoal = true;
         }
     }
@@ -292,6 +292,11 @@ public abstract class DataDecepticon {
     protected Coord map4_target = null;
     protected int map4_stepNum = 0;
     protected Stack<Megatron.Action> map4_pathToUnexploredCell = new Stack<>();
+    
+    // For findWay
+    protected int findWay_wayLength = 0;
+    protected int findWay_minWayLength = 0;
+    protected Stack<Megatron.Action> findWay_pathToTarget = new Stack<>();
 
     /**
      * The best path to reach the goal, once we have found it, using A*
@@ -302,18 +307,21 @@ public abstract class DataDecepticon {
      * @throws Exception
      * @author Daniel Sánchez Alcaide
      */
-    public final Stack<Megatron.Action> aStar(Node start, Node goal) throws Exception {
-        Comparator<Node> comp = new ComparatorNodeHeuristic(goal);
+    public final Stack<Megatron.Action> aStar(Coord start, Coord goal) throws Exception {
+        Node startNode = this.map.getMap().get(start);
+        Node goalNode = this.map.getMap().get(goal);
+        
+        Comparator<Node> comp = new ComparatorNodeHeuristic(goalNode);
         PriorityQueue<Node> abiertos = new PriorityQueue<>(10, comp);
         ArrayList<Node> cerrados = new ArrayList<>();
 
         Stack<Megatron.Action> caminito = new Stack<>();
 
-        Node current = start;
+        Node current = startNode;
         abiertos.add(current);
 
         //El vértice no es la meta y abiertos no está vacío
-        while (!abiertos.isEmpty() && !current.equals(goal)) {
+        while (!abiertos.isEmpty() && !current.equals(goalNode)) {
             //Sacamos el nodo de abiertos
             current = abiertos.poll();
             //Metemos el nodo en cerrados
@@ -330,15 +338,15 @@ public abstract class DataDecepticon {
                 if (abiertos.contains(vecino)) {
                     //Si el vecino está en abiertos comparamos los valores de g 
                     //para los posibles nodos padre
-                    if (vecino.getPath().g(start) > current.g(start)) {
+                    if (vecino.getPath().g(startNode) > current.g(startNode)) {
                         vecino.setPath(current);
                     }
                 }
             }
         }
         //Recorremos el camino desde el nodo objetivo hacia atrás para obtener la accion
-        if (current.equals(goal)) {
-            while (!current.getPath().equals(start)) {
+        if (current.equals(goalNode)) {
+            while (!current.getPath().equals(startNode)) {
                 //El padre está al norte
                 if (current.getPath().getCoord().equals(current.N())) {
                     caminito.add(Megatron.Action.S);
@@ -384,11 +392,11 @@ public abstract class DataDecepticon {
     /**
      * Search for the best way to go from one node to one not completely explored
      *
-     * @param start Node where to start
+     * @param start Starting position
      * @return Stack of actions
      * @author Alexander Straub
      */
-    public final Stack<Megatron.Action> dijkstra(Node start) {
+    public final Stack<Megatron.Action> dijkstra(Coord start) {
         // Sanity check for the parameter
         if (start == null) {
             return null;
@@ -396,10 +404,10 @@ public abstract class DataDecepticon {
 
         // Get the map
         HashMap<Coord, Node> localMap = this.map.getAccessibleMap();
-        start = localMap.get(start.getCoord());
+        Node startNode = localMap.get(start);
 
         // Assign distances and set paths
-        expandNodes(start);
+        expandNodes(startNode, localMap);
 
         // Search for a node not fully explored with least distance
         List<Node> nodes = new ArrayList<>(localMap.values());
@@ -409,7 +417,7 @@ public abstract class DataDecepticon {
         for (Iterator<Node> i = nodes.iterator(); i.hasNext();) {
             temp = i.next();
             
-            if ((temp.getDistance() != Double.MAX_VALUE && temp.getExplored() < 7) 
+            if ((temp.getDistance() != Double.MAX_VALUE && this.map.getMap().get(temp.getCoord()).getExplored() < 7) 
                     && (target == null || target.getDistance() > temp.getDistance())) {
                 target = temp;
             }
@@ -433,7 +441,7 @@ public abstract class DataDecepticon {
         }
 
         // Return found path
-        return retracePath(start, target);
+        return retracePath(startNode, target);
     }
     
     /**
@@ -444,39 +452,49 @@ public abstract class DataDecepticon {
      * @return Stack of actions
      * @author Alexander Straub
      */
-    public final Stack<Megatron.Action> dijkstra(Node start, Node target) {
+    public final Stack<Megatron.Action> dijkstra(Coord start, Coord target) {
+        return dijkstra(start, target, this.map.getAccessibleMap());
+    }
+    
+    /**
+     * Search for the best way to go from one node to another
+     *
+     * @param start Node where to start
+     * @param target Node where to get to
+     * @param localMap Map to use
+     * @return Stack of actions
+     * @author Alexander Straub
+     */
+    public final Stack<Megatron.Action> dijkstra(Coord start, Coord target, HashMap<Coord, Node> localMap) {
         // Sanity check for the parameters
         if (start == null || target == null || start.equals(target)) {
             return null;
         }
 
         // Get the map
-        HashMap<Coord, Node> localMap = this.map.getAccessibleMap();
-        start = localMap.get(start.getCoord());
-        target = localMap.get(target.getCoord());
+        Node startNode = localMap.get(start);
+        Node targetNode = localMap.get(target);
         
         // Assign distances and set paths
-        expandNodes(start);
+        expandNodes(startNode, localMap);
 
         // Check if a path is even possible (may not be connected to this graph)
-        if (target.getDistance() == Double.MAX_VALUE) {
+        if (targetNode.getDistance() == Double.MAX_VALUE) {
             return null;
         }
 
         // Return found path
-        return retracePath(start, target);
+        return retracePath(startNode, targetNode);
     }
     
     /**
      * Expand nodes for dijkstra, assigning distances and paths
      * 
      * @param start Node to start from
+     * @param localMap Map to use
      * @author Alexander Straub
      */
-    private void expandNodes(Node start) {
-        // Get the map
-        HashMap<Coord, Node> localMap = this.map.getAccessibleMap();
-
+    private void expandNodes(Node start, HashMap<Coord, Node> localMap) {
         // Initialize
         List<Node> nodes = new ArrayList<>(localMap.values());
         for (Iterator<Node> i = nodes.iterator(); i.hasNext();) {
@@ -1203,7 +1221,7 @@ public abstract class DataDecepticon {
 
             // If everything around the drone already has been explored,
             // look for the closest node with unexplored neighbours
-            this.map3_pathToUnexploredCell = dijkstra(this.map.getMap().get(position));
+            this.map3_pathToUnexploredCell = dijkstra(position);
             
             // If the way is too long, set drone to standby
             if (this.map3_pathToUnexploredCell != null && this.map3_pathToUnexploredCell.size() > 50 
@@ -1330,42 +1348,42 @@ public abstract class DataDecepticon {
             this.map4_target = new Coord(x, y);
         }
         
-        Node closestNode = null;
+        Coord closestCoord = null;
         
         // Check if target node is in the graph
         if (this.map.getAccessibleMap().containsKey(this.map4_target)) {
             this.map4_stop = true;
             
-            closestNode = this.map.getAccessibleMap().get(this.map4_target);
+            closestCoord = this.map4_target;
         } else {
             // Get neighbour closest to the target            
-            if (closestNode == null || this.getPosition().NW().distanceTo(this.map4_target) < closestNode.getCoord().distanceTo(this.map4_target)) {
-                closestNode = this.map.getAccessibleMap().get(this.getPosition().NW());
+            if ((closestCoord == null || this.getPosition().NW().distanceTo(this.map4_target) < closestCoord.distanceTo(this.map4_target)) && this.map.getAccessibleMap().get(this.getPosition().NW()) != null) {
+                closestCoord = this.getPosition().NW();
             }
-            if (closestNode == null || this.getPosition().N().distanceTo(this.map4_target) < closestNode.getCoord().distanceTo(this.map4_target)) {
-                closestNode = this.map.getAccessibleMap().get(this.getPosition().N());
+            if ((closestCoord == null || this.getPosition().N().distanceTo(this.map4_target) < closestCoord.distanceTo(this.map4_target)) && this.map.getAccessibleMap().get(this.getPosition().N()) != null) {
+                closestCoord = this.getPosition().N();
             }
-            if (closestNode == null || this.getPosition().NE().distanceTo(this.map4_target) < closestNode.getCoord().distanceTo(this.map4_target)) {
-                closestNode = this.map.getAccessibleMap().get(this.getPosition().NE());
+            if ((closestCoord == null || this.getPosition().NE().distanceTo(this.map4_target) < closestCoord.distanceTo(this.map4_target)) && this.map.getAccessibleMap().get(this.getPosition().NE()) != null) {
+                closestCoord = this.getPosition().NE();
             }
-            if (closestNode == null || this.getPosition().E().distanceTo(this.map4_target) < closestNode.getCoord().distanceTo(this.map4_target)) {
-                closestNode = this.map.getAccessibleMap().get(this.getPosition().E());
+            if ((closestCoord == null || this.getPosition().E().distanceTo(this.map4_target) < closestCoord.distanceTo(this.map4_target)) && this.map.getAccessibleMap().get(this.getPosition().E()) != null) {
+                closestCoord = this.getPosition().E();
             }
-            if (closestNode == null || this.getPosition().SE().distanceTo(this.map4_target) < closestNode.getCoord().distanceTo(this.map4_target)) {
-                closestNode = this.map.getAccessibleMap().get(this.getPosition().SE());
+            if ((closestCoord == null || this.getPosition().SE().distanceTo(this.map4_target) < closestCoord.distanceTo(this.map4_target)) && this.map.getAccessibleMap().get(this.getPosition().SE()) != null) {
+                closestCoord = this.getPosition().SE();
             }
-            if (closestNode == null || this.getPosition().S().distanceTo(this.map4_target) < closestNode.getCoord().distanceTo(this.map4_target)) {
-                closestNode = this.map.getAccessibleMap().get(this.getPosition().S());
+            if ((closestCoord == null || this.getPosition().S().distanceTo(this.map4_target) < closestCoord.distanceTo(this.map4_target)) && this.map.getAccessibleMap().get(this.getPosition().S()) != null) {
+                closestCoord = this.getPosition().S();
             }
-            if (closestNode == null || this.getPosition().SW().distanceTo(this.map4_target) < closestNode.getCoord().distanceTo(this.map4_target)) {
-                closestNode = this.map.getAccessibleMap().get(this.getPosition().SW());
+            if ((closestCoord == null || this.getPosition().SW().distanceTo(this.map4_target) < closestCoord.distanceTo(this.map4_target)) && this.map.getAccessibleMap().get(this.getPosition().SW()) != null) {
+                closestCoord = this.getPosition().SW();
             }
-            if (closestNode == null || this.getPosition().W().distanceTo(this.map4_target) < closestNode.getCoord().distanceTo(this.map4_target)) {
-                closestNode = this.map.getAccessibleMap().get(this.getPosition().W());
+            if ((closestCoord == null || this.getPosition().W().distanceTo(this.map4_target) < closestCoord.distanceTo(this.map4_target)) && this.map.getAccessibleMap().get(this.getPosition().W()) != null) {
+                closestCoord = this.getPosition().W();
             }
             
-            if (closestNode == null || closestNode.getCoord().distanceTo(this.map4_target) >= this.getPosition().distanceTo(this.map4_target)) {
-                closestNode = null;
+            if (closestCoord == null || closestCoord.distanceTo(this.map4_target) >= this.getPosition().distanceTo(this.map4_target)) {
+                closestCoord = null;
                 
                 // Find unexplored cell closest to the corner to get to
                 Node currentNode;
@@ -1375,22 +1393,104 @@ public abstract class DataDecepticon {
 
                     currentNode = it.next();
                     if (currentNode.getRadar() == 0 && !currentNode.isExplored()
-                            && (closestNode == null || this.map4_target.distanceTo(currentNode.getCoord()) < this.map4_target.distanceTo(closestNode.getCoord()))) {
+                            && (closestCoord == null || this.map4_target.distanceTo(currentNode.getCoord()) < this.map4_target.distanceTo(closestCoord))) {
 
-                        closestNode = currentNode;
+                        closestCoord = currentNode.getCoord();
                     }
                 }
             }
         }
         
-        if (closestNode == null) {
+        if (closestCoord == null) {
             System.err.println("ERROR: mapv4 called, but map already explored completely");
             return null;
         }
 
         // Find way to the previously found closest node (or the target)
-        this.map4_pathToUnexploredCell = dijkstra(this.map.getMap().get(this.getPosition()), closestNode);
+        this.map4_pathToUnexploredCell = dijkstra(this.getPosition(), closestCoord);
         
         return this.map4_pathToUnexploredCell.pop();
     }
+    
+    /**
+     * Tries to find a way to the target position, updating the way lengths
+     * 
+     * @param start Current position
+     * @param target Target position
+     * @return Next action for the decepticon
+     * @author Alexander Straub
+     */
+    public Megatron.Action findWay(Coord start, Coord target) {
+        Megatron.Action action = findWay(start, target, false);
+        
+        // If it's an ilegal action, try again
+        if (this.map.getMap().get(this.currentPosition.neighbour(action)).getRadar() == 1) {
+            this.findWay_pathToTarget.clear();
+            
+            action = findWay(start, target, false);
+        }
+        
+        return action;
+    }
+    
+    /**
+     * Tries to find a way to the target position, updating the way lengths
+     * 
+     * @param start Current position
+     * @param target Target position
+     * @param keep Keep the element on the stack, returning null
+     * @return Next action for the decepticon
+     * @author Alexander Straub
+     */
+    public Megatron.Action findWay(Coord start, Coord target, boolean keep) {
+        if (start.equals(target)) {
+            return null;
+        }
+        
+        if (this.findWay_pathToTarget == null || this.findWay_pathToTarget.isEmpty()) {
+            // Execute the search
+            this.findWay_pathToTarget = dijkstra(start, target);
+            Stack<Megatron.Action> actionsExploredMap = dijkstra(start, target, this.map.getPretendExploredMap());
+
+            // If search was not successfull (when there is no direct path)
+            if (this.findWay_pathToTarget == null) {
+                // TODO: Algorithm to get to the target exploring the map
+                //  Now assuming an empty map
+                this.findWay_pathToTarget = actionsExploredMap;
+
+                this.findWay_wayLength = 0;
+                this.findWay_minWayLength = actionsExploredMap.size();
+            } else {
+                // Update way information
+                this.findWay_wayLength = this.findWay_pathToTarget.size();
+                this.findWay_minWayLength = actionsExploredMap.size();
+            }
+        }
+        
+        if (keep) {
+            return null;
+        }
+        return this.findWay_pathToTarget.pop();
+    }
+    
+    /**
+     * Return the actual way length needed to arrive at the target position
+     * 
+     * @return Way length
+     * @author Alexander Straub
+     */
+    public final int findWay_getWayLength() {
+        return this.findWay_wayLength;
+    }
+    
+    /**
+     * Return the minimal possible way length needed to arrive at the target
+     * 
+     * @return Minimal possible way length
+     * @author Alexander Straub
+     */
+    public final int findWay_getMinWayLength() {
+        return this.findWay_minWayLength;
+    }
+    
 }
