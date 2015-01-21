@@ -298,6 +298,16 @@ public class Node implements Comparable<Node> {
     public Coord NW() {
         return new Coord(this.coord.getX() - 1, this.coord.getY() - 1);
     }
+    
+    /**
+     * Returns the coordinates of all neighbours
+     * 
+     * @return Array for neighbours
+     * @author Alexander Straub
+     */
+    public Coord[] neighbours() {
+        return new Coord[] {NW(), N(), NE(), E(), SE(), S(), SW(), W()};
+    }
 
     /**
      * Reset values for a new search

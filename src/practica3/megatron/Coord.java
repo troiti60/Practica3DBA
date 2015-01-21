@@ -178,6 +178,45 @@ public class Coord {
     }
     
     /**
+     * Returns the coordinates of all neighbours
+     * 
+     * @return Array for neighbours
+     * @author Alexander Straub
+     */
+    public Coord[] neighbours() {
+        return new Coord[] {NW(), N(), NE(), E(), SE(), S(), SW(), W()};
+    }
+    
+    /**
+     * Returns the action needed to get to a neighbouring coordinate
+     * 
+     * @param neighbour Neighbour to get to
+     * @return Action to get to the neighbour
+     * @author Alexander Straub
+     */
+    public Megatron.Action neighbour(Coord neighbour) {
+        if (NW().equals(neighbour)) {
+            return Megatron.Action.NW;
+        } else if (N().equals(neighbour)) {
+            return Megatron.Action.N;
+        } else if (NE().equals(neighbour)) {
+            return Megatron.Action.NE;
+        } else if (E().equals(neighbour)) {
+            return Megatron.Action.E;
+        } else if (SE().equals(neighbour)) {
+            return Megatron.Action.SE;
+        } else if (S().equals(neighbour)) {
+            return Megatron.Action.S;
+        } else if (SW().equals(neighbour)) {
+            return Megatron.Action.SW;
+        } else if (W().equals(neighbour)) {
+            return Megatron.Action.W;
+        } else {
+            return null;
+        }
+    }
+    
+    /**
      * Return position with modified x coordinate
      * 
      * @param offsetX Value to add to the current x coordinate

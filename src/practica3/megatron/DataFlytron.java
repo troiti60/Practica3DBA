@@ -104,11 +104,12 @@ public final class DataFlytron extends DataDecepticon {
     /**
      * Try to cross the map
      * 
+     * @param positions Positions of the drones to evade collision
      * @return Next action
      * @author Alexander Straub
      */
     @Override
-    protected final Megatron.Action mapv4_crossMap() {
+    protected final Megatron.Action mapv4_crossMap(ArrayList<Coord> positions) {
         // Only execute once
         if (this.map4_stop) {
             return null;
@@ -145,12 +146,13 @@ public final class DataFlytron extends DataDecepticon {
      * 
      * @param start Current position
      * @param target Target position
+     * @param positions Positions of the drones to evade collision
      * @param keep Keep the top of the stack, returning null
      * @return Next action for the decepticon
      * @author Alexander Straub
      */
     @Override
-    public final Megatron.Action findWay(Coord start, Coord target, boolean keep) {
+    public final Megatron.Action findWay(Coord start, Coord target, ArrayList<Coord> positions, boolean keep) {
         if (this.findWay_pathToTarget.isEmpty()) {
             // Update path lengths
             this.findWay_wayLength = Math.max(Math.abs(start.getX() - target.getX()), Math.abs(start.getY() - target.getY()));

@@ -7,6 +7,9 @@ import es.upv.dsic.gti_ia.core.SingleAgent;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.Queue;
+import java.util.Random;
 import practica3.DataAccess;
 import practica3.JsonDBA;
 import practica3.Draw.MapImage;
@@ -257,6 +260,8 @@ public class Megatron extends SingleAgent {
         int droneNumber = -1;
         int worldEnergy = 0;
         boolean firstSearch = true;
+        Queue<Integer> reactivatedDrones = new LinkedList<>();
+        Random rand = new Random();
 
         System.out.println("Megatron: Initiating");
 
@@ -401,19 +406,20 @@ public class Megatron extends SingleAgent {
                     boolean reactivate = true;
                     for (int i = 0; i < 4 && reactivate; i++) {
                         reactivate &= this.drones.get(i).isOnStandby()
-                                || !this.drones.get(i).isAlive();
+                                || !this.drones.get(i).isAlive()
+                                || this.drones.get(i).isInGoal();
                     }
 
                     for (int i = 0; i < 4 && reactivate; i++) {
                         if (this.drones.get(i).isOnStandby()) {
                             this.drones.get(i).reactivate();
-                            reactivate = false;
-                            state = State.Heuristic;
-                            droneNumber = i;
+                            reactivatedDrones.add(i);
                         }
                     }
 
-                    if (state == State.Heuristic) {
+                    if (!reactivatedDrones.isEmpty()) {
+                        droneNumber = reactivatedDrones.poll();
+                        state = State.Heuristic;
                         break;
                     }
 
@@ -522,6 +528,12 @@ public class Megatron extends SingleAgent {
                 case Heuristic:
                     System.out.println("Megatron------ State: Heuristic");
 
+                    if (this.drones.get(droneNumber).isOnStandby()) {
+                        System.out.println("Megatron: Drone "+ this.dataAccess.getNameDrone()[droneNumber] + " is on standby");
+                        state = State.Feel;
+                        break;
+                    }
+                    
                     try {
                         // Check if drone needs to refuel
                         if (fuelHeuristic(droneNumber, this.drones.get(droneNumber).getMyGoal())) {
@@ -531,6 +543,14 @@ public class Megatron extends SingleAgent {
                             state = State.Feel;
                             break;
                         } else {
+                            // Extract position of drones
+                            ArrayList<Coord> positions = new ArrayList<>(4);
+                            for (int i = 0; i < 4; i++) {
+                                if (i != droneNumber) {
+                                    positions.add(this.drones.get(i).getPosition());
+                                }
+                            }
+                            
                             // Decide between searching for the goal area or finding a way
                             if (this.zoneGoalFound) {
                                 System.out.println("Megatron: Using search algorithm to get from "
@@ -538,14 +558,14 @@ public class Megatron extends SingleAgent {
                                         + " to " + this.drones.get(droneNumber).getMyGoal().toString());
 
                                 // Ask for next action
-                                nextAction = this.drones.get(droneNumber).findWay(this.drones.get(droneNumber).getPosition(), this.drones.get(droneNumber).getMyGoal());
+                                nextAction = this.drones.get(droneNumber).findWay(this.drones.get(droneNumber).getPosition(), this.drones.get(droneNumber).getMyGoal(), positions);
                                 
                                 // Start heuristic to decide who goes to the target
                                 if (firstSearch) {
                                     firstSearch = false;
                                     
                                     System.out.println("Megatron: Starting heuristic to decide who goes and who dies");
-                                    if (!deathHeuristic(droneNumber, worldEnergy)) {
+                                    if (!deathHeuristic(droneNumber, worldEnergy, reactivatedDrones)) {
                                         nextAction = null;
                                     }
                                 }
@@ -556,14 +576,34 @@ public class Megatron extends SingleAgent {
                             } else {
                                 // Let Flytron use another method of searching
                                 if (this.drones.get(droneNumber).getRole() == 0) {
-                                    nextAction = this.drones.get(droneNumber).mapv4();
+                                    nextAction = this.drones.get(droneNumber).mapv4(positions);
                                 } else {
-                                    nextAction = this.drones.get(droneNumber).mapv3();
+                                    nextAction = this.drones.get(droneNumber).mapv3(positions);
                                 }
                             }
 
                             System.out.println("Megatron: Action " + nextAction + " chosen for drone " + this.dataAccess.getNameDrone()[droneNumber]);
 
+                            // If there would be a crash executing this action
+                            if (positions.contains(this.drones.get(droneNumber).getPosition().neighbour(nextAction))) {
+                                System.err.println("Megatron: Action cannot be executed because of other drone blocking the way");
+                                System.out.println("Megatron: Moving drone to random free position");
+                                
+                                // Get all neighbours that can be reached
+                                ArrayList<Coord> neighbours = new ArrayList<>(8);
+                                for (Coord neighbour : this.drones.get(droneNumber).getPosition().neighbours()) {
+                                    if (!positions.get(0).equals(neighbour) && !positions.get(1).equals(neighbour)
+                                            && !positions.get(2).equals(neighbour) && 
+                                            this.myMap.getAccessibleMap().containsKey(neighbour)) {
+                                        
+                                        neighbours.add(neighbour);
+                                    }
+                                }
+                                
+                                // Pick random between neighbours
+                                nextAction = this.drones.get(droneNumber).getPosition().neighbour(neighbours.get(rand.nextInt(neighbours.size())));
+                            }
+                            
                             state = State.Action;
                             break;
                         }
@@ -660,17 +700,18 @@ public class Megatron extends SingleAgent {
      * 
      * @param droneNumber Drone ID
      * @param worldFuel Amount of fuel left
+     * @param outReactivatedDrones IDs of drones that have been reactivated
      * @return Indicator for the current drone: false-don't move
      * @author Alexander Straub
      */
-    private boolean deathHeuristic(int droneNumber, int worldFuel) {
+    private boolean deathHeuristic(int droneNumber, int worldFuel, Queue<Integer> outReactivatedDrones) {
         // Execute find way algorithm for all drones
         int wayLength = 0, minWayLength = 0;
         
         for (int i = 0; i < 4; i++) {
             if (droneNumber != i) {
                 this.drones.get(i).findWay(this.drones.get(i).getPosition(), 
-                        this.drones.get(i).getMyGoal(), true);
+                        this.drones.get(i).getMyGoal(), new ArrayList<>(), true);
             }
             
             // Get actual path length and optimal path length
@@ -746,6 +787,9 @@ public class Megatron extends SingleAgent {
             
             if (fuelNeeded > worldFuel) {
                 this.drones.get(indices[i]).setStandby();
+            } else if (this.drones.get(indices[i]).isOnStandby()) {
+                this.drones.get(indices[i]).reactivate();
+                outReactivatedDrones.add(indices[i]);
             }
         }
         

@@ -393,10 +393,11 @@ public abstract class DataDecepticon {
      * Search for the best way to go from one node to one not completely explored
      *
      * @param start Starting position
+     * @param positions Positions of the drones to evade collision
      * @return Stack of actions
      * @author Alexander Straub
      */
-    public final Stack<Megatron.Action> dijkstra(Coord start) {
+    public final Stack<Megatron.Action> dijkstra(Coord start, ArrayList<Coord> positions) {
         // Sanity check for the parameter
         if (start == null) {
             return null;
@@ -405,12 +406,19 @@ public abstract class DataDecepticon {
         // Get the map
         HashMap<Coord, Node> localMap = this.map.getAccessibleMap();
         Node startNode = localMap.get(start);
+        List<Node> nodes = new ArrayList<>(localMap.values());
+        
+        // Eliminate positions of other drones from list
+        for (Coord position : positions) {
+            if (!position.equals(start)) {
+                nodes.remove(localMap.get(position));
+            }
+        }
 
         // Assign distances and set paths
-        expandNodes(startNode, localMap);
+        expandNodes(startNode, new ArrayList<>(nodes));
 
         // Search for a node not fully explored with least distance
-        List<Node> nodes = new ArrayList<>(localMap.values());
         Node target = null, temp;
         
         // First, search for nodes with number of neighbours <7
@@ -449,11 +457,12 @@ public abstract class DataDecepticon {
      *
      * @param start Node where to start
      * @param target Node where to get to
+     * @param positions Positions of the drones to evade collision
      * @return Stack of actions
      * @author Alexander Straub
      */
-    public final Stack<Megatron.Action> dijkstra(Coord start, Coord target) {
-        return dijkstra(start, target, this.map.getAccessibleMap());
+    public final Stack<Megatron.Action> dijkstra(Coord start, Coord target, ArrayList<Coord> positions) {
+        return dijkstra(start, target, positions, this.map.getAccessibleMap());
     }
     
     /**
@@ -461,11 +470,12 @@ public abstract class DataDecepticon {
      *
      * @param start Node where to start
      * @param target Node where to get to
+     * @param positions Positions of the drones to evade collision
      * @param localMap Map to use
      * @return Stack of actions
      * @author Alexander Straub
      */
-    public final Stack<Megatron.Action> dijkstra(Coord start, Coord target, HashMap<Coord, Node> localMap) {
+    public final Stack<Megatron.Action> dijkstra(Coord start, Coord target, ArrayList<Coord> positions, HashMap<Coord, Node> localMap) {
         // Sanity check for the parameters
         if (start == null || target == null || start.equals(target)) {
             return null;
@@ -474,9 +484,17 @@ public abstract class DataDecepticon {
         // Get the map
         Node startNode = localMap.get(start);
         Node targetNode = localMap.get(target);
+        List<Node> nodes = new ArrayList<>(localMap.values());
+        
+        // Eliminate positions of other drones from list
+        for (Coord position : positions) {
+            if (!position.equals(start)) {
+                nodes.remove(localMap.get(position));
+            }
+        }
         
         // Assign distances and set paths
-        expandNodes(startNode, localMap);
+        expandNodes(startNode, nodes);
 
         // Check if a path is even possible (may not be connected to this graph)
         if (targetNode.getDistance() == Double.MAX_VALUE) {
@@ -491,12 +509,11 @@ public abstract class DataDecepticon {
      * Expand nodes for dijkstra, assigning distances and paths
      * 
      * @param start Node to start from
-     * @param localMap Map to use
+     * @param nodes Nodes of the map to use
      * @author Alexander Straub
      */
-    private void expandNodes(Node start, HashMap<Coord, Node> localMap) {
+    private void expandNodes(Node start, List<Node> nodes) {
         // Initialize
-        List<Node> nodes = new ArrayList<>(localMap.values());
         for (Iterator<Node> i = nodes.iterator(); i.hasNext();) {
             i.next().resetSearch();
         }
@@ -1111,22 +1128,24 @@ public abstract class DataDecepticon {
      * considered usable, use a path finding algorithm to get to the next
      * unexplored cell, there resetting to the exploration pattern above.
      *
+     * @param positions Positions of the drones to evade collision
      * @return Next action for the specified drone
      * @throws java.lang.Exception
      * @author Alexander Straub
      */
-    public final Megatron.Action mapv3() throws Exception {
+    public final Megatron.Action mapv3(ArrayList<Coord> positions) throws Exception {
         if (isOnStandby()) return null;
         
-        Megatron.Action ret = mapv3(false);
+        Megatron.Action ret = mapv3(positions, false);
 
         // If mapv3 returns an illegal action, try again
         if (this.map.getMap().get(this.currentPosition.neighbour(ret)).getRadar() == 1
-                || this.map.getMap().get(this.currentPosition.neighbour(ret)).getRadar() == 2) {
+                || this.map.getMap().get(this.currentPosition.neighbour(ret)).getRadar() == 2
+                || positions.contains(this.currentPosition.neighbour(ret))) {
             System.err.println("ERROR: mapv3 devolvió una acción ilegal");
 
             this.map3_pathToUnexploredCell.clear();
-            ret = mapv3(true);
+            ret = mapv3(positions, true);
         }
 
         return ret;
@@ -1148,12 +1167,13 @@ public abstract class DataDecepticon {
      * considered usable, use a path finding algorithm to get to the next
      * unexplored cell, there resetting to the exploration pattern above.
      * 
+     * @param positions Positions of the drones to evade collision
      * @param findWay True: Don't look at border cells but only for a close cell
      * @return Next action for the specified drone
      * @throws java.lang.Exception
      * @author Alexander Straub
      */
-    protected Megatron.Action mapv3(boolean findWay) throws Exception {
+    protected Megatron.Action mapv3(ArrayList<Coord> positions, boolean findWay) throws Exception {
         Coord position = this.currentPosition;
         
         // If it's the first time executing, step away from the border
@@ -1221,7 +1241,7 @@ public abstract class DataDecepticon {
 
             // If everything around the drone already has been explored,
             // look for the closest node with unexplored neighbours
-            this.map3_pathToUnexploredCell = dijkstra(position);
+            this.map3_pathToUnexploredCell = dijkstra(position, positions);
             
             // If the way is too long, set drone to standby
             if (this.map3_pathToUnexploredCell != null && this.map3_pathToUnexploredCell.size() > 50 
@@ -1258,15 +1278,14 @@ public abstract class DataDecepticon {
     /**
      * First go to the nearest corner, then try to cross the map
      * 
+     * @param positions Positions of the drones to evade collision
      * @return Next action
      * @author Alexander Straub
      */
-    public final Megatron.Action mapv4() {
+    public final Megatron.Action mapv4(ArrayList<Coord> positions) {
         if (this.map4_stepNum++ * getConsumation() == 192) {
             setStandby();
         }
-        
-        if (isOnStandby()) return null;
         
         // If it's the first time executing, go to the nearest corner
         if (this.map4_start) {
@@ -1293,7 +1312,7 @@ public abstract class DataDecepticon {
         }
         
         // Try to cross the map
-        Megatron.Action ret = mapv4_crossMap();
+        Megatron.Action ret = mapv4_crossMap(positions);
         
         // Go to the other corner and cross again
         if (ret == null) {
@@ -1321,10 +1340,11 @@ public abstract class DataDecepticon {
     /**
      * Try to cross the map
      * 
+     * @param positions Positions of the drones to evade collision
      * @return Next action
      * @author Alexander Straub
      */
-    protected Megatron.Action mapv4_crossMap() {
+    protected Megatron.Action mapv4_crossMap(ArrayList<Coord> positions) {
         if (this.map4_stop) {
             return null;
         }
@@ -1407,7 +1427,7 @@ public abstract class DataDecepticon {
         }
 
         // Find way to the previously found closest node (or the target)
-        this.map4_pathToUnexploredCell = dijkstra(this.getPosition(), closestCoord);
+        this.map4_pathToUnexploredCell = dijkstra(this.getPosition(), closestCoord, positions);
         
         return this.map4_pathToUnexploredCell.pop();
     }
@@ -1417,17 +1437,22 @@ public abstract class DataDecepticon {
      * 
      * @param start Current position
      * @param target Target position
+     * @param positions Positions of the drones to evade collision
      * @return Next action for the decepticon
      * @author Alexander Straub
      */
-    public Megatron.Action findWay(Coord start, Coord target) {
-        Megatron.Action action = findWay(start, target, false);
+    public Megatron.Action findWay(Coord start, Coord target, ArrayList<Coord> positions) {
+        if (start.equals(target)) {
+            return null;
+        }
+        
+        Megatron.Action action = findWay(start, target, positions, false);
         
         // If it's an ilegal action, try again
         if (this.map.getMap().get(this.currentPosition.neighbour(action)).getRadar() == 1) {
             this.findWay_pathToTarget.clear();
             
-            action = findWay(start, target, false);
+            action = findWay(start, target, positions, false);
         }
         
         return action;
@@ -1438,24 +1463,23 @@ public abstract class DataDecepticon {
      * 
      * @param start Current position
      * @param target Target position
+     * @param positions Positions of the drones to evade collision
      * @param keep Keep the element on the stack, returning null
      * @return Next action for the decepticon
      * @author Alexander Straub
      */
-    public Megatron.Action findWay(Coord start, Coord target, boolean keep) {
+    public Megatron.Action findWay(Coord start, Coord target, ArrayList<Coord> positions, boolean keep) {
         if (start.equals(target)) {
             return null;
         }
         
         if (this.findWay_pathToTarget == null || this.findWay_pathToTarget.isEmpty()) {
             // Execute the search
-            this.findWay_pathToTarget = dijkstra(start, target);
-            Stack<Megatron.Action> actionsExploredMap = dijkstra(start, target, this.map.getPretendExploredMap());
+            this.findWay_pathToTarget = dijkstra(start, target, positions);
+            Stack<Megatron.Action> actionsExploredMap = dijkstra(start, target, positions, this.map.getPretendExploredMap());
 
             // If search was not successfull (when there is no direct path)
             if (this.findWay_pathToTarget == null) {
-                // TODO: Algorithm to get to the target exploring the map
-                //  Now assuming an empty map
                 this.findWay_pathToTarget = actionsExploredMap;
 
                 this.findWay_wayLength = 0;
