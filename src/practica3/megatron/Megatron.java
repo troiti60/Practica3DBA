@@ -22,7 +22,7 @@ import practica3.Draw.Window;
 /**
  * Class that controls the rest of Decepticons
  *
- * @author Javier Ortega Rodriguez
+ * @author Javier Ortega Rodriguez, Alexander Straub
  */
 public class Megatron extends SingleAgent {
 
@@ -31,13 +31,7 @@ public class Megatron extends SingleAgent {
     private final JsonDBA json;
     private DataAccess dataAccess;
     private Window draw;
-    private State state;
-    private boolean live;
-    private Action sigAction;
-    private int droneNumber;
-    private double PENALTY; // read-only multiplicative value used to estimate the number of steps
-                            //necessary to go from A to B on an unknown environment
-    private int pasos = 0;
+    private final double PENALTY;
     private boolean zoneGoalFound = false;
 
     // Image of the map for visualization
@@ -580,10 +574,6 @@ public class Megatron extends SingleAgent {
                                         nextAction = null;
                                     }
                                 }
-                                
-                                // TODO: New heuristic if drones from heuristic before
-                                // arrived but there are still drones alive with a chance to get there
-                                
                             } else {
                                 // Let Flytron use another method of searching
                                 if (this.drones.get(droneNumber).getRole() == 0) {
@@ -911,6 +901,7 @@ public class Megatron extends SingleAgent {
             this.drones.get(i).setMyGoal(targetNodes.get(i).getCoord());
         }
     }
+    
     /**
      * Finds the node where a drone will be after following a plan of actions
      * @param start position where the drone is
