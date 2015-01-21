@@ -165,8 +165,13 @@ public class Window extends javax.swing.JFrame {
      * @param value New value
      * @author José Carlos Alfaro
      */
-    public void setTotalBatteryValue(int value) {
-        Double d = value * 0.1;
+    public void setTotalBatteryValue(int value,String world) {
+        Double d;
+        if(world != "newyork")
+          d = value * 0.1;
+        else
+          d = value * 0.05;
+        
         this.batteryTotal.setValue(d.intValue());
         this.batteryTotal.repaint();
     }

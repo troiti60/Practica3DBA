@@ -130,9 +130,9 @@ public class Megatron extends SingleAgent {
         this.myMap = new Map(resolution);
 
         this.draw = new Window();
-        this.draw.setResizable(true);
+        this.draw.setResizable(true);      
         this.draw.setVisible(true);
-
+        this.draw.getJpanel().setWorld(dataAccess.getWorld());
         this.mapImage = new MapImage(resolution);
     }
 
@@ -172,7 +172,7 @@ public class Megatron extends SingleAgent {
             this.draw.getJpanel().updateDraw(this.myMap, drone, this.drones.get(drone).getLastPosition());
             this.draw.setLabelCoordinate(pos.getX(), pos.getY(), drone);
             this.draw.setBatteryDroneValue(drone, this.drones.get(drone).getFuel());
-            this.draw.setTotalBatteryValue(worldEnergy);
+            this.draw.setTotalBatteryValue(worldEnergy,dataAccess.getWorld());
 
             System.out.println("Megatron: Map updated");
         }
@@ -203,6 +203,24 @@ public class Megatron extends SingleAgent {
         outbox.setReceiver(new AgentID(this.dataAccess.getVirtualHost()));
         outbox.setSender(getAid());
         outbox.setContent(this.dataAccess.getKey());
+        this.send(outbox);
+
+        System.out.println("Megatron: Cancel sent to server");
+    }
+    /**
+     * Send the message to cancel the session
+     *
+     * @author José Carlos Alfaro
+     */
+    public void cancelActivateTrace() {
+        LinkedHashMap<String, Object> hm = new LinkedHashMap<>();
+        hm.put("key", this.dataAccess.getKey());
+        hm.put("trace", true);
+        String msg = this.json.createJson(hm);
+        ACLMessage outbox = new ACLMessage(ACLMessage.CANCEL);
+        outbox.setReceiver(new AgentID(this.dataAccess.getVirtualHost()));
+        outbox.setSender(getAid());
+        outbox.setContent(msg);
         this.send(outbox);
 
         System.out.println("Megatron: Cancel sent to server");

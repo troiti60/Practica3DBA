@@ -22,6 +22,7 @@ public class JPMap extends javax.swing.JPanel {
     Coord dronePos;
     ArrayList<Node> visited;
     int numDron;
+    String world;
     
     /**
      * Semaphore to restrict access
@@ -41,6 +42,7 @@ public class JPMap extends javax.swing.JPanel {
         this.dronePos = null;
         this.visited = new ArrayList<>();
         this.numDron = -1;
+        this.world = world;
     }
 
     /**
@@ -51,6 +53,10 @@ public class JPMap extends javax.swing.JPanel {
      */
     public void setDronPosition(Coord pos) {
         this.dronePos = pos;
+    }
+    
+    public void setWorld(String world){
+        this.world = world;
     }
 
     /**
@@ -99,8 +105,10 @@ public class JPMap extends javax.swing.JPanel {
                 } else if (n.getRadar() == 3) {
                     g.setColor(Color.MAGENTA);
                 }
-                
-                g.fillRect((n.getX() * 5) + 7, (n.getY() * 5) + 7, 5, 5);
+               if(world != "newyork") 
+                    g.fillRect((n.getX() * 5) + 7, (n.getY() * 5) + 7, 5, 5);
+               else  
+                    g.fillRect((n.getX()) + 7, (n.getY()) + 7, 1, 1);
             }
             
             // Draw visited path of the drones
@@ -119,7 +127,10 @@ public class JPMap extends javax.swing.JPanel {
                         g.setColor(Color.YELLOW);
                         break;
                 }
-                g.fillRect((n.getX() * 5) + 7, (n.getY() * 5) + 7, 5, 5);
+               if(world != "newyork")
+                    g.fillRect((n.getX() * 5) + 7, (n.getY() * 5) + 7, 5, 5);
+               else
+                    g.fillRect((n.getX()) + 7, (n.getY()) + 7, 1, 1);
             }
             
             // Highlight position of currently moving drone
@@ -138,8 +149,11 @@ public class JPMap extends javax.swing.JPanel {
                         g.setColor(Color.ORANGE);
                         break;
                 }
-                
-                g.fillRect((this.dronePos.getX() * 5) + 7, (this.dronePos.getY() * 5) + 7, 5, 5);
+               if(world != "newyork")
+                    g.fillRect((this.dronePos.getX() * 5) + 7, (this.dronePos.getY() * 5) + 7, 5, 5);
+               else
+                    g.fillRect((this.dronePos.getX()) + 7, (this.dronePos.getY()) + 7, 1, 1);
+                   
             }
 
         }
