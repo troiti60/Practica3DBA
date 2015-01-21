@@ -506,6 +506,8 @@ public class Megatron extends SingleAgent {
                             this.myMap.setDroneParkingSpace(newCoordinates);
                             
                             if (state != State.LaunchRest) {
+                                deathHeuristic(droneNumber, worldEnergy, reactivatedDrones);
+                                
                                 state = State.Feel;
                             }
                             break;
@@ -706,95 +708,92 @@ public class Megatron extends SingleAgent {
      * @author Alexander Straub
      */
     private boolean deathHeuristic(int droneNumber, int worldFuel, Queue<Integer> outReactivatedDrones) {
-        // Execute find way algorithm for all drones
-        int wayLength = 0, minWayLength = 0;
-        
+        // Get all drones that need to get to the target
+        ArrayList<Integer> droneIDs = new ArrayList<>(4);
         for (int i = 0; i < 4; i++) {
-            if (droneNumber != i) {
-                this.drones.get(i).findWay(this.drones.get(i).getPosition(), 
-                        this.drones.get(i).getMyGoal(), new ArrayList<>(), true);
+            if (!this.drones.get(i).isInGoal() && this.drones.get(i).isAlive()) {
+                droneIDs.add(i);
             }
-            
-            // Get actual path length and optimal path length
-            if (this.drones.get(i).getRole() != 0 && this.drones.get(i).findWay_getWayLength() != 0) {
-                wayLength += this.drones.get(i).findWay_getWayLength();
-                minWayLength += this.drones.get(i).findWay_getMinWayLength();
-            }
+        }
+        
+        if (droneIDs.isEmpty()) {
+            return false;
+        }
+        
+        int[] indices = new int[droneIDs.size()];
+        for (int i = 0; i < droneIDs.size(); i++) {
+            indices[i] = droneIDs.get(i);
+        }
+        
+        // Execute find way algorithm for all drones
+        for (int i = 0; i < indices.length; i++) {
+            this.drones.get(indices[i]).findWay(this.drones.get(indices[i]).getPosition(), 
+                    this.drones.get(indices[i]).getMyGoal(), new ArrayList<>(), true);
         }
         
         // Calculate ratio (or guess)
-        double ratio;
-        
-        if (wayLength == 0) {
-            ratio = Math.sqrt(2.0);
-        } else {
-            ratio = (double)wayLength / (double)minWayLength;
-        }
+        double ratio = Math.sqrt(2.0);
         
         // Get path costs assumed for drones
-        int[] costs = new int[4];
+        int[] costs = new int[indices.length];
         
-        for (int i = 0; i < 4; i++) {
-            if (this.drones.get(i).findWay_getWayLength() != 0) {
-                costs[i] = this.drones.get(i).findWay_getWayLength() * this.drones.get(i).getConsumation();
+        for (int i = 0; i < costs.length; i++) {
+            if (this.drones.get(indices[i]).findWay_getWayLength() != 0) {
+                costs[i] = this.drones.get(indices[i]).findWay_getWayLength();
             } else {
-                costs[i] = (int)(this.drones.get(i).findWay_getMinWayLength() * ratio) * this.drones.get(i).getConsumation();
+                costs[i] = (int)(this.drones.get(indices[i]).findWay_getMinWayLength() * ratio);
             }
-        }
-        
-        // Substract local battery from path costs
-        for (int i = 0; i < 4; i++) {
-            costs[i] -= this.drones.get(i).getFuel();
+            
+            costs[i] *= this.drones.get(indices[i]).getConsumation();
         }
         
         // For the costs we have to consider that the drone is not at full fuel
         // so a recharge will at least restore 100 - current fuel
-        for (int i = 0; i < 4; i++) {
-            if (costs[i] > this.drones.get(i).getFuel() && costs[i] < 100) {
+        for (int i = 0; i < costs.length; i++) {
+            if (costs[i] > this.drones.get(indices[i]).getFuel() && costs[i] < 100) {
                 costs[i] = 100;
             }
         }
         
+        // Substract local battery from path costs
+        for (int i = 0; i < costs.length; i++) {
+            costs[i] -= this.drones.get(indices[i]).getFuel();
+        }
+        
         // Kill drones who will not be able to reach the target (absolutely sure)
-        for (int i = 0; i < 4; i++) {
-            if (this.drones.get(i).findWay_getMinWayLength() * this.drones.get(i).getConsumation() 
-                    > this.drones.get(i).getFuel() + worldFuel) {
-                this.drones.get(i).setDead();
+        for (int i = 0; i < indices.length; i++) {
+            if (this.drones.get(indices[i]).findWay_getMinWayLength() * this.drones.get(indices[i]).getConsumation() 
+                    > this.drones.get(indices[i]).getFuel() + worldFuel) {
+                this.drones.get(indices[i]).setDead();
             }
         }
         
         // Sort drones: first the ones needing less fewel
-        int[] indices = new int[4];
-        
-        for (int i = 0; i < 4; i++) {
-            indices[i] = i;
-        }
-        
-        for (int i = 0; i < 3; i++) {
-            for (int j = i + 1; j < 4; j++) {
+        for (int i = 0; i < costs.length - 1; i++) {
+            for (int j = i + 1; j < costs.length; j++) {
                 if (costs[i] > costs[j]) {
                     int temp = indices[j];
                     indices[j] = indices[i];
                     indices[i] = temp;
+                    
+                    temp = costs[j];
+                    costs[j] = costs[i];
+                    costs[i] = temp;
                 }
             }
         }
         
-        // Fill until world fuel reached
-        int fuelNeeded = 0;
-        
-        for (int i = 0; i < 4; i++) {
-            fuelNeeded += Math.max(0, costs[indices[i]]);
-            
-            if (fuelNeeded > worldFuel) {
-                this.drones.get(indices[i]).setStandby();
-            } else if (this.drones.get(indices[i]).isOnStandby()) {
-                this.drones.get(indices[i]).reactivate();
-                outReactivatedDrones.add(indices[i]);
-            }
+        // Activate drone with lowest costs, set others to standby
+        if (costs[0] <= worldFuel && this.drones.get(indices[0]).isOnStandby()) {
+            this.drones.get(indices[0]).reactivate();
+            outReactivatedDrones.add(indices[0]);
         }
         
-        return !this.drones.get(droneNumber).isOnStandby();
+        for (int i = 1; i < indices.length; i++) {
+            this.drones.get(indices[i]).setStandby();
+        }
+        
+        return droneNumber == indices[0];
     }
 
     /**

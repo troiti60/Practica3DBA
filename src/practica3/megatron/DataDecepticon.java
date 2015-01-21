@@ -1482,12 +1482,17 @@ public abstract class DataDecepticon {
             if (this.findWay_pathToTarget == null) {
                 this.findWay_pathToTarget = actionsExploredMap;
 
+                // Update way information
                 this.findWay_wayLength = 0;
                 this.findWay_minWayLength = actionsExploredMap.size();
             } else {
                 // Update way information
                 this.findWay_wayLength = this.findWay_pathToTarget.size();
                 this.findWay_minWayLength = actionsExploredMap.size();
+                
+                if (this.findWay_pathToTarget.size() > actionsExploredMap.size() * Math.sqrt(2.0)) {
+                    this.findWay_pathToTarget = actionsExploredMap;
+                }
             }
         }
         

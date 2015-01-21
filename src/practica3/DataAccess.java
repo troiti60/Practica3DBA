@@ -26,7 +26,7 @@ public class DataAccess {
      * Name Decepticons
      */
     private final String nameMegatron = "Megatron";
-    private final String nameDrone1 = "Spectro";
+    private final String nameDrone1 = "Spectron";
     private final String nameDrone2 = "Viewfinder";
     private final String nameDrone3 = "Nightbird";
     private final String nameDrone4 = "Squawktalk";
