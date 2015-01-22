@@ -1,3 +1,7 @@
+/*
+    mirar la heristaica de refuel (nodo objetivo y consumo)
+    cambiar el halcón por el pájaro
+*/
 package practica3.megatron;
 
 import practica3.drones.*;
@@ -218,11 +222,18 @@ public class Megatron extends SingleAgent {
         hm.put("trace", true);
         String msg = this.json.createJson(hm);
         ACLMessage outbox = new ACLMessage(ACLMessage.CANCEL);
-        outbox.setReceiver(new AgentID(this.dataAccess.getVirtualHost()));
         outbox.setSender(getAid());
         outbox.setContent(msg);
-        this.send(outbox);
 
+        // Send all decepticon their death
+        for(int i=0;i<this.drones.size();i++){
+            outbox.setReceiver(new AgentID(this.dataAccess.getNameDrone()[i]));
+            this.send(outbox);
+        }
+        
+        outbox.setReceiver(new AgentID(this.dataAccess.getVirtualHost()));
+        this.send(outbox);
+        
         System.out.println("Megatron: Cancel sent to server");
     }
 
@@ -559,7 +570,7 @@ public class Megatron extends SingleAgent {
                         break;
                     }
                     
-                    try {
+                    //try {
                         // Check if drone needs to refuel
                         if (fuelHeuristic(droneNumber, this.drones.get(droneNumber).getMyGoal())) {
                             System.out.println("Megatron: Drone " + this.dataAccess.getNameDrone()[droneNumber] + " needs refueling");
@@ -599,7 +610,12 @@ public class Megatron extends SingleAgent {
                                 if (this.drones.get(droneNumber).getRole() == 0) {
                                     nextAction = this.drones.get(droneNumber).mapv4(positions);
                                 } else {
-                                    nextAction = this.drones.get(droneNumber).mapv3(positions);
+                                    try {
+                                        nextAction = this.drones.get(droneNumber).mapv3(positions);
+                                    } catch (Exception ex) {
+                                        Logger.getLogger(Megatron.class.getName()).log(Level.SEVERE, null, ex);
+                                        System.err.println("Megatron: Error ocurred in the heuristics. Mapv3");
+                                    }
                                 }
                             }
 
@@ -628,13 +644,13 @@ public class Megatron extends SingleAgent {
                             state = State.Action;
                             break;
                         }
-                    } catch (Exception ex) {
+                    /*} catch (Exception ex) {
                         System.err.println("Megatron: Error occured in the heuristics");
                         System.err.println("\t" + ex.getMessage());
 
                         state = State.Cancel;
                         break;
-                    }
+                    }*/
 
                 // Execute the action
                 case Action:
@@ -672,7 +688,8 @@ public class Megatron extends SingleAgent {
                     }
                     System.out.println("\n######################\n");
 
-                    cancel();
+                    //cancel();
+                    cancelActivateTrace();
 
                     System.out.println("Megatron: Dying");
                     alive = false;
@@ -697,7 +714,7 @@ public class Megatron extends SingleAgent {
      * @return True if drone has to refuel
      * @author Daniel Sánchez Alcaide
      */
-    private boolean fuelHeuristic(int drone, Coord goal) throws Exception {
+    private boolean fuelHeuristic(int drone, Coord goal){
         boolean res = false;
         int consume = this.drones.get(drone).getConsumation();
 
@@ -746,7 +763,7 @@ public class Megatron extends SingleAgent {
         // Execute find way algorithm for all drones
         for (int i = 0; i < indices.length; i++) {
             this.drones.get(indices[i]).findWay(this.drones.get(indices[i]).getPosition(), 
-                    this.drones.get(indices[i]).getMyGoal(), new ArrayList<>(), true);
+                    this.drones.get(indices[i]).getMyGoal(), new ArrayList<Coord>(), true);
         }
         
         // Calculate ratio (or guess)
