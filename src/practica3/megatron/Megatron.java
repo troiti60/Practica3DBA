@@ -433,10 +433,14 @@ public class Megatron extends SingleAgent {
                                 || this.drones.get(i).isInGoal();
                     }
 
-                    for (int i = 0; i < 4 && reactivate; i++) {
-                        if (this.drones.get(i).isOnStandby()) {
-                            this.drones.get(i).reactivate();
-                            reactivatedDrones.add(i);
+                    if (this.zoneGoalFound) {
+                        deathHeuristic(droneNumber, worldEnergy, reactivatedDrones);
+                    } else {
+                        for (int i = 0; i < 4 && reactivate; i++) {
+                            if (this.drones.get(i).isOnStandby()) {
+                                this.drones.get(i).reactivate();
+                                reactivatedDrones.add(i);
+                            }
                         }
                     }
 
