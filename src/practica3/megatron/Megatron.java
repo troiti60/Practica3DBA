@@ -667,6 +667,7 @@ public class Megatron extends SingleAgent {
                     } else {
                         System.out.println("Megatron: Drone " + this.dataAccess.getNameDrone()[droneNumber] + " executing action " + nextAction);
                         move(this.dataAccess.getNameDrone()[droneNumber], nextAction);
+                        drones.get(droneNumber).setPosition(drones.get(droneNumber).getPosition().neighbour(nextAction));
                     }
 
                     state = State.Feel;
@@ -1009,11 +1010,18 @@ public class Megatron extends SingleAgent {
         else {
             int steps=0;
             try {
-                Stack<Action> toGoal=drone.aStar(localMap.get(drone.getPosition()).getCoord(), localMap.get(drone.getMyGoal()).getCoord());
+                ArrayList<Coord> posDrones;
+                posDrones = new ArrayList();
+                for(DataDecepticon d : drones){
+                    if(drone != d){
+                        posDrones.add(d.getPosition());
+                    }
+                }
+                Stack<Action> toGoal=drone.aStar(localMap.get(drone.getPosition()).getCoord(), localMap.get(drone.getMyGoal()).getCoord(),posDrones);
                 steps+=toGoal.size();
                 Node fin = endOfPath(drone.getPosition(),toGoal);
                 if (fin.getRadar()==3) return steps*drone.getConsumation();
-                toGoal=drone.aStar(localMap.get(drone.getMyGoal()).getCoord(), localMap.get(drone.getPosition()).getCoord());
+                toGoal=drone.aStar(localMap.get(drone.getMyGoal()).getCoord(), localMap.get(drone.getPosition()).getCoord(),posDrones);
                 steps+=toGoal.size();
                 Node fin2 = endOfPath(drone.getMyGoal(),toGoal);
                 steps+=stepsEstimation(fin.getCoord(),fin2.getCoord());
