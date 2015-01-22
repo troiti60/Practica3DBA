@@ -304,10 +304,11 @@ public abstract class DataDecepticon {
      * @return Direction where drone should move
      * @param start the position of the selected drone
      * @param goal the position of the goal
+     * @param posDrones the positions of the drones
      * @throws Exception
      * @author Daniel Sánchez Alcaide
      */
-    public final Stack<Megatron.Action> aStar(Coord start, Coord goal) throws Exception {
+    public final Stack<Megatron.Action> aStar(Coord start, Coord goal, ArrayList<Coord> posDrones) throws Exception {
         Node startNode = this.map.getMap().get(start);
         Node goalNode = this.map.getMap().get(goal);
         
@@ -331,9 +332,19 @@ public abstract class DataDecepticon {
             for (Node vecino : vecinos) {
                 //Comprobamos que no esté ni en abiertos ni en cerrados
                 if (!abiertos.contains(vecino) && !cerrados.contains(vecino)) {
+                    //Comprobamos que no sea un nodo en el que esté otro dron
+                    boolean libre = true;
+                    for(Coord pos : posDrones){
+                        if(pos == vecino.getCoord()){
+                            libre = false;
+                            cerrados.add(vecino);
+                        }
+                    }
                     //Guardamos el camino hacia el nodo actual desde los vecinos
-                    vecino.setPath(current);
-                    abiertos.add(vecino);
+                    if(libre){
+                        vecino.setPath(current);
+                        abiertos.add(vecino);
+                    }
                 }
                 if (abiertos.contains(vecino)) {
                     //Si el vecino está en abiertos comparamos los valores de g 
