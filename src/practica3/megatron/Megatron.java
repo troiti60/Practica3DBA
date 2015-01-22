@@ -1,6 +1,7 @@
 /*
     mirar la heristaica de refuel (nodo objetivo y consumo)
     cambiar el halcón por el pájaro
+    cambiar la búsqueda por lo que me mande Dani (evita crashed)
 */
 package practica3.megatron;
 
@@ -373,10 +374,10 @@ public class Megatron extends SingleAgent {
                         this.drones.add(new DataFlytron(this.myMap));
 
                         System.out.println("Megatron: Launching decepticon 4: " + this.dataAccess.getNameDrone4());
-                        drone = new Falcdron(new AgentID(this.dataAccess.getNameDrone4()),
+                        drone = new Birdron(new AgentID(this.dataAccess.getNameDrone4()),
                                 this.getAid(), this.dataAccess.getKey());
                         drone.start();
-                        this.drones.add(new DataFalcdron(this.myMap));
+                        this.drones.add(new DataBirdron(this.myMap));
 
                         state = State.Feel;
                         break;
@@ -550,6 +551,7 @@ public class Megatron extends SingleAgent {
                         break;
                     } else {
                         // Drone died
+                        System.err.println("Megatron: Kill to dron " + droneNumber);
                         this.drones.get(droneNumber).setDead();
 
                         // If all drones are dead, go to cancel
